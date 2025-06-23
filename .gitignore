@@ -1,0 +1,29 @@
+# Environment variables
+.env
+
+# Build directories
+build/
+cmake-build-*/
+
+# Memory and conversation files
+memory.txt
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled binaries
+*.exe
+*.out
+agent
+
+# Temporary files
+*.tmp
+*.temp 
