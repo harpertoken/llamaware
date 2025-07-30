@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 LABEL maintainer="bniladridas"
 LABEL description="Llamaware Agent - Professional AI Agent"
