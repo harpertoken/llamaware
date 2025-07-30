@@ -1,0 +1,59 @@
+# Environment variables
+.env
+
+# Build directories
+build/
+bin/
+lib/
+cmake-build-*/
+
+# Runtime data
+data/memory.txt
+data/*.log
+*.log
+
+# Compiled Object files
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+agent
+llamaware-agent
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+build/Makefile
+*.cmake
+!CMakeLists.txt
+!Makefile
+
+# Package managers
+conan.lock
+vcpkg_installed/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak 
