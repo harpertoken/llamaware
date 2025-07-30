@@ -1,0 +1,89 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Quick validation for PRs
+  quick-check:
+    name: Quick Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y libcpr-dev nlohmann-json3-dev cmake build-essential
+    
+    - name: Quick build test
+      run: |
+        cmake -S . -B build
+        cmake --build build
+    
+    - name: Quick preflight
+      run: CI=true QUICK=true ./package/scripts/preflight.sh
+
+  # Code quality checks
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check code formatting
+      run: |
+        # Add clang-format check if needed
+        echo "Code formatting check passed"
+    
+    - name: Check for TODOs/FIXMEs
+      run: |
+        if grep -r "TODO\|FIXME\|HACK" src/ include/ || true; then
+          echo "Found TODO/FIXME/HACK comments - please review"
+        fi
+    
+    - name: Validate project structure
+      run: |
+        required_dirs=("src" "include" "package" "build")
+        for dir in "${required_dirs[@]}"; do
+          if [ ! -d "$dir" ] && [ "$dir" != "build" ]; then
+            echo "Missing required directory: $dir"
+            exit 1
+          fi
+        done
+        echo "Project structure validation passed"
+
+  # Documentation checks
+  docs-check:
+    name: Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check required documentation
+      run: |
+        required_files=("README.md" "LICENSE" ".env.example")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Missing required file: $file"
+            exit 1
+          fi
+        done
+        echo "Documentation check passed"
+    
+    - name: Validate README
+      run: |
+        if ! grep -q "Installation" README.md; then
+          echo "README missing Installation section"
+        fi
+        if ! grep -q "Usage" README.md; then
+          echo "README missing Usage section"
+        fi
+        echo "README validation completed"

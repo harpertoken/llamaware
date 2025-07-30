@@ -1,0 +1,22 @@
+# Global code owners
+* @bniladridas
+
+# Core source code
+/src/ @bniladridas
+/include/ @bniladridas
+
+# Build and configuration
+/CMakeLists.txt @bniladridas
+/Makefile @bniladridas
+
+# CI/CD and automation
+/.github/ @bniladridas
+/package/scripts/ @bniladridas
+
+# Documentation
+/README.md @bniladridas
+/package/docs/ @bniladridas
+
+# Docker and deployment
+/package/docker/ @bniladridas
+/package/managers/ @bniladridas

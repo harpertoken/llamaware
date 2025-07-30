@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  llamaware-agent:
+    build:
+      context: ../..
+      dockerfile: package/docker/Dockerfile
+    container_name: llamaware-agent
+    environment:
+      - TOGETHER_API_KEY=${TOGETHER_API_KEY}
+      - SERPAPI_KEY=${SERPAPI_KEY}
+    volumes:
+      - llamaware_data:/home/llamaware/data
+      - ./config/.env:/home/llamaware/.env:ro
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  # Optional: Ollama service for offline mode
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  llamaware_data:
+    driver: local
+  ollama_data:
+    driver: local

@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  # Create release builds for multiple platforms
+  build-release:
+    name: Build Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+            artifact: llamaware-agent
+          - os: macos-latest
+            platform: macos-x64
+            artifact: llamaware-agent
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install -y libcpr-dev nlohmann-json3-dev cmake build-essential
+    
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cpr nlohmann-json cmake
+    
+    - name: Build release
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build
+    
+    - name: Run full preflight checks
+      run: CI=true ./package/scripts/preflight.sh
+    
+    - name: Create distribution package
+      run: make package
+    
+    - name: Rename binary for platform
+      run: |
+        cp build/bin/llamaware-agent llamaware-agent-${{ matrix.platform }}
+    
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: llamaware-agent-${{ matrix.platform }}
+        path: llamaware-agent-${{ matrix.platform }}
+
+  # Create GitHub release
+  create-release:
+    name: Create Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+    
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          llamaware-agent-linux-x64/llamaware-agent-linux-x64
+          llamaware-agent-macos-x64/llamaware-agent-macos-x64
+        body: |
+          ## Llamaware Agent ${{ github.ref_name }}
+          
+          ### Features
+          - Professional AI agent with command execution
+          - File operations and web search capabilities
+          - Dual mode: Online (Together AI) and Offline (Ollama)
+          - Memory management and conversation history
+          
+          ### Installation
+          
+          **Linux:**
+          ```bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/llamaware-agent-linux-x64
+          chmod +x llamaware-agent-linux-x64
+          sudo mv llamaware-agent-linux-x64 /usr/local/bin/llamaware-agent
+          ```
+          
+          **macOS:**
+          ```bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/llamaware-agent-macos-x64
+          chmod +x llamaware-agent-macos-x64
+          sudo mv llamaware-agent-macos-x64 /usr/local/bin/llamaware-agent
+          ```
+          
+          ### Configuration
+          Create a `.env` file with your API keys:
+          ```env
+          TOGETHER_API_KEY=your_key_here
+          SERPAPI_KEY=your_key_here
+          ```
+          
+          ### Documentation
+          See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for full documentation.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
