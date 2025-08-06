@@ -14,10 +14,7 @@ namespace Version {
     }
     
     void print_version_info() {
-        std::cout << Utils::UI::CYAN << Utils::UI::BOLD;
-        std::cout << "Llamaware Agent v" << get_version() << Utils::UI::RESET << std::endl;
-        std::cout << Utils::UI::BLUE << "Built: " << get_build_info() << Utils::UI::RESET << std::endl;
-        std::cout << Utils::UI::GREEN << "Professional Edition" << Utils::UI::RESET << std::endl;
-        std::cout << std::endl;
+        std::cout << "Llamaware v" << get_version() << std::endl;
+        std::cout << "Built: " << get_build_info() << std::endl;
     }
 }

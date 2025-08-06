@@ -1,20 +1,16 @@
 
-````markdown
-# llamaware agent
+# llamaware
 
-modular C++ AI agent with offline + online LLM support, safe shell commands, web search, and memory.
+C++ AI agent with online/offline LLM support, shell commands, web search, memory.
 
 ## install
 
-### dependencies
-
-macOS:
+**macOS:**
 ```bash
 brew install cpr nlohmann-json cmake
-````
+```
 
-ubuntu/debian:
-
+**ubuntu/debian:**
 ```bash
 sudo apt update
 sudo apt install -y nlohmann-json3-dev cmake build-essential git libcurl4-openssl-dev
@@ -23,14 +19,12 @@ cmake -S cpr -B cpr/build -DBUILD_CPR_TESTS=OFF -DCPR_USE_SYSTEM_CURL=ON
 sudo cmake --build cpr/build --target install
 ```
 
-required:
-
-* c++17 compiler (gcc 7+, clang 5+, or msvc 2017+)
+**requirements:**
+* c++17 compiler
 * cmake ≥ 3.14
-* [cpr](https://github.com/libcpr/cpr)
-* [nlohmann/json](https://github.com/nlohmann/json)
-* [ollama](https://ollama.com/download) (for offline mode)
-* together ai + serpapi keys (for online + search)
+* [cpr](https://github.com/libcpr/cpr), [nlohmann/json](https://github.com/nlohmann/json)
+* [ollama](https://ollama.com/download) (offline)
+* API keys: together ai, cerebras, serpapi
 
 ## build
 
@@ -38,104 +32,96 @@ required:
 git clone https://github.com/bniladridas/llamaware.git
 cd llamaware
 mkdir build && cd build
-cmake ..
-make
+cmake .. && make
 ```
 
-optional:
-
 ```bash
-cp .env.example .env
-# add your API keys
+cp .env.example .env  # add API keys
 ```
 
 ## run
 
-### run the c++ agent
-
 ```bash
+export $(cat .env | xargs)
 ./build/bin/llamaware-agent
 ```
 
-### run preflight checks
-
+**optional:**
 ```bash
-make preflight
+make preflight  # run checks
+cd web && npm install && npm start  # web ui
 ```
-
-### start the web ui (optional)
-
-```bash
-cd web
-npm install
-npm start
-```
-
-> 💡 fix any import errors before starting.
 
 ## usage
 
 on startup:
 
 ```
-choose mode [1=online / 2=offline]: 2
-offline mode: llama3.2
-agent initialized. type 'help' or 'exit'
+   ███      ███      ███   
+   ███      ███      ███   
+   ███      ███      ███   
+          ███  ███          
+          ███  ███          
+          ███  ███          
+          ███  ███          
+          ███  ███          
+          ███  ███          
+
+Llamaware - Open Source AI Agent
+Type 'help' for commands
+
+Mode [1=Online / 2=Offline]: 1
+Provider [1=Together AI / 2=Cerebras]: 2
+Cerebras
+Ready
 ```
 
-available commands:
+**models:**
+- online: Together AI (Llama-3.3-70B), Cerebras (Llama-4-Maverick-17B)
+- offline: llama3.2:3b, llama3.2:latest
 
+**commands:**
 ```
-  search:<query>        → web search via serpapi
-  cmd:<command>         → run safe shell command
-  read:<file>           → read file contents
-  write:<file> <text>   → write to file
-
-  help                  → list commands
-  exit / quit           → exit the agent
+search:query     web search
+cmd:command      run command
+read:file        read file
+write:file text  write file
+help             show help
+version          show version
+exit             quit
 ```
 
-example session:
-
+**example:**
 ```
-› search:latest ai news
-[search results]
+> search:latest ai news
+[results]
 
-› cmd:ls -la
-[executing]: ls -la
-[command result]
+> cmd:ls -la
 total 48
-...
+drwxr-xr-x@ 19 user staff 608 Aug 6 23:04 .
+
+> write:note.txt Hello from Llamaware!
+File 'note.txt' written successfully (22 bytes)
+
+> read:note.txt
+Hello from Llamaware!
 ```
 
-## structure
+## features
 
-```
-src/
-  main.cpp               → entry point
-  core/agent.cpp         → main logic
-  services/
-    ai_service.cpp       → together + ollama api
-    command_service.cpp  → shell exec
-    file_service.cpp     → file ops
-    web_service.cpp      → serpapi integration
-  utils/
-    ui.cpp               → terminal ui helpers
-    config.cpp           → env setup
-  data/memory_manager.cpp → context memory
-
-include/                → headers
-data/                   → runtime data
-.env                    → config file
-web/                    → react frontend
-```
+* clean interface with custom ASCII logo
+* multiple AI providers (Together AI, Cerebras, Ollama)
+* conversation memory and context
+* safe command execution with blocking
+* file operations and web search
+* open source (MIT license)
 
 ## customize
 
-* change model: `agent.cpp`
-* tweak ui: `ui.cpp` (ansi colors)
-* memory file: `memory_manager.cpp`
-* add features: chat, search, etc
+* models: `src/services/ai_service.cpp`
+* interface: `src/utils/ui.cpp`
+* commands: `src/core/agent.cpp`
+* safety: `src/services/command_service.cpp`
 
 ## license
 

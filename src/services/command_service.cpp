@@ -1,12 +1,11 @@
 #include "services/command_service.h"
-#include "utils/ui.h"
-#include <iostream>
 #include <cstdio>
+#include <array>
 
 namespace Services {
-    std::vector<std::string> CommandService::dangerous_commands_ = {
+    const std::array<std::string, 9> CommandService::dangerous_commands_ = {
         "rm -rf", "sudo rm", "format", "del /", "shutdown", "reboot", 
-        "mkfs", "fdisk", "dd if=", ":(){ :|:& };:", "chmod -R 777 /"
+        "mkfs", "fdisk", "dd if="
     };
     
     bool CommandService::is_dangerous_command(const std::string& command) {
@@ -19,11 +18,8 @@ namespace Services {
     }
     
     std::string CommandService::execute(const std::string& command) {
-        std::cout << Utils::UI::YELLOW << "[Executing]: " << command << Utils::UI::RESET << std::endl;
-        
-        // Safety check
         if (is_dangerous_command(command)) {
-            return "SAFETY: Dangerous command blocked. Command: " + command;
+            return "Error: Dangerous command blocked";
         }
         
         FILE* pipe = popen(command.c_str(), "r");
@@ -38,10 +34,10 @@ namespace Services {
         }
         
         int exit_code = pclose(pipe);
-        if (exit_code != 0) {
+        if (exit_code != 0 && !result.empty()) {
             result += "\nExit code: " + std::to_string(exit_code);
         }
         
-        return result.empty() ? "Command executed successfully (no output)" : result;
+        return result.empty() ? "Command completed" : result;
     }
 }

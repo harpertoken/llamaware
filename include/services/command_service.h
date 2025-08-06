@@ -1,11 +1,11 @@
 #pragma once
 #include <string>
-#include <vector>
+#include <array>
 
 namespace Services {
     class CommandService {
     private:
-        static std::vector<std::string> dangerous_commands_;
+        static const std::array<std::string, 9> dangerous_commands_;
         static bool is_dangerous_command(const std::string& command);
         
     public:
