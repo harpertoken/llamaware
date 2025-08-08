@@ -2,73 +2,134 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <string>
+#include <iomanip>
 
 namespace Utils {
-    namespace UI {
-        // Minimal color palette
-        const std::string CYAN = "\033[36m";
-        const std::string GREEN = "\033[32m";
-        const std::string YELLOW = "\033[33m";
-        const std::string RED = "\033[31m";
-        const std::string RESET = "\033[0m";
-        const std::string DIM = "\033[2m";
 
-        void print_logo() {
-    std::cout << "\n";
-    std::cout << GREEN << "   ███      ███      ███   " << RESET << "\n";
-    std::cout << GREEN << "   ███      ███      ███   " << RESET << "\n";
-    std::cout << GREEN << "   ███      ███      ███   " << RESET << "\n";
-    std::cout << GREEN << "          ███  ███          " << RESET << "\n";
-    std::cout << GREEN << "          ███  ███          " << RESET << "\n";
-    std::cout << GREEN << "          ███  ███          " << RESET << "\n";
-    std::cout << GREEN << "          ███  ███          " << RESET << "\n";
-    std::cout << GREEN << "          ███  ███          " << RESET << "\n";
-    std::cout << GREEN << "          ███  ███          " << RESET << "\n";
-    std::cout << "\nLlamaware" << DIM << " - Open Source AI Agent" << RESET << "\n";
-    std::cout << DIM << "Type 'help' for commands" << RESET << "\n\n";
-}
-
-        
-        void print_help() {
-            std::cout << "\nLlamaware - Open Source AI Agent\n";
-            std::cout << DIM << "MIT License - github.com/bniladridas/llamaware" << RESET << "\n\n";
-            std::cout << "Commands:\n";
-            std::cout << "  search:query     web search\n";
-            std::cout << "  cmd:command      run command\n";
-            std::cout << "  read:file        read file\n";
-            std::cout << "  write:file text  write file\n";
-            std::cout << "  help             show help\n";
-            std::cout << "  version          show version\n";
-            std::cout << "  exit             quit\n\n";
-            std::cout << DIM << "Chat naturally or use commands above" << RESET << "\n\n";
-        }
-        
-        void spinner(std::atomic<bool>& done) {
-            const char frames[] = {'|', '/', '-', '\\'};
-            int frame = 0;
-            
-            while (!done) {
-                std::cout << "\r" << frames[frame % 4] << std::flush;
-                frame++;
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-            std::cout << "\r \r" << std::flush;
-        }
-
-        void print_success(const std::string& message) {
-            std::cout << GREEN << message << RESET << std::endl;
-        }
-
-        void print_error(const std::string& message) {
-            std::cout << RED << message << RESET << std::endl;
-        }
-
-        void print_warning(const std::string& message) {
-            std::cout << YELLOW << message << RESET << std::endl;
-        }
-
-        void print_info(const std::string& message) {
-            std::cout << message << std::endl;
-        }
+    // ===== Color Codes =====
+    namespace Color {
+        const std::string RESET   = "\033[0m";
+        const std::string GREEN   = "\033[32m";
+        const std::string YELLOW  = "\033[33m";
+        const std::string RED     = "\033[31m";
+        const std::string CYAN    = "\033[36m";
+        const std::string BOLD    = "\033[1m";
+        const std::string DIM     = "\033[2m";
     }
+
+    // ===== Logo =====
+    void UI::print_logo() {
+    std::cout << Color::GREEN
+              << "██      ██       █████  ███    ███  █████  ██     ██  █████  ██████  ███████ \n"
+              << "██      ██      ██   ██ ████  ████ ██   ██ ██     ██ ██   ██ ██   ██ ██      \n"
+              << "██      ██      ███████ ██ ████ ██ ███████ ██  █  ██ ███████ ██████  █████   \n"
+              << "██      ██      ██   ██ ██  ██  ██ ██   ██ ██ ███ ██ ██   ██ ██   ██ ██      \n"
+              << "███████ ███████ ██   ██ ██      ██ ██   ██  ███ ███  ██   ██ ██   ██ ███████ \n"
+              << Color::RESET;
+    std::cout << Color::DIM << "Welcome to Llamaware — Choose your mode below.\n" << Color::RESET;
+    print_divider();
+    }
+
+
+    // ===== Help Menu =====
+    void UI::print_help() {
+        std::cout << Color::BOLD << "Available Commands:\n" << Color::RESET;
+        std::cout << Color::CYAN << "  search:<query>" << Color::RESET << "   - Search the web for a query\n";
+        std::cout << Color::CYAN << "  cmd:<command>" << Color::RESET << "   - Run a system command\n";
+        std::cout << Color::CYAN << "  read:<file>" << Color::RESET << "     - Read from a file\n";
+        std::cout << Color::CYAN << "  write:<file>" << Color::RESET << "    - Write to a file\n";
+        std::cout << Color::CYAN << "  clear" << Color::RESET << "           - Clear memory\n";
+        std::cout << Color::CYAN << "  exit" << Color::RESET << "            - Exit the program\n";
+        print_divider();
+    }
+
+    // ===== Spinner =====
+    void UI::spinner(const std::string& message, int duration_ms) {
+        const char* frames[] = {"/", "-", "\\", "|"};
+        const int num_frames = 4;
+        int frame = 0;
+        auto start = std::chrono::steady_clock::now();
+
+        std::cout << Color::CYAN << message << " " << Color::RESET;
+        while (std::chrono::steady_clock::now() - start < std::chrono::milliseconds(duration_ms)) {
+            std::cout << "\b" << frames[frame] << std::flush;
+            frame = (frame + 1) % num_frames;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        std::cout << "\b" << " " << "\n";
+    }
+
+    // ===== Threaded Spinner =====
+    void UI::spinner(std::atomic<bool>& done) {
+        const char frames[] = {'|', '/', '-', '\\'};
+        int frame = 0;
+        
+        while (!done) {
+            std::cout << "\r" << frames[frame % 4] << std::flush;
+            frame++;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        std::cout << "\r \r" << std::flush;
+    }
+
+    // ===== Status Messages =====
+    void UI::print_success(const std::string& message) {
+        std::cout << Color::GREEN << "[OK] " << Color::RESET << message << "\n";
+    }
+
+    void UI::print_error(const std::string& message) {
+        std::cout << Color::RED << "[ERROR] " << Color::RESET << message << "\n";
+    }
+
+    void UI::print_warning(const std::string& message) {
+        std::cout << Color::YELLOW << "[WARN] " << Color::RESET << message << "\n";
+    }
+
+    void UI::print_info(const std::string& message) {
+        std::cout << Color::CYAN << "[INFO] " << Color::RESET << message << "\n";
+    }
+
+    // ===== Divider =====
+    void UI::print_divider() {
+        std::cout << Color::DIM << "----------------------------------------\n" << Color::RESET;
+    }
+
+    // ===== Quick Help Interface =====
+    void UI::print_quick_help() {
+        std::cout << Color::DIM << "Quick Commands: " << Color::RESET;
+        std::cout << Color::CYAN << "help" << Color::RESET << " | ";
+        std::cout << Color::CYAN << "version" << Color::RESET << " | ";
+        std::cout << Color::CYAN << "search:query" << Color::RESET << " | ";
+        std::cout << Color::CYAN << "cmd:command" << Color::RESET << " | ";
+        std::cout << Color::CYAN << "read:file" << Color::RESET << " | ";
+        std::cout << Color::CYAN << "write:file text" << Color::RESET << " | ";
+        std::cout << Color::CYAN << "exit" << Color::RESET << "\n";
+        print_divider();
+    }
+
+    // ===== System Info =====
+    void UI::print_system_info(const std::string& mode, const std::string& model) {
+        std::cout << Color::DIM << "System: " << Color::RESET;
+        std::cout << Color::GREEN << "Mode=" << mode << Color::RESET << " | ";
+        std::cout << Color::GREEN << "Model=" << model << Color::RESET << " | ";
+        std::cout << Color::GREEN << "Memory=Active" << Color::RESET << " | ";
+        std::cout << Color::GREEN << "Commands=Available" << Color::RESET << "\n";
+    }
+
+    // ===== Ready Interface =====
+    void UI::print_ready_interface(const std::string& mode, const std::string& model) {
+        print_system_info(mode, model);
+        print_quick_help();
+        std::cout << Color::BOLD << "Ready" << Color::RESET << " - Type a command or chat naturally:\n";
+    }
+
+    // ===== Prompted Input =====
+    std::string UI::prompt_user(const std::string& prompt_text) {
+        std::cout << Color::BOLD << "[You]" << Color::RESET << " " << prompt_text << " > ";
+        std::string input;
+        std::getline(std::cin, input);
+        return input;
+    }
+
 }
