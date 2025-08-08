@@ -1,143 +1,68 @@
 
-````markdown
-# llamaware agent
+# llamaware
 
-modular C++ AI agent with offline + online LLM support, safe shell commands, web search, and memory.
+[![CI/CD Pipeline](https://github.com/bniladridas/Llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/bniladridas/Llamaware/actions/workflows/ci.yml)
+
+```
+██      ██       █████  ███    ███  █████  ██     ██  █████  ██████  ███████ 
+██      ██      ██   ██ ████  ████ ██   ██ ██     ██ ██   ██ ██   ██ ██      
+██      ██      ███████ ██ ████ ██ ███████ ██  █  ██ ███████ ██████  █████   
+██      ██      ██   ██ ██  ██  ██ ██   ██ ██ ███ ██ ██   ██ ██   ██ ██      
+███████ ███████ ██   ██ ██      ██ ██   ██  ███ ███  ██   ██ ██   ██ ███████ 
+```
+
+AI agent with online/offline LLM support, shell commands, web search, memory.
 
 ## install
 
-### dependencies
+**macOS:** `brew install cpr nlohmann-json cmake`
 
-macOS:
-```bash
-brew install cpr nlohmann-json cmake
-````
+**ubuntu:** `sudo apt install nlohmann-json3-dev cmake build-essential git libcurl4-openssl-dev && git clone --depth=1 https://github.com/libcpr/cpr.git && cmake -S cpr -B cpr/build -DBUILD_CPR_TESTS=OFF && sudo cmake --build cpr/build --target install`
 
-ubuntu/debian:
-
-```bash
-sudo apt update
-sudo apt install -y nlohmann-json3-dev cmake build-essential git libcurl4-openssl-dev
-git clone --depth=1 https://github.com/libcpr/cpr.git
-cmake -S cpr -B cpr/build -DBUILD_CPR_TESTS=OFF -DCPR_USE_SYSTEM_CURL=ON
-sudo cmake --build cpr/build --target install
-```
-
-required:
-
-* c++17 compiler (gcc 7+, clang 5+, or msvc 2017+)
-* cmake ≥ 3.14
-* [cpr](https://github.com/libcpr/cpr)
-* [nlohmann/json](https://github.com/nlohmann/json)
-* [ollama](https://ollama.com/download) (for offline mode)
-* together ai + serpapi keys (for online + search)
-
-## build
-
-```bash
-git clone https://github.com/bniladridas/llamaware.git
-cd llamaware
-mkdir build && cd build
-cmake ..
-make
-```
-
-optional:
-
-```bash
-cp .env.example .env
-# add your API keys
-```
+**requires:** c++17, cmake ≥ 3.14, [ollama](https://ollama.com/download), API keys
 
 ## run
 
-### run the c++ agent
-
 ```bash
-./build/bin/llamaware-agent
+git clone https://github.com/bniladridas/llamaware.git && cd llamaware
+mkdir build && cd build && cmake .. && make
+cp .env.example .env && export $(cat .env | xargs) && ./build/bin/llamaware-agent
 ```
-
-### run preflight checks
-
-```bash
-make preflight
-```
-
-### start the web ui (optional)
-
-```bash
-cd web
-npm install
-npm start
-```
-
-> 💡 fix any import errors before starting.
 
 ## usage
 
-on startup:
-
 ```
-choose mode [1=online / 2=offline]: 2
-offline mode: llama3.2
-agent initialized. type 'help' or 'exit'
-```
-
-available commands:
-
-```
-  search:<query>        → web search via serpapi
-  cmd:<command>         → run safe shell command
-  read:<file>           → read file contents
-  write:<file> <text>   → write to file
-
-  help                  → list commands
-  exit / quit           → exit the agent
+Mode [1=Online / 2=Offline]: 2
+Model [1=llama3.2:3b / 2=llama3.2:latest]: 1
+System: Mode=Offline | Model=llama3.2:3b | Memory=Active | Commands=Available
+Ready - Type a command or chat naturally:
 ```
 
-example session:
+**models:** online (Together AI, Cerebras), offline (llama3.2:3b, llama3.2:latest)
+**commands:** `search:query` `cmd:command` `read:file` `write:file text` `help` `version` `exit`
 
+**example:**
 ```
-› search:latest ai news
-[search results]
+> search:latest ai news
+[results]
 
-› cmd:ls -la
-[executing]: ls -la
-[command result]
+> cmd:ls -la
 total 48
-...
+drwxr-xr-x@ 19 user staff 608 Aug 6 23:04 .
+
+> write:note.txt Hello from Llamaware!
+File 'note.txt' written successfully (22 bytes)
+
+> read:note.txt
+Hello from Llamaware!
 ```
 
-## structure
+## features
 
-```
-src/
-  main.cpp               → entry point
-  core/agent.cpp         → main logic
-  services/
-    ai_service.cpp       → together + ollama api
-    command_service.cpp  → shell exec
-    file_service.cpp     → file ops
-    web_service.cpp      → serpapi integration
-  utils/
-    ui.cpp               → terminal ui helpers
-    config.cpp           → env setup
-  data/memory_manager.cpp → context memory
-
-include/                → headers
-data/                   → runtime data
-.env                    → config file
-web/                    → react frontend
-```
+enhanced interface • multiple AI providers • conversation memory • safe command execution • file operations • web search
 
 ## customize
 
-* change model: `agent.cpp`
-* tweak ui: `ui.cpp` (ansi colors)
-* memory file: `memory_manager.cpp`
-* add features: chat, search, etc
+**models:** `src/services/ai_service.cpp` **interface:** `src/utils/ui.cpp` **commands:** `src/core/agent.cpp` **safety:** `src/services/command_service.cpp`
 
-## license
-
-MIT — see `LICENSE`
-(c) 2025 bniladridas
+MIT license — (c) 2025 bniladridas

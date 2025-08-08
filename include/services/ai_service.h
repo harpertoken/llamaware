@@ -10,6 +10,7 @@ namespace Services {
         
         nlohmann::json create_payload(const std::string& user_input, const std::string& context);
         std::string get_api_url();
+        std::string parse_cerebras_stream(const std::string& response);
         
     public:
         AIService(int mode, const std::string& api_key = "");

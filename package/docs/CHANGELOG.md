@@ -1,54 +1,43 @@
-# Changelog
+# changelog
 
-All notable changes to Llamaware Agent will be documented in this file.
+## [2.0.0] - 2025-08-07
 
-## \[2.0.0] - 2025-07-28
+### clean & optimized edition
 
-### Major Release - Professional Edition
+**interface:**
+* minimal UI with custom ASCII logo
+* clean typography, no visual noise
+* streamlined mode selection (online/offline → provider/model)
 
-#### Added
+**AI providers:**
+* Together AI: Llama-3.3-70B-Instruct-Turbo-Free
+* Cerebras: Llama-4-Maverick-17B-128E-Instruct
+* Offline: llama3.2:3b, llama3.2:latest
 
-* **Modular Architecture**: Complete restructure into professional modules
+**commands:**
+* `search:query` - web search
+* `cmd:command` - safe shell execution
+* `read:file`, `write:file` - file operations
+* `help`, `version` - system info
 
-  * `core/`: Main agent logic and orchestration
-  * `services/`: Business logic for AI, commands, files, and web search
-  * `utils/`: Shared utilities for UI, configuration, and versioning
-  * `data/`: Memory and data management
-* **Enhanced Command System**: Safe command execution with built-in security
-* **Professional UI**: Improved terminal interface with status indicators
-* **File Operations**: Comprehensive file read/write capabilities
-* **Version Management**: Built-in version tracking and display
-* **Build System**: Professional CMake configuration and Makefile
-* **Documentation**: Comprehensive README and project documentation
+**technical:**
+* single MemoryManager instance
+* lazy AI service initialization
+* smart pointers, enum-based modes
+* removed UI dependencies from services
+* centralized input validation
 
-#### Enhanced
+**breaking changes:**
+* UI redesigned (minimal aesthetic)
+* mode selection flow changed
+* command output simplified
+* Cerebras model: gpt-oss-120b → llama-4-maverick-17b
 
-* **Memory System**: Advanced context management with size limits
-* **Error Handling**: Comprehensive error management and user feedback
-* **Security**: Built-in dangerous command detection
-* **Performance**: Optimized build configuration
+## [1.0.0] - 2025-01-XX
 
-#### Technical Improvements
-
-* Modern C++17 standards and practices
-* Namespace organization for better code structure
-* Comprehensive error handling and logging
-* Professional build and installation system
-
-### Breaking Changes
-
-* Complete API restructure (not backward compatible with v1.x)
-* New command syntax and structure
-* Updated configuration format
-
----
-
-## \[1.0.0] - 2025-01-XX
-
-### Initial Release
-
-* Basic chat functionality with Llama models
-* Online (Together API) and offline (Ollama) support
-* Simple web search integration
-* Basic memory system
-* Monolithic architecture
+**initial release:**
+* basic chat with Llama models
+* online (Together API) and offline (Ollama)
+* web search integration
+* memory system
+* monolithic architecture
