@@ -4,9 +4,14 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+#else
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#endif
 
 namespace Services {
     

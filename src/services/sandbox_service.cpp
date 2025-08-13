@@ -13,8 +13,12 @@
 #include <random>
 #include <regex>
 #include <algorithm>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 #include <nlohmann/json.hpp>
 
 namespace Services {

@@ -32,7 +32,7 @@ namespace Services {
             std::ostringstream buffer;
             buffer << file.rdbuf();
             return buffer.str();
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             return std::string("Error reading file: ") + e.what();
 
         }
@@ -68,7 +68,7 @@ namespace Services {
             }
 
             return result.str();
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             return std::string("Error reading file range: ") + e.what();
 
         }
@@ -95,7 +95,7 @@ namespace Services {
                 return "Error: Write operation failed";
             }
             return "File '" + filename + "' written successfully (" + std::to_string(content.length()) + " bytes)";
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             return std::string("Error writing file: ") + e.what();
 
         }
@@ -169,7 +169,7 @@ namespace Services {
             result.message = "Successfully replaced " + std::to_string(count) + " occurrence(s)";
             return result;
 
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             result.message = std::string("Error during text replacement: ") + e.what();
             return result;
         }
@@ -213,7 +213,7 @@ namespace Services {
                 line_number++;
             }
 
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             // Log error but return partial results
         }
 
@@ -263,7 +263,7 @@ namespace Services {
                 }
             }
 
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             // Log error but return partial results
         }
 
