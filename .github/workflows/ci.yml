@@ -98,7 +98,7 @@ jobs:
     
     - name: Build (Windows)
       if: matrix.os == 'windows-latest'
-      run: cmake --build build --config %matrix.build_type%
+      run: cmake --build build --config ${{ matrix.build_type }}
       shell: cmd
     
     - name: Run preflight checks (Linux/macOS)
@@ -109,7 +109,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         REM Run preflight checks using CMake
-        cmake --build build --target preflight --config %matrix.build_type%
+        cmake --build build --target preflight --config ${{ matrix.build_type }}
       shell: cmd
       continue-on-error: true
     
