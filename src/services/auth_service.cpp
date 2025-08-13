@@ -17,6 +17,7 @@
 #include <Lmcons.h> // for UNLEN and GetUserName
 #else
 #include <unistd.h> // for getlogin_r
+#include <pwd.h>
 #endif
 
 // Initialize static members
@@ -37,7 +38,7 @@ void Services::AuthService::ensure_auth_directory() {
 
 std::vector<unsigned char> Services::AuthService::generate_random_bytes(size_t length) {
         std::vector<unsigned char> buffer(length);
-        if (RAND_bytes(buffer.data(), length) != 1) {
+        if (RAND_bytes(buffer.data(), static_cast<int>(length)) != 1) {
             throw std::runtime_error("Failed to generate random bytes");
         }
         return buffer;
@@ -67,8 +68,8 @@ bool Services::AuthService::derive_key(const std::string& password,
                                std::vector<unsigned char>& key) {
         key.resize(KEY_SIZE);
         return PKCS5_PBKDF2_HMAC(
-            password.c_str(), password.length(),
-            salt.data(), salt.size(),
+            password.c_str(), static_cast<int>(password.length()),
+            salt.data(), static_cast<int>(salt.size()),
             ITERATIONS, EVP_sha256(),
             KEY_SIZE, key.data()) == 1;
     }
@@ -85,33 +86,23 @@ bool Services::AuthService::save_encryption_key() {
         std::vector<unsigned char> derived_key;
         char username[256] = {0};
         
-        // First try getlogin_r
+        // Get username in a cross-platform way
+#ifdef _WIN32
+        DWORD username_len = UNLEN + 1;
+        if (!GetUserNameA(username, &username_len)) {
+            throw std::runtime_error("Failed to get Windows username");
+        }
+#else
         if (getlogin_r(username, sizeof(username) - 1) != 0) {
-            username[0] = '\0'; // Ensure null termination on error
-        }
-        
-        // If getlogin_r failed or returned empty, try environment variable
-        if (username[0] == '\0') {
-            const char* env_user = getenv("USER");
-            if (env_user) {
-                strncpy(username, env_user, sizeof(username) - 1);
-                username[sizeof(username) - 1] = '\0';
+            // Try getpwuid if getlogin_r fails
+            struct passwd* pwd = getpwuid(geteuid());
+            if (!pwd || !pwd->pw_name) {
+                throw std::runtime_error("Failed to get system username");
             }
+            strncpy(username, pwd->pw_name, sizeof(username) - 1);
+            username[sizeof(username) - 1] = '\0';
         }
-        
-        // If we still don't have a username, try another environment variable (for Windows compatibility)
-        if (username[0] == '\0') {
-            const char* env_username = getenv("USERNAME");
-            if (env_username) {
-                strncpy(username, env_username, sizeof(username) - 1);
-                username[sizeof(username) - 1] = '\0';
-            }
-        }
-        
-        // If we still don't have a username, fail explicitly
-        if (username[0] == '\0') {
-            throw std::runtime_error("Cannot determine system username. Authentication requires a unique user identifier.");
-        }
+#endif
         
         if (!derive_key(username, salt, derived_key)) {
             throw std::runtime_error("Key derivation failed");
@@ -133,7 +124,7 @@ bool Services::AuthService::save_encryption_key() {
             return false;
         }
         
-        if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, encryption_key_.data(), encryption_key_.size()) != 1) {
+        if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, encryption_key_.data(), static_cast<int>(encryption_key_.size())) != 1) {
             EVP_CIPHER_CTX_free(ctx);
             return false;
         }
@@ -181,10 +172,23 @@ bool Services::AuthService::load_or_generate_key() {
             );
             
             // Derive key from username and salt
-            char username[256];
-            if (getlogin_r(username, sizeof(username)) != 0) {
+            char username[256] = {0};
+#ifdef _WIN32
+        DWORD username_len = UNLEN + 1;
+        if (!GetUserNameA(username, &username_len)) {
+            throw std::runtime_error("Failed to get Windows username");
+        }
+#else
+        if (getlogin_r(username, sizeof(username) - 1) != 0) {
+            // Try getpwuid if getlogin_r fails
+            struct passwd* pwd = getpwuid(geteuid());
+            if (!pwd || !pwd->pw_name) {
                 throw std::runtime_error("Failed to get system username");
             }
+            strncpy(username, pwd->pw_name, sizeof(username) - 1);
+            username[sizeof(username) - 1] = '\0';
+        }
+#endif
             
             std::vector<unsigned char> derived_key;
             if (!derive_key(username, salt, derived_key)) {
@@ -206,7 +210,7 @@ bool Services::AuthService::load_or_generate_key() {
             }
             
             if (EVP_DecryptUpdate(ctx, plaintext.data(), &len, 
-                                ciphertext.data(), ciphertext.size()) != 1) {
+                                ciphertext.data(), static_cast<int>(ciphertext.size())) != 1) {
                 EVP_CIPHER_CTX_free(ctx);
                 return false;
             }
@@ -274,7 +278,7 @@ std::string Services::AuthService::encrypt_credential(const std::string& credent
         // Encrypt the plaintext
         if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, 
                             reinterpret_cast<const unsigned char*>(credential.c_str()), 
-                            credential.length()) != 1) {
+                            static_cast<int>(credential.length())) != 1) {
             EVP_CIPHER_CTX_free(ctx);
             throw std::runtime_error("Encryption update failed");
         }
@@ -343,7 +347,7 @@ std::string Services::AuthService::decrypt_credential(const std::string& encrypt
         
         // Provide the message to be decrypted and obtain the plaintext output
         if (EVP_DecryptUpdate(ctx, plaintext.data(), &len, 
-                            ciphertext.data(), ciphertext.size()) != 1) {
+                            ciphertext.data(), static_cast<int>(ciphertext.size())) != 1) {
             EVP_CIPHER_CTX_free(ctx);
             throw std::runtime_error("Decryption update failed");
         }

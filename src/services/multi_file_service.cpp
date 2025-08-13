@@ -244,7 +244,7 @@ namespace Services {
     }
     
     std::string MultiFileService::get_file_type(const std::string& file_path) {
-        std::string ext = std::filesystem::path(file_path).extension();
+        std::string ext = std::filesystem::path(file_path).extension().string();
         std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
         
         if (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c" || 
@@ -455,7 +455,7 @@ namespace Services {
                 }
             }
             
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             // If git commands fail, return empty vector
         }
         
@@ -500,7 +500,7 @@ namespace Services {
             
             return true;
             
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             return false;
         }
     }

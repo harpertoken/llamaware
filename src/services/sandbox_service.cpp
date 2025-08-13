@@ -297,7 +297,7 @@ namespace Services {
         }
         
         // Determine execution command based on file extension
-        std::string extension = std::filesystem::path(file_path).extension();
+        std::string extension = std::filesystem::path(file_path).extension().string();
         std::string command;
         
         if (extension == ".py") {
@@ -326,7 +326,11 @@ namespace Services {
         while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
         
         int status = pclose(pipe);
+        #ifdef _WIN32
+        return status == 0;  // On Windows, pclose returns the exit status directly
+        #else
         return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        #endif
     }
     
     bool SandboxService::copy_file_from_sandbox(const std::string& container_path,
@@ -342,7 +346,11 @@ namespace Services {
         while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
         
         int status = pclose(pipe);
+        #ifdef _WIN32
+        return status == 0;  // On Windows, pclose returns the exit status directly
+        #else
         return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        #endif
     }
     
     std::vector<std::string> SandboxService::list_active_containers() {
@@ -374,7 +382,11 @@ namespace Services {
         while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
         
         int status = pclose(pipe);
+        #ifdef _WIN32
+        return status == 0;  // On Windows, pclose returns the exit status directly
+        #else
         return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        #endif
     }
     
     bool SandboxService::remove_container(const std::string& container_name) {
@@ -387,7 +399,11 @@ namespace Services {
         while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
         
         int status = pclose(pipe);
+        #ifdef _WIN32
+        return status == 0;  // On Windows, pclose returns the exit status directly
+        #else
         return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        #endif
     }
     
     void SandboxService::cleanup_old_containers() {
@@ -599,7 +615,11 @@ namespace Services {
         while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
         
         int status = pclose(pipe);
+        #ifdef _WIN32
+        return status == 0;  // On Windows, pclose returns the exit status directly
+        #else
         return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        #endif
     }
     
     std::vector<std::string> SandboxService::list_available_images() {
