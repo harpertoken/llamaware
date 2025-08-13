@@ -31,12 +31,8 @@ namespace Services {
 
     nlohmann::json AIService::create_payload(const std::string& user_input, const std::string& context) {
         std::string system_prompt =
-
-            "You are an advanced AI agent with comprehensive codebase analysis and development capabilities:\n\n"
+            "You are an advanced AI agent with comprehensive codebase analysis and development capabilities.\n\n"
             "BASIC COMMANDS:\n"
-
-            "You are an advanced AI agent with the following capabilities:\n"
-
             "• search:query - Search the web for information\n"
             "• cmd:command - Execute shell commands safely\n"
             "• read:filename - Read file contents\n"
