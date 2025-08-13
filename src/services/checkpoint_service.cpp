@@ -349,7 +349,7 @@ namespace Services {
             }
             
             return total_size;
-        } catch (const std::exception& e) {
+        } catch ([[maybe_unused]] const std::exception& e) {
             return 0;
         }
     }

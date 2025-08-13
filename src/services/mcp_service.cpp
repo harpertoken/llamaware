@@ -92,7 +92,11 @@ namespace Services {
             
             // For now, simulate server startup
             server.is_running = true;
-            server.process_id = getpid(); // Mock PID
+            #ifdef _WIN32
+            server.process_id = _getpid(); // Use _getpid() on Windows
+            #else
+            server.process_id = getpid(); // Use getpid() on Unix-like systems
+            #endif
             
             std::cout << "Started MCP server: " << server_name << std::endl;
             return true;

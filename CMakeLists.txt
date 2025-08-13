@@ -23,6 +23,48 @@ else()
 endif()
 
 # Find dependencies
+# Find zlib with platform-specific logic
+if(APPLE)
+    # On macOS, prefer pkg-config as it's more reliable with Homebrew
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
+    message(STATUS "Found zlib using pkg-config: ${ZLIB_LINK_LIBRARIES}")
+    set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
+    set(ZLIB_LIBRARIES PkgConfig::ZLIB)
+    set(ZLIB_TARGET PkgConfig::ZLIB)
+elseif(WIN32)
+    # On Windows, first try to find zlib via vcpkg
+    find_package(ZLIB REQUIRED)
+    
+    if(ZLIB_FOUND)
+        message(STATUS "Found zlib via vcpkg: ${ZLIB_LIBRARIES}")
+        # Create an imported target for zlib if it doesn't exist
+        if(NOT TARGET zlib_imported)
+            add_library(zlib_imported INTERFACE IMPORTED)
+            target_link_libraries(zlib_imported INTERFACE ${ZLIB_LIBRARIES})
+            target_include_directories(zlib_imported INTERFACE ${ZLIB_INCLUDE_DIRS})
+        endif()
+        set(ZLIB_TARGET zlib_imported)
+    else()
+        message(FATAL_ERROR "zlib not found. Please install it using vcpkg: vcpkg install zlib:x64-windows")
+    endif()
+else()
+    # Linux/other Unix-like systems
+    find_package(ZLIB REQUIRED)
+    if(ZLIB_FOUND)
+        set(ZLIB_TARGET ZLIB::ZLIB)
+    else()
+        find_package(PkgConfig)
+        if(PKG_CONFIG_FOUND)
+            pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
+            set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
+            set(ZLIB_TARGET PkgConfig::ZLIB)
+        else()
+            message(FATAL_ERROR "zlib not found and pkg-config not available")
+        endif()
+    endif()
+endif()
+
 # Find libcurl
 find_package(CURL REQUIRED)
 
@@ -78,6 +120,12 @@ else()
     if(NOT CURL_FOUND)
         find_package(CURL REQUIRED)
     endif()
+    
+    # On Windows, rely on vcpkg for zlib
+    if(WIN32)
+        find_package(ZLIB REQUIRED)
+        message(STATUS "Using zlib: ${ZLIB_LIBRARIES}")
+    endif()
 endif()
 
 # Make sure we have the curl include directory
@@ -126,7 +174,7 @@ FetchContent_MakeAvailable(cpr)
 target_link_libraries(cpr PRIVATE 
     OpenSSL::SSL 
     OpenSSL::Crypto
-    z
+    ${ZLIB_TARGET}  # Use the appropriate zlib target for this platform
 )
 
 # On macOS, add additional settings
@@ -224,6 +272,7 @@ set_target_properties(llamaware-agent PROPERTIES
 target_include_directories(llamaware-agent PRIVATE 
     ${CURL_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIRS}  # Add zlib include directories
 )
 
 # Common linking for all platforms
@@ -234,7 +283,7 @@ if(TARGET nlohmann_json::nlohmann_json)
         nlohmann_json::nlohmann_json
         OpenSSL::SSL
         OpenSSL::Crypto
-        z
+        ${ZLIB_TARGET}  # Use the platform-appropriate zlib target
         ${CMAKE_DL_LIBS}
     )
     
@@ -251,7 +300,7 @@ else()
     target_link_libraries(llamaware-agent PRIVATE 
         cpr::cpr 
         ${OPENSSL_LIBRARIES}
-        z
+        ZLIB::ZLIB
     )
     target_include_directories(llamaware-agent PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()

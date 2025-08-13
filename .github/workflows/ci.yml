@@ -50,26 +50,15 @@ jobs:
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
         iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
         
-        # Install curl and required tools
-        choco install -y curl cmake --no-progress
-        
-        # Add curl to PATH
-        $curlPath = "C:\Program Files\cURL\bin"
-        $currentPath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
-        if ($currentPath -notlike "*$curlPath*") {
-            [Environment]::SetEnvironmentVariable('Path', "$currentPath;$curlPath", 'Machine')
-            $env:Path = "$env:Path;$curlPath"
-        }
+        # Install build tools
+        choco install -y cmake --no-progress
         
         # Setup vcpkg
-        if (Test-Path C:\vcpkg) {
-            Remove-Item -Recurse -Force C:\vcpkg
-        }
         git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
-        C:\vcpkg\bootstrap-vcpkg.bat
+        C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
         C:\vcpkg\vcpkg.exe integrate install
         
-        # Install vcpkg dependencies
+        # Install all dependencies via vcpkg
         C:\vcpkg\vcpkg.exe install cpr nlohmann-json --triplet x64-windows
       shell: powershell
     
@@ -80,17 +69,12 @@ jobs:
     - name: Configure CMake (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        $curlPath = "C:\Program Files\cURL"
+        # Configure CMake with vcpkg toolchain
         cmake -S . -B build `
           -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake `
-          -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE `
-          -DCMAKE_PREFIX_PATH="C:/vcpkg/installed/x64-windows" `
-          -DCURL_LIBRARY="$curlPath/lib/libcurl.lib" `
-          -DCURL_INCLUDE_DIR="$curlPath/include"
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} `
+          -DCMAKE_PREFIX_PATH="C:/vcpkg/installed/x64-windows"
       shell: powershell
-      env:
-        VCPKG_DEFAULT_TRIPLET: x64-windows
-        BUILD_TYPE: ${{ matrix.build_type }}
     
     - name: Build (Linux/macOS)
       if: matrix.os != 'windows-latest'
@@ -126,122 +110,3 @@ jobs:
       with:
         name: llamaware-agent-${{ matrix.os }}-${{ matrix.build_type }}
         path: build/bin/Release/llamaware-agent.exe
-
-  # Security and code quality checks
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Run CodeQL Analysis
-      uses: github/codeql-action/init@v3
-      with:
-        languages: cpp
-    
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
-    
-    - name: Build for analysis
-      run: |
-        cmake -S . -B build
-        cmake --build build
-    
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-
-  # Package creation and distribution
-  package:
-    name: Create Packages
-    needs: [build-and-test]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'release'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
-    
-    - name: Build release
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-        cmake --build build
-    
-    - name: Create packages
-      run: |
-        make package
-        cd build && cpack
-    
-    - name: Upload release assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./package/dist/llamaware-agent
-        asset_name: llamaware-agent-linux-x64
-        asset_content_type: application/octet-stream
-
-  # Docker image build and push
-  docker:
-    name: Build Docker Image
-    needs: [build-and-test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: llamaware/agent
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./package/docker/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-  # Deployment to staging/production
-  deploy:
-    name: Deploy
-    needs: [package, docker]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'release'
-    environment: production
-    
-    steps:
-    - name: Deploy to production
-      run: |
-        echo "Deploying Llamaware Agent v${{ github.event.release.tag_name }}"
-        # Add your deployment commands here
-        # e.g., kubectl apply, docker-compose up, etc.

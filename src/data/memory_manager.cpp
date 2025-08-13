@@ -264,8 +264,8 @@ void MemoryManager::save_global_fact(const std::string& fact) {
                 file << content;
             }
 
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to save global fact: " + std::string(e.what()));
+        } catch (const std::exception&) {
+            throw std::runtime_error("Failed to save global fact");
         }
     }
 
@@ -302,7 +302,7 @@ std::string MemoryManager::get_global_context() const {
             std::string memories = content.substr(start_pos, end_pos - start_pos);
             return memories.empty() ? "" : "Global memories:\n" + memories;
 
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             return "";
         }
     }
@@ -312,8 +312,8 @@ void MemoryManager::clear_global_memory() {
             if (Services::FileService::file_exists(global_memory_file_)) {
                 std::filesystem::remove(global_memory_file_);
             }
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to clear global memory: " + std::string(e.what()));
+        } catch (const std::exception&) {
+            throw std::runtime_error("Failed to clear global memory");
         }
     }
 
@@ -377,7 +377,7 @@ void MemoryManager::export_memory(const std::string& filename) const {
             }
 
             return true;
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             return false;
         }
     }
@@ -392,8 +392,8 @@ void MemoryManager::export_memory(const std::string& filename) const {
             std::filesystem::path conv_file = conv_dir / (tag + ".txt");
             std::filesystem::copy_file(memory_file_, conv_file, std::filesystem::copy_options::overwrite_existing);
             
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to save conversation state: " + std::string(e.what()));
+        } catch (const std::exception&) {
+            throw std::runtime_error("Failed to save conversation state");
         }
     }
 
@@ -410,7 +410,7 @@ void MemoryManager::export_memory(const std::string& filename) const {
             std::filesystem::copy_file(conv_file, memory_file_, std::filesystem::copy_options::overwrite_existing);
             return true;
             
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             return false;
         }
     }
@@ -433,7 +433,7 @@ void MemoryManager::export_memory(const std::string& filename) const {
             
             std::sort(conversations.begin(), conversations.end());
             
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             // Return empty vector on error
         }
         
@@ -449,8 +449,8 @@ void MemoryManager::export_memory(const std::string& filename) const {
                 std::filesystem::remove(conv_file);
             }
             
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to delete conversation state: " + std::string(e.what()));
+        } catch (const std::exception&) {
+            throw std::runtime_error("Failed to delete conversation state");
         }
     }
 
@@ -508,8 +508,8 @@ void MemoryManager::export_memory(const std::string& filename) const {
             
             file.close();
             
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to compress memory: " + std::string(e.what()));
+        } catch (const std::exception&) {
+            throw std::runtime_error("Failed to compress memory");
         }
     }
 
