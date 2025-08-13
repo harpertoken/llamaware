@@ -42,17 +42,34 @@ jobs:
       run: |
         brew install cpr nlohmann-json cmake
     
-    - name: Install dependencies (Windows)
+    - name: Install Chocolatey and dependencies (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        REM Setup vcpkg
+        # Install Chocolatey
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+        
+        # Install curl and required tools
+        choco install -y curl cmake --no-progress
+        
+        # Add curl to PATH
+        $curlPath = "C:\Program Files\cURL\bin"
+        $currentPath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+        if ($currentPath -notlike "*$curlPath*") {
+            [Environment]::SetEnvironmentVariable('Path', "$currentPath;$curlPath", 'Machine')
+            $env:Path = "$env:Path;$curlPath"
+        }
+        
+        # Setup vcpkg
         IF EXIST C:\vcpkg RMDIR /S /Q C:\vcpkg
         git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
         C:\vcpkg\bootstrap-vcpkg.bat
         C:\vcpkg\vcpkg.exe integrate install
-        REM Install dependencies
-        C:\vcpkg\vcpkg.exe install cpr nlohmann-json curl --triplet x64-windows
-      shell: cmd
+        
+        # Install vcpkg dependencies
+        C:\vcpkg\vcpkg.exe install cpr nlohmann-json --triplet x64-windows
+      shell: powershell
     
     - name: Configure CMake (Linux/macOS)
       if: matrix.os != 'windows-latest'
@@ -61,13 +78,17 @@ jobs:
     - name: Configure CMake (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        cmake -S . -B build ^
-          -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake ^
-          -DCMAKE_BUILD_TYPE=%matrix.build_type% ^
-          -DCMAKE_PREFIX_PATH=C:/vcpkg/installed/x64-windows
-      shell: cmd
+        $curlPath = "C:\Program Files\cURL"
+        cmake -S . -B build `
+          -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake `
+          -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE `
+          -DCMAKE_PREFIX_PATH="C:/vcpkg/installed/x64-windows" `
+          -DCURL_LIBRARY="$curlPath/lib/libcurl.lib" `
+          -DCURL_INCLUDE_DIR="$curlPath/include"
+      shell: powershell
       env:
         VCPKG_DEFAULT_TRIPLET: x64-windows
+        BUILD_TYPE: ${{ matrix.build_type }}
     
     - name: Build (Linux/macOS)
       if: matrix.os != 'windows-latest'
