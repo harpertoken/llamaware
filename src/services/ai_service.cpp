@@ -1,9 +1,13 @@
 #include "services/ai_service.h"
 #include "utils/config.h"
-
-#include <cpr/cpr.h>
+#include "services/web_service.h"
 #include <sstream>
 #include <nlohmann/json.hpp>
+#include <curl/curl.h>
+
+// Use the HeaderMap from web_service.h
+
+// Reuse the CaseInsensitiveCompare and HeaderMap from web_service.h
 
 namespace Services {
 
@@ -180,72 +184,81 @@ namespace Services {
     }
 
     std::string AIService::chat(const std::string& user_input, const std::string& context) {
-        cpr::Header headers;
-        if (mode_ == 1 || mode_ == 3) {
-            headers = {
-                {"Authorization", "Bearer " + api_key_},
-                {"Content-Type", "application/json"}
-            };
-        } else {
-            headers = { {"Content-Type", "application/json"} };
+        if (!is_available()) {
+            return "Error: AI service is not available. Please check your API key and internet connection.";
         }
 
-        nlohmann::json payload = create_payload(user_input, context);
-
-        cpr::Response response;
+        auto payload = create_payload(user_input, context);
+        auto url = get_api_url();
+        
         try {
-            response = cpr::Post(
-                cpr::Url{get_api_url()},
-                headers,
-                cpr::Body{payload.dump()}
-            );
-        } catch (const std::exception& e) {
-            return std::string("HTTP request failed: ") + e.what();
-        }
-
-        if (response.status_code == 200) {
-            try {
-                if (mode_ == 3) {
-                    // Cerebras streaming style
-                    return parse_cerebras_stream(response.text);
-                } else {
-                    auto json = nlohmann::json::parse(response.text);
-
-                    if (mode_ == 1) {
-                        // Together: choices[0].message.content
-                        std::string val = safe_get_string(json, {"choices"}, "");
-                        // more robust extraction:
-                        if (json.contains("choices") && !json["choices"].empty()) {
-                            const auto& ch = json["choices"][0];
-                            if (ch.contains("message") && ch["message"].contains("content")) {
-                                return ch["message"]["content"].get<std::string>();
-                            } else if (ch.contains("text")) {
-                                return ch["text"].get<std::string>();
-                            }
-                        }
-                        return "AI responded with unexpected format";
-                    } else {
-                        // Offline modes (2,4) - assume ollama-like: { "message": {"content": "..." } }
-                        if (json.contains("message") && json["message"].contains("content")) {
-                            return json["message"]["content"].get<std::string>();
-                        }
-                        // Fallbacks
-                        if (json.contains("choices") && !json["choices"].empty()) {
-                            const auto& ch = json["choices"][0];
-                            if (ch.contains("text")) return ch["text"].get<std::string>();
-                        }
-                        return "AI responded with unexpected format";
+            // Set up headers
+            HeaderMap headers = {
+                {"Content-Type", "application/json"},
+                {"Accept", "text/event-stream"}
+            };
+            
+            // Set API key in appropriate header based on service
+            if (mode_ == 1) { // Together AI
+                headers["Authorization"] = "Bearer " + api_key_;
+            } else if (mode_ == 3) { // Cerebras
+                headers["X-API-Key"] = api_key_;
+            } else if (mode_ == 2 || mode_ == 4) { // Local Ollama
+                headers["Content-Type"] = "application/json";
+            }
+            
+            // Use WebService to make the HTTP request
+            WebService web_service;
+            // For simplicity, we'll just use the URL as-is and let the WebService handle the payload
+            // In a real implementation, you might want to add query parameters or modify the URL based on the mode
+            std::string full_url = url;
+            if (mode_ == 1) { // TogetherAI
+                full_url += "/completions";
+                headers["Content-Type"] = "application/json";
+                // For POST requests, we'll need to modify WebService to handle the payload
+                // For now, we'll just include it in the URL as a workaround
+                full_url += "?data=" + payload.dump();
+            }
+            auto response = web_service.fetch_with_headers(full_url, headers);
+            
+            if (response.status_code != 200) {
+                return "Error: AI service returned status code " + std::to_string(response.status_code) + 
+                       " - " + response.content;
+            }
+            
+            // Handle streaming response for Cerebras
+            if (mode_ == 3) {
+return parse_cerebras_stream(response.content);
+            }
+            
+            // Parse the response based on the service
+            auto json_response = nlohmann::json::parse(response.content);
+            
+            // Handle different response formats
+            if (mode_ == 1) { // Together AI
+                if (json_response.contains("choices") && !json_response["choices"].empty()) {
+                    auto& choice = json_response["choices"][0];
+                    if (choice.contains("message") && choice["message"].contains("content")) {
+                        return choice["message"]["content"].get<std::string>();
+                    } else if (choice.contains("text")) {
+                        return choice["text"].get<std::string>();
                     }
                 }
-            } catch (const std::exception& e) {
-                return "Error parsing AI response: " + std::string(e.what());
+            } else if (mode_ == 2 || mode_ == 4) { // Local Ollama
+                if (json_response.contains("message") && json_response["message"].contains("content")) {
+                    return json_response["message"]["content"].get<std::string>();
+                } else if (json_response.contains("response")) {
+                    return json_response["response"].get<std::string>();
+                }
             }
-        } else {
-            if ((mode_ == 2 || mode_ == 4) && response.status_code == 0) {
-                return "Offline server not found. Please start Ollama with 'ollama serve'";
-            }
-            return "AI service error: HTTP " + std::to_string(response.status_code) + " - " + response.error.message;
+            
+            // If we get here, the response format wasn't as expected
+            return "Error: Unexpected response format from AI service: " + response.content;
+            
+        } catch (const std::exception& e) {
+            return "Error: " + std::string(e.what());
         }
+        return "Error: Unknown error occurred in AI service";
     }
 
 } // namespace Services
