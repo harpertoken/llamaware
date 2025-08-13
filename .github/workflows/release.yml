@@ -68,11 +68,13 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         # Setup vcpkg
-        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
-        C:\vcpkg\bootstrap-vcpkg.bat
-        C:\vcpkg\vcpkg.exe integrate install
+        if not exist C:\vcpkg (
+          git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat
+          C:\vcpkg\vcpkg.exe integrate install
+        )
         # Install dependencies
-        C:\vcpkg\vcpkg.exe install cpr nlohmann-json --triplet x64-windows
+        C:\vcpkg\vcpkg.exe install cpr nlohmann-json zlib --triplet x64-windows
       shell: cmd
     
     - name: Build release (Linux/macOS)
