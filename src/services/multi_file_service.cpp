@@ -37,8 +37,8 @@ namespace Services {
                 } else if (std::filesystem::is_regular_file(path)) {
                     if (should_include_file(path, options)) {
                         FileMatch match;
-                        match.file_path = path;
-                        match.relative_path = std::filesystem::relative(path);
+                        match.file_path = std::filesystem::path(path).string();
+                        match.relative_path = std::filesystem::relative(path).string();
                         match.file_type = get_file_type(path);
                         
                         // Read file content
@@ -114,7 +114,7 @@ namespace Services {
                     // Create file match
                     FileMatch match;
                     match.file_path = file_path;
-                    match.relative_path = std::filesystem::relative(file_path, directory);
+                    match.relative_path = std::filesystem::relative(file_path, directory).string();
                     match.file_type = get_file_type(file_path);
                     match.size = entry.file_size();
                     
@@ -163,7 +163,7 @@ namespace Services {
                     // Create file match
                     FileMatch match;
                     match.file_path = file_path;
-                    match.relative_path = std::filesystem::relative(file_path, directory);
+                    match.relative_path = std::filesystem::relative(file_path, directory).string();
                     match.file_type = get_file_type(file_path);
                     match.size = entry.file_size();
                     

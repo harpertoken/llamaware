@@ -27,7 +27,7 @@ namespace Services {
         return false;
     }
 
-    std::string CommandService::execute_command(const std::string& command, FILE* pipe) {
+    std::string CommandService::execute_command([[maybe_unused]] const std::string& command, FILE* pipe) {
         if (!pipe) {
             throw std::runtime_error("Failed to execute command");
         }

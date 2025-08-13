@@ -238,8 +238,8 @@ namespace Services {
         return false;
     }
     
-    void ErrorService::register_recovery_handler(ErrorCategory category, 
-                                                std::function<bool(const ErrorInfo&)> handler) {
+    void ErrorService::register_recovery_handler([[maybe_unused]] ErrorCategory category, 
+                                                [[maybe_unused]] std::function<bool(const ErrorInfo&)> handler) {
         // Recovery handler registration - placeholder for future implementation
     }
     
@@ -380,11 +380,11 @@ namespace Services {
         return ErrorCategory::UNKNOWN;
     }
     
-    void ErrorService::set_max_log_entries(size_t max_entries) {
+    void ErrorService::set_max_log_entries([[maybe_unused]] size_t max_entries) {
         // Implementation for setting max log entries
     }
     
-    void ErrorService::set_log_level(ErrorLevel min_level) {
+    void ErrorService::set_log_level([[maybe_unused]] ErrorLevel min_level) {
         // Implementation for setting minimum log level
     }
     

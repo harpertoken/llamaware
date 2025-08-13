@@ -131,8 +131,6 @@ namespace Services {
                 if (entry.is_regular_file() && 
                     entry.path().filename() == "LLAMAWARE.md") {
                     
-                    // Skip if already loaded in project context
-                    bool already_loaded = false;
                     std::string entry_path = entry.path().string();
                     
                     // Simple check - if it's in a parent directory, skip

@@ -12,7 +12,12 @@
 #include <openssl/kdf.h>
 #include <openssl/err.h>
 #include <nlohmann/json.hpp>
+#ifdef _WIN32
+#include <windows.h>
+#include <Lmcons.h> // for UNLEN and GetUserName
+#else
 #include <unistd.h> // for getlogin_r
+#endif
 
 // Initialize static members
 namespace Services {

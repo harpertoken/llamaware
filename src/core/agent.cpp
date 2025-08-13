@@ -32,15 +32,7 @@
 #include <map>
 
 
-// Define simple integer mode constants so implementation is clear and independent of the header enum layout.
-// If you already have enum Mode in core/agent.h, ensure the values match these constants or remove these and use the enum.
-constexpr int MODE_UNSET      = 0;
-constexpr int MODE_TOGETHER   = 1;
-constexpr int MODE_LLAMA_3B   = 2;
-constexpr int MODE_CEREBRAS   = 3;
-constexpr int MODE_LLAMA_LATEST = 4;
-
-constexpr int MODE_LLAMA_31   = 5;
+// Using the Mode enum from agent.h instead of separate constants
 
 namespace Core {
     Agent::Agent() : mode_(MODE_UNSET), 
