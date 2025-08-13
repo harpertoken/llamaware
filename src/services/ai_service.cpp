@@ -110,9 +110,6 @@ namespace Services {
                 };
 
             case 4: // Llama latest (local)
-
-            default: // Llama latest (local)
-
                 return {
                     {"model", "llama3.2:latest"},
                     {"stream", false},
@@ -131,6 +128,7 @@ namespace Services {
                         {{"role", "user"}, {"content", user_input}}
                     }}
                 };
+
             default: // Fallback to Llama 3B
                 return {
                     {"model", "llama3.2:3b"},

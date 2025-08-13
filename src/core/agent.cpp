@@ -43,11 +43,12 @@ constexpr int MODE_LLAMA_LATEST = 4;
 constexpr int MODE_LLAMA_31   = 5;
 
 namespace Core {
-    Agent::Agent() : mode_(MODE_UNSET), memory_(std::make_unique<Data::MemoryManager>()), shell_mode_(false) {}
-
-
-namespace Core {
-    Agent::Agent() : mode_(MODE_UNSET), memory_(std::make_unique<Data::MemoryManager>()) {}
+    Agent::Agent() : mode_(MODE_UNSET), 
+                    api_key_(""), 
+                    shell_mode_(false),
+                    memory_(std::make_unique<Data::MemoryManager>()),
+                    ai_service_(nullptr) {}
+                    
     Agent::~Agent() = default;
 
     // Helper: trim whitespace
@@ -138,11 +139,6 @@ namespace Core {
                 mode_ = MODE_LLAMA_31;
                 Utils::UI::print_success("llama3.1:latest");
             }
-
-            int model = get_user_choice("Model [1=llama3.2:3b / 2=llama3.2:latest] (default 1): ", {1, 2}, 1);
-
-            mode_ = (model == 1) ? MODE_LLAMA_3B : MODE_LLAMA_LATEST;
-            Utils::UI::print_success((model == 1) ? "llama3.2:3b" : "llama3.2:latest");
         }
     }
 
@@ -196,9 +192,6 @@ namespace Core {
         // Check for direct commands (detect colon)
         if (trimmed_input.find(':') != std::string::npos) {
             handle_direct_command(trimmed_input);
-        // Check for direct commands (detect colon)
-        if (input.find(':') != std::string::npos) {
-            handle_direct_command(input);
         } else {
             handle_ai_chat(trimmed_input);
         }
@@ -237,6 +230,7 @@ namespace Core {
                     return;
                 }
             }
+            std::string query = input.substr(7); // Extract query after 'search:'
             result = Services::WebService::search(query);
             memory_->save_interaction("search:" + query, result);
         }
@@ -350,8 +344,6 @@ namespace Core {
                 for (const auto& match : search_results) {
                     result += match.file_path + ":" + std::to_string(match.line_number) + ": " + match.line_content + "\n";
                 }
-            } else {
-                result = "Usage: write:filename content";
             }
             memory_->save_interaction("grep:" + pattern, result);
         }
@@ -996,20 +988,22 @@ namespace Core {
             return;
         }
 
-        std::atomic<bool> done(false);
-        std::thread spin([&done]() { Utils::UI::spinner(done); });
+        // Process the fetched content with AI if needed
+        if (result.length() > 1000) {  // Only process large content with AI
+            std::atomic<bool> done(false);
+            std::thread spin([&done]() { Utils::UI::spinner(done); });
 
-        std::string context = memory_->get_context_string();
-        std::string response = ai_service_->chat(input, context);
+            std::string context = memory_->get_context_string();
+            std::string ai_prompt = "Summarize the following content:\n\n" + result;
+            std::string response = ai_service_->chat(ai_prompt, context);
 
-        done = true;
-        if (spin.joinable()) spin.join();
+            done = true;
+            if (spin.joinable()) spin.join();
 
-        if (!response.empty()) {
-            std::cout << response << std::endl;
-            memory_->save_interaction(input, response);
-        } else {
-            std::cout << "No response\n";
+            if (!response.empty()) {
+                std::cout << "\nAI Summary:\n" << response << std::endl;
+                memory_->save_interaction("web_fetch_summary", response);
+            }
         }
 
         std::cout << result << std::endl;

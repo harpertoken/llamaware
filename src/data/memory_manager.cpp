@@ -14,42 +14,33 @@
 
 namespace Data {
 
-    MemoryManager::MemoryManager(const std::string& filename) 
-        : memory_file_(filename) 
-    {
+MemoryManager::MemoryManager(const std::string& filename) 
+    : memory_file_(filename) 
+{
+    ensure_memory_directory();
+    global_memory_file_ = get_global_memory_path();
+}
 
-        ensure_memory_directory();
-        global_memory_file_ = get_global_memory_path();
-    }
-
-    void MemoryManager::ensure_memory_directory() const {
-        try {
-            // Ensure directory exists if a path is provided
-            std::filesystem::path file_path(memory_file_);
-            if (file_path.has_parent_path()) {
-                std::filesystem::create_directories(file_path.parent_path());
-            }
-            
-            // Ensure global memory directory exists
-            std::filesystem::path global_path(get_global_memory_path());
-            if (global_path.has_parent_path()) {
-                std::filesystem::create_directories(global_path.parent_path());
-            }
-
-        try {
-            // Ensure directory exists if a path is provided
-            std::filesystem::path file_path(filename);
-            if (file_path.has_parent_path()) {
-                std::filesystem::create_directories(file_path.parent_path());
-            }
-
-        } catch (const std::filesystem::filesystem_error& e) {
-            throw std::runtime_error("Failed to create memory directory: " + std::string(e.what()));
+void MemoryManager::ensure_memory_directory() const {
+    try {
+        // Ensure directory exists if a path is provided
+        std::filesystem::path file_path(memory_file_);
+        if (file_path.has_parent_path()) {
+            std::filesystem::create_directories(file_path.parent_path());
         }
+        
+        // Ensure global memory directory exists
+        std::filesystem::path global_path(get_global_memory_path());
+        if (global_path.has_parent_path()) {
+            std::filesystem::create_directories(global_path.parent_path());
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        throw std::runtime_error("Failed to create memory directory: " + std::string(e.what()));
     }
+}
 
 
-    std::string MemoryManager::get_timestamp() const {
+std::string MemoryManager::get_timestamp() const {
         auto now = std::chrono::system_clock::now();
         auto time_t = std::chrono::system_clock::to_time_t(now);
         std::stringstream ss;
@@ -57,7 +48,7 @@ namespace Data {
         return ss.str();
     }
 
-    std::string MemoryManager::get_global_memory_path() const {
+std::string MemoryManager::get_global_memory_path() const {
         // Get home directory
         const char* home = std::getenv("HOME");
         if (!home) {
@@ -203,7 +194,7 @@ namespace Data {
         return entries;
     }
 
-    std::string MemoryManager::get_facts_context() const {
+std::string MemoryManager::get_facts_context() const {
         std::vector<MemoryEntry> entries = load_structured_memory();
         std::string facts_context;
 
@@ -229,7 +220,7 @@ namespace Data {
         return prefs_context.empty() ? "" : "User preferences:\n" + prefs_context;
     }
 
-    void MemoryManager::save_global_fact(const std::string& fact) {
+void MemoryManager::save_global_fact(const std::string& fact) {
         try {
             std::string content;
             
@@ -278,7 +269,7 @@ namespace Data {
         }
     }
 
-    std::string MemoryManager::get_global_context() const {
+std::string MemoryManager::get_global_context() const {
         if (!Services::FileService::file_exists(global_memory_file_)) {
             return "";
         }
@@ -316,7 +307,7 @@ namespace Data {
         }
     }
 
-    void MemoryManager::clear_global_memory() {
+void MemoryManager::clear_global_memory() {
         try {
             if (Services::FileService::file_exists(global_memory_file_)) {
                 std::filesystem::remove(global_memory_file_);
@@ -326,7 +317,7 @@ namespace Data {
         }
     }
 
-    std::vector<MemoryEntry> MemoryManager::search_memory(const std::string& query) const {
+std::vector<MemoryEntry> MemoryManager::search_memory(const std::string& query) const {
         std::vector<MemoryEntry> results;
         std::vector<MemoryEntry> all_entries = load_structured_memory();
 
@@ -345,7 +336,7 @@ namespace Data {
         return results;
     }
 
-    void MemoryManager::export_memory(const std::string& filename) const {
+void MemoryManager::export_memory(const std::string& filename) const {
         std::vector<MemoryEntry> entries = load_structured_memory();
         
         std::ofstream file(filename);
@@ -522,5 +513,4 @@ namespace Data {
         }
     }
 
-
-}
+} // namespace Data

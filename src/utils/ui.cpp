@@ -166,39 +166,6 @@ namespace Utils {
     void UI::spinner(std::atomic<bool>& done) {
         const char frames[] = {'|', '/', '-', '\\'};
         int frame = 0;
-        
-
-        std::cout << Color::BOLD << "Available Commands:\n" << Color::RESET;
-        std::cout << Color::CYAN << "  search:<query>" << Color::RESET << "   - Search the web for a query\n";
-        std::cout << Color::CYAN << "  cmd:<command>" << Color::RESET << "   - Run a system command\n";
-        std::cout << Color::CYAN << "  read:<file>" << Color::RESET << "     - Read from a file\n";
-        std::cout << Color::CYAN << "  write:<file>" << Color::RESET << "    - Write to a file\n";
-        std::cout << Color::CYAN << "  clear" << Color::RESET << "           - Clear memory\n";
-        std::cout << Color::CYAN << "  exit" << Color::RESET << "            - Exit the program\n";
-        print_divider();
-    }
-
-    // ===== Spinner =====
-    void UI::spinner(const std::string& message, int duration_ms) {
-        const char* frames[] = {"/", "-", "\\", "|"};
-        const int num_frames = 4;
-        int frame = 0;
-        auto start = std::chrono::steady_clock::now();
-
-        std::cout << Color::CYAN << message << " " << Color::RESET;
-        while (std::chrono::steady_clock::now() - start < std::chrono::milliseconds(duration_ms)) {
-            std::cout << "\b" << frames[frame] << std::flush;
-            frame = (frame + 1) % num_frames;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-        std::cout << "\b" << " " << "\n";
-    }
-
-    // ===== Threaded Spinner =====
-    void UI::spinner(std::atomic<bool>& done) {
-        const char frames[] = {'|', '/', '-', '\\'};
-        int frame = 0;
-        
 
         while (!done) {
             std::cout << "\r" << frames[frame % 4] << std::flush;

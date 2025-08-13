@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 # Find dependencies
 find_package(nlohmann_json REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # Fetch CPR using FetchContent to avoid system installation conflicts
 include(FetchContent)
@@ -80,10 +81,16 @@ if(TARGET nlohmann_json::nlohmann_json)
     target_link_libraries(llamaware-agent PRIVATE 
         cpr::cpr 
         nlohmann_json::nlohmann_json
+        OpenSSL::SSL
+        OpenSSL::Crypto
     )
 else()
     target_include_directories(llamaware-agent PRIVATE ${nlohmann_json_INCLUDE_DIRS})
-    target_link_libraries(llamaware-agent PRIVATE cpr::cpr)
+    target_link_libraries(llamaware-agent PRIVATE 
+        cpr::cpr 
+        ${OPENSSL_LIBRARIES}
+    )
+    target_include_directories(llamaware-agent PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()
 
 # Installation
