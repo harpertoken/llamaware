@@ -78,18 +78,34 @@ bool Services::AuthService::save_encryption_key() {
         
         // Derive a key from the system's username and salt
         std::vector<unsigned char> derived_key;
-        char username[256];
-        if (getlogin_r(username, sizeof(username)) != 0 || username[0] == '\0') {
-            // Fallback to environment variable if getlogin_r fails
+        char username[256] = {0};
+        
+        // First try getlogin_r
+        if (getlogin_r(username, sizeof(username) - 1) != 0) {
+            username[0] = '\0'; // Ensure null termination on error
+        }
+        
+        // If getlogin_r failed or returned empty, try environment variable
+        if (username[0] == '\0') {
             const char* env_user = getenv("USER");
             if (env_user) {
                 strncpy(username, env_user, sizeof(username) - 1);
                 username[sizeof(username) - 1] = '\0';
-            } else {
-                strncpy(username, "unknown", sizeof(username) - 1);
+            }
+        }
+        
+        // If we still don't have a username, try another environment variable (for Windows compatibility)
+        if (username[0] == '\0') {
+            const char* env_username = getenv("USERNAME");
+            if (env_username) {
+                strncpy(username, env_username, sizeof(username) - 1);
                 username[sizeof(username) - 1] = '\0';
             }
-            throw std::runtime_error("Failed to get system username");
+        }
+        
+        // If we still don't have a username, fail explicitly
+        if (username[0] == '\0') {
+            throw std::runtime_error("Cannot determine system username. Authentication requires a unique user identifier.");
         }
         
         if (!derive_key(username, salt, derived_key)) {

@@ -239,11 +239,9 @@ namespace Utils {
 
     // ===== Prompted Input =====
     std::string UI::prompt_user(const std::string& prompt_text) {
-
-        std::cout << Color::BOLD << prompt_text << Color::RESET << " > ";
-
-        std::cout << Color::BOLD << "[You]" << Color::RESET << " " << prompt_text << " > ";
-
+        // Only print the prompt once with consistent formatting
+        std::cout << Color::BOLD << "[You] " << prompt_text << Color::RESET << " > ";
+        
         std::string input;
         std::getline(std::cin, input);
         return input;

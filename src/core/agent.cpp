@@ -227,15 +227,11 @@ namespace Core {
                 std::getline(std::cin, confirm);
                 if (confirm != "y" && confirm != "Y") {
                     result = "Command cancelled by user";
+                    memory_->save_interaction("cmd:" + command, result);
+                    std::cout << result << std::endl;
                     return;
                 }
             }
-            std::string query = input.substr(7); // Extract query after 'search:'
-            result = Services::WebService::search(query);
-            memory_->save_interaction("search:" + query, result);
-        }
-        else if (input.rfind("cmd:", 0) == 0) {
-            std::string command = trim_copy(input.substr(4));
             result = Services::CommandService::execute(command);
             memory_->save_interaction("cmd:" + command, result);
         }
@@ -273,20 +269,19 @@ namespace Core {
         }
         else if (input.rfind("write:", 0) == 0) {
             // Format: write:filename content...
-            size_t space_pos = input.find(' ', 6);
-            std::string filename = trim_copy(input.substr(5));
-            result = Services::FileService::read_file(filename);
-            memory_->save_interaction("read:" + filename, result);
-        }
-        else if (input.rfind("write:", 0) == 0) {
-            // Format: write:filename content...
-            // Find first space after the "write:" prefix
             size_t space_pos = input.find(' ', 6); // index 6 is safe for "write:"
             if (space_pos != std::string::npos) {
                 std::string filename = trim_copy(input.substr(6, space_pos - 6));
                 std::string content = input.substr(space_pos + 1);
-                result = Services::FileService::write_file(filename, content);
-                memory_->save_interaction("write:" + filename, result);
+                
+                // Validate the file is writable
+                auto validation = Utils::Validator::validate_file_writable(filename);
+                if (!validation.is_valid) {
+                    result = "Error: " + validation.error_message;
+                } else {
+                    result = Services::FileService::write_file(filename, content);
+                    memory_->save_interaction("write:" + filename, result);
+                }
             } else {
                 result = "Usage: write:filename content";
             }
