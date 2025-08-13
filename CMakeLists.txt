@@ -36,12 +36,23 @@ set(SERVICE_SOURCES
     src/services/file_service.cpp
     src/services/web_service.cpp
     src/services/ai_service.cpp
+    src/services/git_service.cpp
+    src/services/codebase_service.cpp
+    src/services/multi_file_service.cpp
+    src/services/context_service.cpp
+    src/services/checkpoint_service.cpp
+    src/services/mcp_service.cpp
+    src/services/theme_service.cpp
+    src/services/auth_service.cpp
+    src/services/error_service.cpp
+    src/services/sandbox_service.cpp
 )
 
 set(UTILS_SOURCES
     src/utils/ui.cpp
     src/utils/config.cpp
     src/utils/version.cpp
+    src/utils/validation.cpp
 )
 
 set(DATA_SOURCES

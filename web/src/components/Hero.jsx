@@ -98,38 +98,39 @@ const Hero = () => {
               <div className="tablet-screen">
                 <div className="screen-content">
                   <div className="terminal-header">
-                    <span className="terminal-title">Llamaware Terminal</span>
+                    <span className="terminal-title">llamaware enterprise agent</span>
                     <div className="mode-indicator">
-                      <span>Offline Mode</span>
+                      <span>cross-platform mode</span>
                     </div>
                   </div>
                   <div className="terminal-content">
                     <div className="command-line">
-                      <span className="prompt">Choose mode [1=Online / 2=Offline]:</span>
-                      <span className="input">2</span>
+                      <span className="prompt">llamaware v2.1.0 - enterprise platform ready</span>
                     </div>
                     <div className="status-line">
-                      <span className="status">Offline mode: llama3.2</span>
+                      <span className="status">16 enterprise features | linux | macos | windows</span>
                     </div>
                     <div className="command-line">
                       <span className="prompt">›</span>
-                      <span className="input">help</span>
+                      <span className="input">/features</span>
                     </div>
                     <div className="help-output">
-                      <div className="output-line">=== Available Commands ===</div>
-                      <div className="output-line">• search:query - Search the web</div>
-                      <div className="output-line">• cmd:command - Execute shell command</div>
-                      <div className="output-line">• read:filename - Read file contents</div>
-                      <div className="output-line">• write:file content - Write to file</div>
+                      <div className="output-line">=== enterprise features ===</div>
+                      <div className="output-line">• file injection (@file, @directory)</div>
+                      <div className="output-line">• session management (save/resume)</div>
+                      <div className="output-line">• mcp server support</div>
+                      <div className="output-line">• docker sandboxing</div>
+                      <div className="output-line">• theme system (/theme)</div>
+                      <div className="output-line">• checkpointing (/restore)</div>
                     </div>
                     <div className="command-line">
                       <span className="prompt">›</span>
-                      <span className="input">cmd:ls -la</span>
+                      <span className="input">/sandbox docker run python:3.11</span>
                     </div>
                     <div className="command-output">
-                      <div className="output-line">[Executing]: ls -la</div>
-                      <div className="output-line">total 48</div>
-                      <div className="output-line">drwxr-xr-x 12 user staff 384 Jan 28 10:30 .</div>
+                      <div className="output-line">[sandboxing]: creating secure container</div>
+                      <div className="output-line">container: llamaware_sandbox_001</div>
+                      <div className="output-line">status: ready for safe execution</div>
                     </div>
                   </div>
                 </div>

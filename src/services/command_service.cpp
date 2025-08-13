@@ -1,4 +1,5 @@
 #include "services/command_service.h"
+#include "utils/platform.h"
 #include <cstdio>
 #include <cstring>
 #include <array>
@@ -40,7 +41,7 @@ namespace Services {
 
         try {
             auto future = std::async(std::launch::async, [&]() -> std::string {
-                FILE* pipe = popen((command + " 2>&1").c_str(), "r"); // capture stderr too
+                FILE* pipe = Utils::Platform::open_process(command + Utils::Platform::get_shell_redirect_both(), "r");
                 if (!pipe) {
                     throw std::runtime_error("Failed to execute command");
                 }
@@ -59,7 +60,7 @@ namespace Services {
                     result += buffer;
                 }
 
-                int exit_code = pclose(pipe);
+                int exit_code = Utils::Platform::close_process(pipe);
                 if (exit_code != 0) {
                     result += "\nExit code: " + std::to_string(exit_code);
                 }

@@ -13,7 +13,8 @@ namespace Core {
             TOGETHER_AI = 1,
             LLAMA_3B = 2,
             CEREBRAS = 3,
-            LLAMA_LATEST = 4
+            LLAMA_LATEST = 4,
+            LLAMA_31 = 5
         };
         
         int mode_;
@@ -26,6 +27,37 @@ namespace Core {
         void process_user_input(const std::string& input);
         void handle_direct_command(const std::string& input);
         void handle_ai_chat(const std::string& input);
+        void handle_file_injection_command(const std::string& input);
+        void handle_shell_command(const std::string& input);
+        void handle_meta_command(const std::string& input);
+        
+        // File injection helpers
+        std::string process_file_injections(const std::string& input);
+        std::string read_file_or_directory(const std::string& path);
+        
+        // Shell mode management
+        bool shell_mode_;
+        void toggle_shell_mode();
+        
+        // Helper methods
+        bool should_skip_file(const std::string& file_path, const std::string& ext);
+        void show_meta_help();
+        void clear_screen();
+        void handle_chat_management(const std::string& command);
+        void show_available_tools();
+        void show_memory_context();
+        void add_to_memory(const std::string& text);
+        void compress_context();
+        void show_session_stats();
+        void handle_context_management(const std::string& command);
+        void handle_multi_file_command(const std::string& command);
+        void handle_web_fetch_command(const std::string& command);
+        void handle_checkpoint_command(const std::string& command);
+        void handle_mcp_command(const std::string& command);
+        void handle_theme_command(const std::string& command);
+        void handle_auth_command(const std::string& command);
+        void handle_sandbox_command(const std::string& command);
+        void handle_error_command(const std::string& command);
         
     public:
         Agent();

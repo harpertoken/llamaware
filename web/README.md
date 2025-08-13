@@ -1,51 +1,81 @@
-# Llamaware Agent - Web Showcase
+# llamaware web showcase
 
-A stunning React website showcasing all the features and capabilities of the Llamaware Agent.
+modern react website showcasing the complete llamaware agent enterprise platform with all 16 features across 4 phases.
 
-## Features
+## enterprise features showcased
 
-- **Hero Section**: Animated ASCII logo and key statistics
-- **Features Grid**: Comprehensive overview of all agent capabilities
-- **Architecture Diagram**: Visual representation of the modular design
-- **Terminal Showcase**: Interactive terminal demonstrations
-- **Installation Guide**: Multiple installation methods with copy-to-clipboard
-- **Professional Footer**: Links, stats, and project information
+### phase 1: core context & file management
+- file injection system (@file, @directory commands)
+- multi-file operations with advanced patterns
+- hierarchical context with LLAMAWARE.md files
+- enhanced shell integration with toggle mode
 
-## Technologies Used
+### phase 2: session & tool management
+- session management (save/resume conversations)
+- comprehensive tool registry and management
+- advanced layered configuration system
+- ai-powered context compression
 
-- React 18
-- Framer Motion (animations)
-- Lucide React (icons)
-- CSS-in-JS styling
-- Responsive design
+### phase 3: extensibility & safety
+- model context protocol (mcp) server support
+- checkpointing system with file backups
+- complete web fetch tool integration
+- git-aware advanced file filtering
 
-## Getting Started
+### phase 4: polish & security
+- multi-theme system with ansi color support
+- authentication management and credential storage
+- docker-based sandboxing for safe execution
+- enhanced error handling with validation
 
+## cross-platform compatibility
+- linux support (native)
+- macos support (native)
+- windows support (vcpkg integration)
+- automated ci/cd for all platforms
+
+## web features
+- hero section with animated ascii logo
+- comprehensive enterprise features grid
+- interactive terminal demonstrations
+- cross-platform installation guides
+- professional responsive design
+
+## technologies
+- react 18 with hooks
+- framer motion animations
+- lucide react icons
+- css-in-js styling
+- responsive mobile-first design
+
+## development
 ```bash
 cd web
 npm install
 npm start
 ```
 
-The website will be available at `http://localhost:3000`
-
-## Build for Production
-
+## build
 ```bash
 npm run build
 ```
 
-## Deployment
+## deployment platforms
+- vercel (recommended)
+- netlify
+- github pages
+- aws s3 + cloudfront
+- azure static web apps
 
-The built files can be deployed to any static hosting service like:
-- Netlify
-- Vercel
-- GitHub Pages
-- AWS S3 + CloudFront
+## customization
+- colors and themes: `src/App.css`
+- feature content: component files
+- enterprise features: update feature grid
+- platform support: installation guides
+- footer and branding: `Footer.js`
 
-## Customization
-
-- Update colors in `src/App.css`
-- Modify content in component files
-- Add new sections by creating components
-- Update project information in `Footer.js`
+## seo optimization
+- meta tags for all enterprise features
+- structured data for software application
+- open graph tags for social sharing
+- performance optimized assets

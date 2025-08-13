@@ -19,6 +19,7 @@ namespace Utils {
         // Core functions
         void print_logo();
         void print_help();
+        void print_enterprise_status();
         void spinner(const std::string& message, int duration_ms);
         void spinner(std::atomic<bool>& done);  // For threaded spinner
         
