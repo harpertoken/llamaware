@@ -46,11 +46,12 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         REM Setup vcpkg
+        IF EXIST C:\vcpkg RMDIR /S /Q C:\vcpkg
         git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
         C:\vcpkg\bootstrap-vcpkg.bat
         C:\vcpkg\vcpkg.exe integrate install
         REM Install dependencies
-        C:\vcpkg\vcpkg.exe install cpr nlohmann-json --triplet x64-windows
+        C:\vcpkg\vcpkg.exe install cpr nlohmann-json curl --triplet x64-windows
       shell: cmd
     
     - name: Configure CMake (Linux/macOS)
