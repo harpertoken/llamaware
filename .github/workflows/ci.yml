@@ -20,8 +20,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         build_type: [Release, Debug]
+        exclude:
+          # Skip Debug builds on Windows to reduce CI time
+          - os: windows-latest
+            build_type: Debug
     
     steps:
     - name: Checkout code
@@ -36,22 +40,60 @@ jobs:
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        brew install nlohmann-json cmake curl
+        brew install cpr nlohmann-json cmake
     
-    - name: Configure CMake
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        # Setup vcpkg
+        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
+        C:\vcpkg\bootstrap-vcpkg.bat
+        C:\vcpkg\vcpkg.exe integrate install
+        # Install dependencies
+        C:\vcpkg\vcpkg.exe install cpr nlohmann-json --triplet x64-windows
+      shell: cmd
+    
+    - name: Configure CMake (Linux/macOS)
+      if: matrix.os != 'windows-latest'
       run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
     
-    - name: Build
+    - name: Configure CMake (Windows)
+      if: matrix.os == 'windows-latest'
+      run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
+      shell: cmd
+    
+    - name: Build (Linux/macOS)
+      if: matrix.os != 'windows-latest'
       run: cmake --build build --config ${{ matrix.build_type }}
     
-    - name: Run preflight checks
-      run: CI=true ./package/scripts/preflight.sh
+    - name: Build (Windows)
+      if: matrix.os == 'windows-latest'
+      run: cmake --build build --config ${{ matrix.build_type }}
+      shell: cmd
     
-    - name: Upload build artifacts
+    - name: Run preflight checks (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: make preflight
+    
+    - name: Run preflight checks (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        echo "Skipping preflight on Windows - make not available"
+      shell: cmd
+    
+    - name: Upload build artifacts (Linux/macOS)
+      if: matrix.os != 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
         name: llamaware-agent-${{ matrix.os }}-${{ matrix.build_type }}
         path: build/bin/llamaware-agent*
+    
+    - name: Upload build artifacts (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: llamaware-agent-${{ matrix.os }}-${{ matrix.build_type }}
+        path: build/bin/Release/llamaware-agent.exe
 
   # Security and code quality checks
   security-scan:

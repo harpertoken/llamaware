@@ -1,278 +1,119 @@
-# Development Workflow Guide
+# Development Workflow
 
-## Commands to Run When Making Changes
-
-### Initial Setup (One Time)
-
+## Setup (One Time)
 ```bash
-# Setup development environment with Git hooks
-make setup
-
-# OR setup just the Git hooks
-make setup-hooks
+make setup          # Dev environment + Git hooks
+make setup-hooks    # Git hooks only
 ```
 
----
+## Daily Workflow
 
-## Daily Development Workflow
-
-### 1. While Coding (Frequent)
-
+### While Coding
 ```bash
-# Quick validation during development
-make preflight-quick
-
-# OR use smart detection (recommended)
-make preflight
+make preflight-quick    # Quick validation
+make preflight          # Smart detection (recommended)
 ```
 
-**When to use:** After making small changes, before taking a break
-
----
-
-### 2. Before Committing
-
+### Before Committing
 ```bash
-# Comprehensive check before commit
-make preflight
+make preflight          # Comprehensive check
+```
+Auto-runs via Git hook: `git commit` → pre-commit hook → quick checks
+
+### Before Pushing
+```bash
+make preflight          # Full validation
+```
+Auto-runs via Git hook: `git push` → pre-push hook → comprehensive checks
+
+### After Major Changes
+```bash
+make clean && make preflight
 ```
 
-**When to use:** Before `git commit` (also runs automatically via Git hook)
-
-**What happens automatically:**
-
+### Before PR
 ```bash
-git commit -m "Your changes"
-# → Triggers pre-commit hook
-# → Runs quick preflight checks
-# → Commits only if checks pass
-```
-
----
-
-### 3. Before Pushing
-
-```bash
-# Full validation before push
-make preflight
-```
-
-**When to use:** Before `git push` (also runs automatically via Git hook)
-
-**What happens automatically:**
-
-```bash
-git push origin feature-branch
-# → Triggers pre-push hook  
-# → Runs comprehensive preflight checks
-# → Pushes only if checks pass
-```
-
----
-
-### 4. After Major Changes
-
-```bash
-# Clean rebuild and full validation
-make clean
-make preflight
-```
-
-**When to use:** After refactoring, adding dependencies, or structural changes
-
----
-
-### 5. Before Creating PR
-
-```bash
-# Simulate CI environment
 CI=true make preflight
-
-# Create distribution package
 make package
-
-# Test Docker build (optional)
-make docker-build
+make docker-build       # Optional
 ```
 
-**When to use:** Before opening a pull request
+## Commands
 
----
+### Preflight
+| Command | Speed | Coverage | Use Case |
+|---------|-------|----------|----------|
+| `make preflight` | Smart | Auto-detects | Default |
+| `make preflight-quick` | Fast | Essential | Development |
+| `make preflight-full` | Slow | Complete | Releases |
+| `make preflight-ci` | Medium | CI-optimized | Local CI test |
 
-## Command Reference
+### Build
+| Command | Purpose |
+|---------|---------|
+| `make build` | Build project |
+| `make clean` | Clean artifacts |
+| `make test` | Basic tests |
+| `make package` | Distribution |
 
-### Preflight Commands
+### Development
+| Command | Purpose |
+|---------|---------|
+| `make setup` | Dev environment + hooks |
+| `make setup-hooks` | Git hooks only |
+| `make run` | Build and run |
 
-| Command                | Speed  | Coverage     | Use Case            |
-| ---------------------- | ------ | ------------ | ------------------- |
-| `make preflight`       | Smart  | Auto-detects | Recommended default |
-| `make preflight-quick` | Fast   | Essential    | During development  |
-| `make preflight-full`  | Slow   | Complete     | Before releases     |
-| `make preflight-ci`    | Medium | CI-optimized | Testing CI locally  |
+## Git Hooks
+- **Pre-commit**: `git commit` → quick checks
+- **Pre-push**: `git push` → comprehensive checks
 
-### Build Commands
-
-| Command        | Purpose               |
-| -------------- | --------------------- |
-| `make build`   | Build the project     |
-| `make clean`   | Clean build artifacts |
-| `make test`    | Run basic tests       |
-| `make package` | Create distribution   |
-
-### Development Commands
-
-| Command            | Purpose                           |
-| ------------------ | --------------------------------- |
-| `make setup`       | Setup dev environment + Git hooks |
-| `make setup-hooks` | Setup Git hooks only              |
-| `make run`         | Build and run the agent           |
-
----
-
-## Git Hooks (Automatic)
-
-### Pre-commit Hook
-
-* **Triggers:** `git commit`
-* **Runs:** Quick preflight checks
-* **Purpose:** Catch basic issues before commit
-
-### Pre-push Hook
-
-* **Triggers:** `git push`
-* **Runs:** Comprehensive preflight checks
-* **Purpose:** Ensure quality before sharing code
-
-### Bypass Hooks (Use Carefully)
-
+### Bypass (Use Carefully)
 ```bash
-# Skip pre-commit checks
 git commit --no-verify -m "Emergency fix"
-
-# Skip pre-push checks  
 git push --no-verify origin branch
 ```
 
----
-
-## Error Scenarios & Solutions
-
-### Build Fails
-
-```bash
-[FAIL] Build failed. Check build log:
-```
-
-**Solution:** Fix compilation errors, then run `make preflight`
-
-### Tests Fail
-
-```bash
-[FAIL] Basic startup test failed
-```
-
-**Solution:** Debug runtime issues, test manually with `make run`
-
-### Missing Files
-
-```bash
-[FAIL] Required file missing: README.md
-```
-
-**Solution:** Add missing files, then run `make preflight`
-
-### Warnings
-
-```bash
-[WARN] TODO/FIXME comments found
-```
-
-**Solution:** Address TODOs or ignore if acceptable
-
----
-
-## CI/CD Integration
-
-### GitHub Actions (Automatic)
-
-* PR Creation → Runs `CI=true make preflight`
-* Push to main → Full CI pipeline
-* Release tag → Build and publish
-
-### Local CI Testing
-
-```bash
-# Test what CI will run
-CI=true make preflight
-
-# Test quick PR checks
-CI=true QUICK=true make preflight
-```
-
----
-
-## Best Practices
-
-### Do This
-
-1. Run `make preflight` before every commit
-2. Use Git hooks for automatic validation
-3. Fix errors immediately, don't accumulate
-4. Test CI locally before pushing
-5. Keep commits small and focused
-
-### Avoid This
-
-1. Bypassing hooks without good reason
-2. Committing broken code
-3. Ignoring warnings long-term
-4. Making large changes without testing
-5. Skipping preflight checks
-
----
-
 ## Troubleshooting
 
+### Build Fails
+Fix compilation errors, run `make preflight`
+
+### Tests Fail
+Debug runtime issues, test with `make run`
+
+### Missing Files
+Add missing files, run `make preflight`
+
 ### Hooks Not Working
-
 ```bash
-# Reinstall hooks
 make setup-hooks
-
-# Check if hooks exist
 ls -la .git/hooks/
 ```
 
 ### Preflight Too Slow
-
 ```bash
-# Use quick mode during development
 make preflight-quick
-
-# Or set environment variable
 QUICK=true make preflight
 ```
 
-### CI Differences
+## CI Integration
+- PR Creation → `CI=true make preflight`
+- Push to main → Full CI pipeline
+- Release tag → Build and publish
 
+### Local CI Testing
 ```bash
-# Test exact CI command locally
-CI=true ./package/scripts/preflight.sh
+CI=true make preflight
+CI=true QUICK=true make preflight
 ```
 
----
+## Best Practices
+**Do:** Run `make preflight` before commits, use Git hooks, fix errors immediately, test CI locally, keep commits small
 
-## Summary: The ONE Command
+**Avoid:** Bypassing hooks, committing broken code, ignoring warnings, large untested changes
 
-For 99% of development work, just remember:
-
+## The ONE Command
 ```bash
 make preflight
 ```
-
-This smart command will:
-
-* Auto-detect your context (dev/CI/quick)
-* Run appropriate checks
-* Give clear feedback
-* Ensure code quality
+Auto-detects context, runs appropriate checks, ensures code quality
