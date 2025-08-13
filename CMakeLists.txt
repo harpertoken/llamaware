@@ -6,23 +6,163 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Build configuration
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
+if(MSVC)
+    add_compile_options(/W4 /WX /MP /EHsc)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+endif()
 
 # Find dependencies
-find_package(nlohmann_json REQUIRED)
-find_package(OpenSSL REQUIRED)
+# Find libcurl
+find_package(CURL REQUIRED)
 
-# Fetch CPR using FetchContent to avoid system installation conflicts
+# Use Homebrew's OpenSSL on macOS/arm64
+if(APPLE)
+    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for macOS" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
+    
+    # Use Homebrew's OpenSSL on macOS/arm64
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+        # Try to find Homebrew's OpenSSL
+        find_program(HOMEBREW NAMES brew)
+        if(HOMEBREW)
+            execute_process(
+                COMMAND ${HOMEBREW} --prefix openssl@3
+                OUTPUT_VARIABLE OPENSSL_ROOT_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            set(OPENSSL_ROOT_DIR ${OPENSSL_ROOT_DIR} CACHE PATH "OpenSSL root directory")
+            
+            # Also find Homebrew's curl if available
+            execute_process(
+                COMMAND ${HOMEBREW} --prefix curl
+                OUTPUT_VARIABLE CURL_ROOT_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            if(EXISTS ${CURL_ROOT_DIR})
+                set(CURL_INCLUDE_DIRS ${CURL_ROOT_DIR}/include)
+                set(CURL_LIBRARIES ${CURL_ROOT_DIR}/lib/libcurl.dylib)
+                message(STATUS "Using Homebrew's curl: ${CURL_ROOT_DIR}")
+            endif()
+        endif()
+    endif()
+    
+    # Find OpenSSL with the updated path
+    find_package(OpenSSL REQUIRED)
+    
+    message(STATUS "Using OpenSSL: ${OPENSSL_INCLUDE_DIR} : ${OPENSSL_LIBRARIES}")
+    
+    # Add compiler and linker flags
+    add_compile_options(-march=armv8.4-a+fp16+rcpc+dotprod+crypto)
+    add_link_options(-Wl,-no_weak_imports)
+    
+    # Set rpath for macOS
+    set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    set(CMAKE_MACOSX_RPATH TRUE)
+else()
+    # On other platforms, use system OpenSSL
+    find_package(OpenSSL REQUIRED)
+    
+    # Ensure we have libcurl
+    if(NOT CURL_FOUND)
+        find_package(CURL REQUIRED)
+    endif()
+endif()
+
+# Make sure we have the curl include directory
+if(NOT CURL_INCLUDE_DIRS)
+    set(CURL_INCLUDE_DIRS ${CURL_INCLUDE_DIR})
+endif()
+
+message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
+
+# Find nlohmann_json
+find_package(nlohmann_json 3.9.1 REQUIRED)
+
+# Fetch CPR with explicit configuration
 include(FetchContent)
-FetchContent_Declare(cpr
+
+# Clear any cached CPR variables
+unset(CPR_LIBRARIES CACHE)
+unset(CPR_INCLUDE_DIRS CACHE)
+
+# Configure CPR
+set(CPR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "" FORCE)
+set(CPR_ENABLE_SSL ON CACHE BOOL "" FORCE)
+set(CPR_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
+set(CPR_FORCE_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
+
+# Always use OpenSSL on all platforms
+set(CPR_USE_OPENSSL ON CACHE BOOL "" FORCE)
+set(CPR_USE_OPENSSL_DEFAULT_IMPLEMENTATION ON CACHE BOOL "" FORCE)
+set(CPR_USE_OPENSSL_AUTO_IMPLEMENTATION OFF CACHE BOOL "" FORCE)
+set(CPR_FORCE_OPENSSL_BACKEND ON CACHE BOOL "" FORCE)
+set(CPR_FORCE_DARWINSSL_BACKEND OFF CACHE BOOL "" FORCE)
+
+# Fetch and make available
+FetchContent_Declare(
+    cpr
     GIT_REPOSITORY https://github.com/libcpr/cpr.git
     GIT_TAG 1.10.5
     GIT_SHALLOW TRUE
 )
-set(CPR_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
-set(BUILD_CPR_TESTS OFF CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(cpr)
+
+# Ensure proper linking on all platforms
+target_link_libraries(cpr PRIVATE 
+    OpenSSL::SSL 
+    OpenSSL::Crypto
+    z
+)
+
+# On macOS, add additional settings
+if(APPLE)
+    # Set minimum deployment target
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
+    
+    # Set rpath
+    set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    set(CMAKE_MACOSX_RPATH TRUE)
+    
+    # Add compiler and linker flags
+    target_compile_options(cpr PRIVATE
+        -march=armv8.4-a+fp16+rcpc+dotprod+crypto
+        -Wno-deprecated-declarations
+    )
+    
+    target_link_options(cpr PRIVATE
+        -Wl,-no_weak_imports
+    )
+    
+    # Add these flags to the main target as well
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8.4-a+fp16+rcpc+dotprod+crypto -Wno-deprecated-declarations")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-no_weak_imports")
+    
+    # Add OpenSSL include directories
+    target_include_directories(cpr PRIVATE ${OPENSSL_INCLUDE_DIR})
+    
+    # Ensure we're using OpenSSL
+    target_compile_definitions(cpr PRIVATE
+        CURL_USE_OPENSSL=1
+        CURL_USE_DARWINSSL=0
+        CURL_USE_SECTRANSP=0
+    )
+endif()
 
 # Include directories
 include_directories(include)
@@ -74,21 +214,44 @@ add_executable(llamaware-agent src/main.cpp ${ALL_SOURCES})
 set_target_properties(llamaware-agent PROPERTIES
     OUTPUT_NAME "llamaware-agent"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    MACOSX_RPATH ON
+    INSTALL_RPATH "@executable_path/../lib"
+    BUILD_WITH_INSTALL_RPATH FALSE
+    SKIP_BUILD_RPATH FALSE
 )
 
-# Link libraries
+# Include directories
+target_include_directories(llamaware-agent PRIVATE 
+    ${CURL_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR}
+)
+
+# Common linking for all platforms
 if(TARGET nlohmann_json::nlohmann_json)
     target_link_libraries(llamaware-agent PRIVATE 
+        ${CURL_LIBRARIES}
         cpr::cpr 
         nlohmann_json::nlohmann_json
         OpenSSL::SSL
         OpenSSL::Crypto
+        z
+        ${CMAKE_DL_LIBS}
     )
+    
+    # On macOS, add additional settings
+    if(APPLE)
+        target_link_options(llamaware-agent PRIVATE
+            -Wl,-rpath,@loader_path/../lib
+            -Wl,-rpath,/usr/local/lib
+            -Wl,-rpath,/opt/homebrew/lib
+        )
+    endif()
 else()
     target_include_directories(llamaware-agent PRIVATE ${nlohmann_json_INCLUDE_DIRS})
     target_link_libraries(llamaware-agent PRIVATE 
         cpr::cpr 
         ${OPENSSL_LIBRARIES}
+        z
     )
     target_include_directories(llamaware-agent PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()
@@ -110,7 +273,7 @@ set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Professional AI Agent with Command Execution")
 set(CPACK_PACKAGE_DESCRIPTION "A powerful, modular AI agent built with modern C++ that provides seamless interaction with language models and comprehensive system operations.")
 set(CPACK_PACKAGE_VENDOR "bniladridas")
-set(CPACK_PACKAGE_CONTACT "your-email@example.com")
+set(CPACK_PACKAGE_CONTACT "bniladridas@gmail.com")
 
 # Platform-specific packaging
 if(APPLE)

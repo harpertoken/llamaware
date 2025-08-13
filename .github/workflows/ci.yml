@@ -45,11 +45,11 @@ jobs:
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        # Setup vcpkg
+        REM Setup vcpkg
         git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
         C:\vcpkg\bootstrap-vcpkg.bat
         C:\vcpkg\vcpkg.exe integrate install
-        # Install dependencies
+        REM Install dependencies
         C:\vcpkg\vcpkg.exe install cpr nlohmann-json --triplet x64-windows
       shell: cmd
     
@@ -59,8 +59,14 @@ jobs:
     
     - name: Configure CMake (Windows)
       if: matrix.os == 'windows-latest'
-      run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
+      run: |
+        cmake -S . -B build ^
+          -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+          -DCMAKE_BUILD_TYPE=%matrix.build_type% ^
+          -DCMAKE_PREFIX_PATH=C:/vcpkg/installed/x64-windows
       shell: cmd
+      env:
+        VCPKG_DEFAULT_TRIPLET: x64-windows
     
     - name: Build (Linux/macOS)
       if: matrix.os != 'windows-latest'
@@ -68,7 +74,7 @@ jobs:
     
     - name: Build (Windows)
       if: matrix.os == 'windows-latest'
-      run: cmake --build build --config ${{ matrix.build_type }}
+      run: cmake --build build --config %matrix.build_type%
       shell: cmd
     
     - name: Run preflight checks (Linux/macOS)
@@ -78,8 +84,10 @@ jobs:
     - name: Run preflight checks (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        echo "Skipping preflight on Windows - make not available"
+        REM Run preflight checks using CMake
+        cmake --build build --target preflight --config %matrix.build_type%
       shell: cmd
+      continue-on-error: true
     
     - name: Upload build artifacts (Linux/macOS)
       if: matrix.os != 'windows-latest'
