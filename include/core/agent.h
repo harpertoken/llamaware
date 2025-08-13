@@ -8,21 +8,20 @@ namespace Services { class AIService; }
 
 namespace Core {
     class Agent {
-    private:
+    public:
         enum Mode {
-            TOGETHER_AI = 1,
-            LLAMA_3B = 2,
-            CEREBRAS = 3,
-
-            LLAMA_LATEST = 4,
-            LLAMA_31 = 5
-
-            LLAMA_LATEST = 4
-
+            MODE_UNSET = 0,
+            MODE_TOGETHER = 1,
+            MODE_LLAMA_3B = 2,
+            MODE_CEREBRAS = 3,
+            MODE_LLAMA_LATEST = 4,
+            MODE_LLAMA_31 = 5
         };
         
-        int mode_;
+    private:
+        Mode mode_;
         std::string api_key_;
+        bool shell_mode_;
         std::unique_ptr<Data::MemoryManager> memory_;
         std::unique_ptr<Services::AIService> ai_service_;
         
@@ -40,7 +39,6 @@ namespace Core {
         std::string read_file_or_directory(const std::string& path);
         
         // Shell mode management
-        bool shell_mode_;
         void toggle_shell_mode();
         
         // Helper methods

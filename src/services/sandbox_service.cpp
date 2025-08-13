@@ -6,11 +6,15 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <cstring>
+#include <cstdio>
 #include <chrono>
 #include <ctime>
 #include <random>
 #include <regex>
 #include <algorithm>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <nlohmann/json.hpp>
 
 namespace Services {
@@ -87,8 +91,19 @@ namespace Services {
     }
     
     bool SandboxService::is_docker_available() {
-        int result = std::system(("docker --version" + Utils::Platform::get_shell_redirect_both()).c_str());
-        return result == 0;
+        FILE* pipe = popen("docker --version 2>&1", "r");
+        if (!pipe) return false;
+        
+        char buffer[128];
+        bool success = false;
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+            if (strstr(buffer, "Docker version") != nullptr) {
+                success = true;
+                break;
+            }
+        }
+        pclose(pipe);
+        return success;
     }
     
     std::string SandboxService::escape_shell_arg(const std::string& arg) {
@@ -299,7 +314,15 @@ namespace Services {
                                              const std::string& container_name) {
         std::string command = "docker cp " + escape_shell_arg(host_path) + 
                              " " + container_name + ":" + escape_shell_arg(container_path);
-        return std::system(command.c_str()) == 0;
+        FILE* pipe = popen(command.c_str(), "r");
+        if (!pipe) return false;
+        
+        // Read and discard output
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
+        
+        int status = pclose(pipe);
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;
     }
     
     bool SandboxService::copy_file_from_sandbox(const std::string& container_path,
@@ -307,7 +330,15 @@ namespace Services {
                                                const std::string& container_name) {
         std::string command = "docker cp " + container_name + ":" + 
                              escape_shell_arg(container_path) + " " + escape_shell_arg(host_path);
-        return std::system(command.c_str()) == 0;
+        FILE* pipe = popen(command.c_str(), "r");
+        if (!pipe) return false;
+        
+        // Read and discard output
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
+        
+        int status = pclose(pipe);
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;
     }
     
     std::vector<std::string> SandboxService::list_active_containers() {
@@ -331,17 +362,39 @@ namespace Services {
     
     bool SandboxService::stop_container(const std::string& container_name) {
         std::string command = "docker stop " + escape_shell_arg(container_name);
-        return std::system(command.c_str()) == 0;
+        FILE* pipe = popen(command.c_str(), "r");
+        if (!pipe) return false;
+        
+        // Read and discard output
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
+        
+        int status = pclose(pipe);
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;
     }
     
     bool SandboxService::remove_container(const std::string& container_name) {
         std::string command = "docker rm -f " + escape_shell_arg(container_name);
-        return std::system(command.c_str()) == 0;
+        FILE* pipe = popen(command.c_str(), "r");
+        if (!pipe) return false;
+        
+        // Read and discard output
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
+        
+        int status = pclose(pipe);
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;
     }
     
     void SandboxService::cleanup_old_containers() {
         std::string command = "docker container prune -f --filter label=llamaware_sandbox";
-        std::system(command.c_str());
+        FILE* pipe = popen(command.c_str(), "r");
+        if (pipe) {
+            // Read and discard output
+            char buffer[128];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
+            pclose(pipe);
+        }
     }
     
     bool SandboxService::is_command_safe(const std::string& command) {
@@ -534,7 +587,15 @@ namespace Services {
     
     bool SandboxService::pull_docker_image(const std::string& image) {
         std::string command = "docker pull " + escape_shell_arg(image);
-        return std::system(command.c_str()) == 0;
+        FILE* pipe = popen(command.c_str(), "r");
+        if (!pipe) return false;
+        
+        // Read and discard output
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {}
+        
+        int status = pclose(pipe);
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;
     }
     
     std::vector<std::string> SandboxService::list_available_images() {

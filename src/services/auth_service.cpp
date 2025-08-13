@@ -12,27 +12,25 @@
 #include <openssl/kdf.h>
 #include <openssl/err.h>
 #include <nlohmann/json.hpp>
+#include <unistd.h> // for getlogin_r
 
 // Initialize static members
-std::map<std::string, Services::AuthProvider> Services::AuthService::providers_;
-std::string Services::AuthService::active_provider_;
-std::vector<unsigned char> Services::AuthService::encryption_key_;
-std::string Services::AuthService::key_file_path_ = "data/encryption_key.bin";
-
 namespace Services {
-    
     std::map<std::string, AuthProvider> AuthService::providers_;
     std::string AuthService::active_provider_ = "together";
-    
-    std::string AuthService::get_auth_config_path() {
-        return "data/auth_config.json";
-    }
-    
-    void AuthService::ensure_auth_directory() {
-        std::filesystem::create_directories("data");
-    }
-    
-    std::vector<unsigned char> AuthService::generate_random_bytes(size_t length) {
+    std::vector<unsigned char> AuthService::encryption_key_;
+    std::string AuthService::key_file_path_ = "data/encryption_key.bin";
+}
+
+std::string Services::AuthService::get_auth_config_path() {
+    return "data/auth_config.json";
+}
+
+void Services::AuthService::ensure_auth_directory() {
+    std::filesystem::create_directories("data");
+}
+
+std::vector<unsigned char> Services::AuthService::generate_random_bytes(size_t length) {
         std::vector<unsigned char> buffer(length);
         if (RAND_bytes(buffer.data(), length) != 1) {
             throw std::runtime_error("Failed to generate random bytes");
@@ -40,7 +38,7 @@ namespace Services {
         return buffer;
     }
 
-    std::string AuthService::bytes_to_hex(const std::vector<unsigned char>& bytes) {
+std::string Services::AuthService::bytes_to_hex(const std::vector<unsigned char>& bytes) {
         std::ostringstream oss;
         oss << std::hex << std::setfill('0');
         for (unsigned char byte : bytes) {
@@ -49,7 +47,7 @@ namespace Services {
         return oss.str();
     }
 
-    std::vector<unsigned char> AuthService::hex_to_bytes(const std::string& hex) {
+std::vector<unsigned char> Services::AuthService::hex_to_bytes(const std::string& hex) {
         std::vector<unsigned char> bytes;
         for (size_t i = 0; i < hex.length(); i += 2) {
             std::string byteString = hex.substr(i, 2);
@@ -59,7 +57,7 @@ namespace Services {
         return bytes;
     }
 
-    bool AuthService::derive_key(const std::string& password, 
+bool Services::AuthService::derive_key(const std::string& password, 
                                const std::vector<unsigned char>& salt,
                                std::vector<unsigned char>& key) {
         key.resize(KEY_SIZE);
@@ -70,7 +68,7 @@ namespace Services {
             KEY_SIZE, key.data()) == 1;
     }
 
-    bool AuthService::save_encryption_key() {
+bool Services::AuthService::save_encryption_key() {
         ensure_auth_directory();
         std::ofstream key_file(key_file_path_, std::ios::binary);
         if (!key_file) return false;
@@ -81,7 +79,16 @@ namespace Services {
         // Derive a key from the system's username and salt
         std::vector<unsigned char> derived_key;
         char username[256];
-        if (getlogin_r(username, sizeof(username)) != 0) {
+        if (getlogin_r(username, sizeof(username)) != 0 || username[0] == '\0') {
+            // Fallback to environment variable if getlogin_r fails
+            const char* env_user = getenv("USER");
+            if (env_user) {
+                strncpy(username, env_user, sizeof(username) - 1);
+                username[sizeof(username) - 1] = '\0';
+            } else {
+                strncpy(username, "unknown", sizeof(username) - 1);
+                username[sizeof(username) - 1] = '\0';
+            }
             throw std::runtime_error("Failed to get system username");
         }
         
@@ -133,7 +140,7 @@ namespace Services {
         return true;
     }
     
-    bool AuthService::load_or_generate_key() {
+bool Services::AuthService::load_or_generate_key() {
         // Try to load existing key
         std::ifstream key_file(key_file_path_, std::ios::binary);
         if (key_file) {
@@ -210,7 +217,7 @@ namespace Services {
         return save_encryption_key();
     }
     
-    bool AuthService::initialize_encryption_key() {
+bool Services::AuthService::initialize_encryption_key() {
         try {
             return load_or_generate_key();
         } catch (const std::exception& e) {
@@ -219,7 +226,7 @@ namespace Services {
         }
     }
     
-    std::string AuthService::encrypt_credential(const std::string& credential) {
+std::string Services::AuthService::encrypt_credential(const std::string& credential) {
         if (encryption_key_.empty() && !initialize_encryption_key()) {
             throw std::runtime_error("Failed to initialize encryption key");
         }
@@ -280,7 +287,7 @@ namespace Services {
         return bytes_to_hex(combined);
     }
     
-    std::string AuthService::decrypt_credential(const std::string& encrypted_hex) {
+std::string Services::AuthService::decrypt_credential(const std::string& encrypted_hex) {
         if (encryption_key_.empty() && !initialize_encryption_key()) {
             throw std::runtime_error("Failed to initialize encryption key");
         }
@@ -342,7 +349,7 @@ namespace Services {
         return std::string(plaintext.begin(), plaintext.end());
     }
     
-    void AuthService::initialize_default_providers() {
+void Services::AuthService::initialize_default_providers() {
         // Together AI
         AuthProvider together;
         together.name = "together";
@@ -386,7 +393,7 @@ namespace Services {
         providers_["cerebras"] = cerebras;
     }
     
-    void AuthService::initialize() {
+void Services::AuthService::initialize() {
         // Initialize encryption first
         if (!initialize_encryption_key()) {
             throw std::runtime_error("Failed to initialize encryption");
@@ -416,12 +423,12 @@ namespace Services {
         }
     }
     
-    bool AuthService::add_provider(const AuthProvider& provider) {
+bool Services::AuthService::add_provider(const AuthProvider& provider) {
         providers_[provider.name] = provider;
         return save_auth_config();
     }
     
-    bool AuthService::remove_provider(const std::string& provider_name) {
+bool Services::AuthService::remove_provider(const std::string& provider_name) {
         auto it = providers_.find(provider_name);
         if (it == providers_.end()) {
             return false;
@@ -444,7 +451,7 @@ namespace Services {
         return save_auth_config();
     }
     
-    bool AuthService::set_active_provider(const std::string& provider_name) {
+bool Services::AuthService::set_active_provider(const std::string& provider_name) {
         auto it = providers_.find(provider_name);
         if (it == providers_.end()) {
             return false;
@@ -462,11 +469,11 @@ namespace Services {
         return save_auth_config();
     }
     
-    std::string AuthService::get_active_provider() {
+std::string Services::AuthService::get_active_provider() {
         return active_provider_;
     }
     
-    std::vector<std::string> AuthService::list_providers() {
+std::vector<std::string> Services::AuthService::list_providers() {
         std::vector<std::string> provider_names;
         for (const auto& [name, provider] : providers_) {
             provider_names.push_back(name);
@@ -474,7 +481,7 @@ namespace Services {
         return provider_names;
     }
     
-    AuthProvider AuthService::get_provider_info(const std::string& provider_name) {
+Services::AuthProvider Services::AuthService::get_provider_info(const std::string& provider_name) {
         auto it = providers_.find(provider_name);
         if (it != providers_.end()) {
             return it->second;
@@ -482,7 +489,7 @@ namespace Services {
         return AuthProvider{}; // Return empty provider if not found
     }
     
-    bool AuthService::set_api_key(const std::string& provider_name, const std::string& api_key) {
+bool Services::AuthService::set_api_key(const std::string& provider_name, const std::string& api_key) {
         auto it = providers_.find(provider_name);
         if (it == providers_.end()) {
             return false;
@@ -494,7 +501,7 @@ namespace Services {
         return save_auth_config();
     }
     
-    std::string AuthService::get_api_key(const std::string& provider_name) {
+std::string Services::AuthService::get_api_key(const std::string& provider_name) {
         std::string target_provider = provider_name.empty() ? active_provider_ : provider_name;
         
         auto it = providers_.find(target_provider);
@@ -504,7 +511,7 @@ namespace Services {
         return "";
     }
     
-    bool AuthService::validate_credentials(const std::string& provider_name) {
+bool Services::AuthService::validate_credentials(const std::string& provider_name) {
         auto it = providers_.find(provider_name);
         if (it == providers_.end()) {
             return false;
@@ -523,7 +530,7 @@ namespace Services {
         return is_valid;
     }
     
-    void AuthService::clear_credentials(const std::string& provider_name) {
+void Services::AuthService::clear_credentials(const std::string& provider_name) {
         auto it = providers_.find(provider_name);
         if (it != providers_.end()) {
             it->second.api_key.clear();
@@ -532,7 +539,7 @@ namespace Services {
         }
     }
     
-    bool AuthService::save_auth_config() {
+bool Services::AuthService::save_auth_config() {
         try {
             ensure_auth_directory();
             
@@ -572,7 +579,7 @@ namespace Services {
         }
     }
     
-    bool AuthService::load_auth_config() {
+bool Services::AuthService::load_auth_config() {
         try {
             std::string config_path = get_auth_config_path();
             if (!std::filesystem::exists(config_path)) {
@@ -633,7 +640,7 @@ namespace Services {
         }
     }
     
-    bool AuthService::update_provider_config(const std::string& provider_name, const std::map<std::string, std::string>& config) {
+bool Services::AuthService::update_provider_config(const std::string& provider_name, const std::map<std::string, std::string>& config) {
         auto it = providers_.find(provider_name);
         if (it == providers_.end()) {
             return false;
@@ -646,7 +653,7 @@ namespace Services {
         return save_auth_config();
     }
     
-    bool AuthService::test_provider_connection(const std::string& provider_name) {
+bool Services::AuthService::test_provider_connection(const std::string& provider_name) {
         auto it = providers_.find(provider_name);
         if (it == providers_.end()) {
             return false;
@@ -661,7 +668,7 @@ namespace Services {
         return !it->second.api_key.empty();
     }
     
-    std::string AuthService::get_provider_status(const std::string& provider_name) {
+std::string Services::AuthService::get_provider_status(const std::string& provider_name) {
         auto it = providers_.find(provider_name);
         if (it == providers_.end()) {
             return "Not Found";
@@ -678,24 +685,24 @@ namespace Services {
         return "Disconnected";
     }
     
-    void AuthService::refresh_all_provider_status() {
+void Services::AuthService::refresh_all_provider_status() {
         for (auto& [name, provider] : providers_) {
             provider.is_valid = validate_credentials(name);
         }
         save_auth_config();
     }
     
-    bool AuthService::is_credential_secure() {
+bool Services::AuthService::is_credential_secure() {
         // Check if we have proper encryption setup
         return true; // For now, assume secure
     }
     
-    void AuthService::generate_encryption_key() {
+void Services::AuthService::generate_encryption_key() {
         // In a real implementation, generate a proper encryption key
         // For now, this is a placeholder
     }
     
-    bool AuthService::backup_credentials(const std::string& backup_path) {
+bool Services::AuthService::backup_credentials(const std::string& backup_path) {
         try {
             std::filesystem::copy_file(get_auth_config_path(), backup_path);
             return true;
@@ -705,7 +712,7 @@ namespace Services {
         }
     }
     
-    bool AuthService::restore_credentials(const std::string& backup_path) {
+bool Services::AuthService::restore_credentials(const std::string& backup_path) {
         try {
             std::filesystem::copy_file(backup_path, get_auth_config_path());
             load_auth_config();
@@ -715,4 +722,3 @@ namespace Services {
             return false;
         }
     }
-}

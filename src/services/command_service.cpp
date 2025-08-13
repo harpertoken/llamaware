@@ -79,22 +79,3 @@ namespace Services {
         }
     }
 }
-                }
-
-                int exit_code = pclose(pipe);
-                if (exit_code != 0) {
-                    result += "\nExit code: " + std::to_string(exit_code);
-                }
-                return result.empty() ? "Command completed" : result;
-            });
-
-            // Timeout: 5 seconds
-            if (future.wait_for(std::chrono::seconds(5)) == std::future_status::timeout) {
-                return "Error: Command timed out";
-            }
-            return future.get();
-        } catch (const std::exception& e) {
-            return std::string("Error executing command: ") + e.what();
-        }
-    }
-}

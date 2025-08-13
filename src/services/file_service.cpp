@@ -268,9 +268,6 @@ namespace Services {
         }
 
         return all_results;
-
-        }
-
     }
 
     bool FileService::file_exists(const std::string& filename) {
