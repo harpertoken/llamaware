@@ -1,68 +1,92 @@
 
-# llamaware
+# Llamaware
 
-[![CI/CD Pipeline](https://github.com/bniladridas/Llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/bniladridas/Llamaware/actions/workflows/ci.yml)
+[![CI](https://github.com/bniladridas/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/bniladridas/llamaware/actions/workflows/ci.yml)
 
-```
-██      ██       █████  ███    ███  █████  ██     ██  █████  ██████  ███████ 
-██      ██      ██   ██ ████  ████ ██   ██ ██     ██ ██   ██ ██   ██ ██      
-██      ██      ███████ ██ ████ ██ ███████ ██  █  ██ ███████ ██████  █████   
-██      ██      ██   ██ ██  ██  ██ ██   ██ ██ ███ ██ ██   ██ ██   ██ ██      
-███████ ███████ ██   ██ ██      ██ ██   ██  ███ ███  ██   ██ ██   ██ ███████ 
-```
-
-AI agent with online/offline LLM support, shell commands, web search, memory.
-
-## install
-
-**macOS:** `brew install cpr nlohmann-json cmake`
-
-**ubuntu:** `sudo apt install nlohmann-json3-dev cmake build-essential git libcurl4-openssl-dev && git clone --depth=1 https://github.com/libcpr/cpr.git && cmake -S cpr -B cpr/build -DBUILD_CPR_TESTS=OFF && sudo cmake --build cpr/build --target install`
-
-**requires:** c++17, cmake ≥ 3.14, [ollama](https://ollama.com/download), API keys
-
-## run
+Llamaware is an AI agent that understands codebases and accelerates development through natural language interaction. It operates as an autonomous assistant, integrating with local and cloud AI models while maintaining security and efficiency.
 
 ```bash
-git clone https://github.com/bniladridas/llamaware.git && cd llamaware
-mkdir build && cd build && cmake .. && make
-cp .env.example .env && export $(cat .env | xargs) && ./build/bin/llamaware-agent
+# Clone and build
+$ git clone https://github.com/bniladridas/llamaware.git
+$ cd llamaware
+$ mkdir build && cd build
+$ cmake .. && make
+
+# Run with default settings
+$ ./bin/llamaware-agent
 ```
 
-## usage
+## Features
 
+- **Code Understanding**: Navigate and analyze complex codebases
+- **File Operations**: Read, write, and modify files with precision
+- **Context Management**: Maintains conversation history and project state
+- **Shell Integration**: Execute commands safely with confirmation
+- **Multi-Model Support**: Local (Ollama) and cloud AI providers
+- **Cross-Platform**: Fully functional on Windows, macOS, and Linux
+
+## Quick Start
+
+1. Install dependencies:
+   ```bash
+   # macOS
+   $ brew install cpr nlohmann-json cmake
+   
+   # Ubuntu/Debian
+   $ sudo apt install nlohmann-json3-dev cmake build-essential git libcurl4-openssl-dev
+   ```
+
+2. Set up local models (optional):
+   ```bash
+   $ curl -fssl https://ollama.com/install.sh | sh
+   $ ollama serve
+   $ ollama pull llama3.2:3b
+   ```
+
+3. Configure API keys in `.env`:
+   ```bash
+   TOGETHER_API_KEY="your-key"
+   CEREBRAS_API_KEY="your-key"
+   ```
+
+## Usage
+
+### Basic Commands
 ```
-Mode [1=Online / 2=Offline]: 2
-Model [1=llama3.2:3b / 2=llama3.2:latest]: 1
-System: Mode=Offline | Model=llama3.2:3b | Memory=Active | Commands=Available
-Ready - Type a command or chat naturally:
+> search:modern C++ patterns     # Web search
+> cmd:ls -la                    # Execute shell command
+> read:src/main.cpp             # View file
+> write:README.md New content   # Modify file
 ```
 
-**models:** online (Together AI, Cerebras), offline (llama3.2:3b, llama3.2:latest)
-**commands:** `search:query` `cmd:command` `read:file` `write:file text` `help` `version` `exit`
+### Advanced Features
+- `/checkpoint` - Save current state
+- `/restore [id]` - Load previous state
+- `/theme [name]` - Change UI theme
+- `/auth list` - View authentication status
 
-**example:**
-```
-> search:latest ai news
-[results]
+## Security
 
-> cmd:ls -la
-total 48
-drwxr-xr-x@ 19 user staff 608 Aug 6 23:04 .
+- Credentials are encrypted using AES-256-GCM
+- Commands are validated before execution
+- Sensitive operations require confirmation
+- Cross-platform secure storage
 
-> write:note.txt Hello from Llamaware!
-File 'note.txt' written successfully (22 bytes)
+## Troubleshooting
 
-> read:note.txt
-Hello from Llamaware!
-```
+### Common Issues
+- **Build failures**: Verify all dependencies are installed
+- **Authentication errors**: Check `.env` configuration
+- **Permission issues**: Run with appropriate user privileges
 
-## features
+## License
 
-enhanced interface • multiple AI providers • conversation memory • safe command execution • file operations • web search
+Llamaware is licensed under the [MIT License](LICENSE).
 
-## customize
+## Development
 
-**models:** `src/services/ai_service.cpp` **interface:** `src/utils/ui.cpp` **commands:** `src/core/agent.cpp` **safety:** `src/services/command_service.cpp`
-
-MIT license — (c) 2025 bniladridas
+Key components:
+- Models: `src/services/ai_service.cpp`
+- Interface: `src/utils/ui.cpp`
+- Commands: `src/core/agent.cpp`
+- Safety: `src/services/command_service.cpp`

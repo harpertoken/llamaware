@@ -1,82 +1,90 @@
-# Vercel Deployment Guide
+# llamaware web deployment
 
-## Quick Deploy to Vercel
+deployment guide for the llamaware enterprise platform showcase website featuring all 16 enterprise features and cross-platform compatibility.
 
-### Option 1: One-Click Deploy
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/bniladridas/Llamaware/tree/main/web)
+## vercel deployment (recommended)
 
-### Option 2: Manual Deploy
+### one-click deploy
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/bniladridas/Llamaware/tree/trunk/web)
 
-1. **Install Vercel CLI**
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Login to Vercel**
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy from web directory**
-   ```bash
-   cd web
-   vercel
-   ```
-
-4. **Follow the prompts:**
-   - Set up and deploy? `Y`
-   - Which scope? Choose your account
-   - Link to existing project? `N`
-   - Project name: `llamaware-agent`
-   - Directory: `./` (current directory)
-
-### Option 3: GitHub Integration
-
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Click "New Project"
-4. Import your GitHub repository
-5. Set root directory to `web`
-6. Deploy!
-
-## Environment Variables (Optional)
-
-If you want to add analytics or other features:
-
+### manual deploy
 ```bash
-# In Vercel dashboard, add these environment variables:
-REACT_APP_GOOGLE_ANALYTICS_ID=your_ga_id
-REACT_APP_MIXPANEL_TOKEN=your_mixpanel_token
+npm i -g vercel
+vercel login
+cd web
+vercel
 ```
 
-## Custom Domain (Optional)
+### github integration
+1. push to github (trunk branch)
+2. import at vercel.com
+3. set root directory to `web`
+4. configure build settings
+5. deploy
 
-1. Go to your project in Vercel dashboard
-2. Click "Settings" → "Domains"
-3. Add your custom domain
-4. Update DNS records as instructed
+## netlify deployment
 
-## Build Settings
+### drag and drop
+1. build locally: `cd web && npm run build`
+2. drag `build` folder to netlify.com
+3. configure custom domain
 
-Vercel will automatically detect:
-- **Framework**: Create React App
-- **Build Command**: `npm run build`
-- **Output Directory**: `build`
-- **Install Command**: `npm install`
+### git integration
+1. connect github repository
+2. set base directory: `web`
+3. build command: `npm run build`
+4. publish directory: `build`
 
-## Performance Optimizations
+## environment variables
+```bash
+REACT_APP_GOOGLE_ANALYTICS_ID=your_ga_id
+REACT_APP_MIXPANEL_TOKEN=your_mixpanel_token
+REACT_APP_GITHUB_REPO=bniladridas/Llamaware
+REACT_APP_VERSION=2.1.0
+```
 
-The site includes:
-- ✅ Static asset caching
-- ✅ Gzip compression
-- ✅ Image optimization
-- ✅ Code splitting
-- ✅ SEO meta tags
-- ✅ PWA manifest
+## build settings
 
-## Monitoring
+### vercel
+- framework: create react app
+- build command: `npm run build`
+- output directory: `build`
+- install command: `npm install`
+- node version: 18.x
 
-After deployment, you can:
-- View analytics in Vercel dashboard
-- Monitor performance with Vercel Speed Insights
-- Set up custom monitoring with your preferred service
+### netlify
+- base directory: `web`
+- build command: `npm run build`
+- publish directory: `web/build`
+- node version: 18
+
+## performance features
+- static asset caching with long-term headers
+- gzip and brotli compression
+- image optimization and lazy loading
+- code splitting for enterprise features
+- seo meta tags for all 16 features
+- pwa manifest for offline support
+- performance budgets and monitoring
+
+## seo optimization
+- structured data for software application
+- open graph tags for social sharing
+- twitter card meta tags
+- canonical urls and sitemap
+- performance score optimization
+- accessibility compliance (wcag 2.1)
+
+## cdn and global distribution
+- automatic edge caching
+- global cdn distribution
+- http/2 and http/3 support
+- ssl/tls encryption
+- ddos protection
+
+## monitoring and analytics
+- core web vitals tracking
+- user experience metrics
+- conversion funnel analysis
+- enterprise feature engagement
+- cross-platform usage statistics

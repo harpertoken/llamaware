@@ -7,107 +7,132 @@ const Terminal = () => {
 
   const terminalSessions = [
     {
-      title: "Basic Usage",
-      commands: [
-        {
-          input: "make preflight",
-          output: `Llamaware Agent Preflight Checks
-====================================
-Environment: Development
-Mode: Comprehensive
-Auto-detect: Enabled
-====================================
-[INFO] Validating build environment...
-[PASS] CMake version: 3.31.6
-[PASS] Make found
-[PASS] C++ compiler available
-[INFO] Checking dependencies...
-[PASS] libcpr found via Homebrew
-[PASS] nlohmann/json found via Homebrew
-[INFO] Performing clean build...
-[PASS] Build completed successfully
-[INFO] Validating binary...
-[PASS] Binary validation passed (size: 248224 bytes)
-====================================
-[PASS] ALL PREFLIGHT CHECKS PASSED!
-Errors: 0 | Warnings: 0
-====================================`
-        }
-      ]
-    },
-    {
-      title: "Agent Interaction",
+      title: "Agent Startup",
       commands: [
         {
           input: "./build/bin/llamaware-agent",
-          output: `╔══════════════════════════════════════════════════╗
-║                                                  ║
-║    ██╗███╗   ██╗ ██████╗ ███████╗███╗   ██╗     ║
-║    ██║████╗  ██║██╔════╝ ██╔════╝████╗  ██║     ║
-║    ██║██╔██╗ ██║██║  ███╗█████╗  ██╔██╗ ██║     ║
-║    ██║██║╚██╗██║██║   ██║██╔══╝  ██║╚██╗██║     ║
-║    ██║██║ ╚████║╚██████╔╝███████╗██║ ╚████║     ║
-║    ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝     ║
-║                                                  ║
-║        ⚡ Ingenuity x Llama Agent v3.0 ⚡        ║
-║              Professional Edition                 ║
-║                                                  ║
-╚══════════════════════════════════════════════════╝
+          output: `
+██      ██       █████  ███    ███  █████  ██     ██  █████  ██████  ███████ 
+██      ██      ██   ██ ████  ████ ██   ██ ██     ██ ██   ██ ██   ██ ██      
+██      ██      ███████ ██ ████ ██ ███████ ██  █  ██ ███████ ██████  █████   
+██      ██      ██   ██ ██  ██  ██ ██   ██ ██ ███ ██ ██   ██ ██   ██ ██      
+███████ ███████ ██   ██ ██      ██ ██   ██  ███ ███  ██   ██ ██   ██ ███████ 
+Llamaware
+----------------------------------------
 
-Choose mode [1=Online / 2=Offline]: 2
-✓ Offline mode: llama3.2 [22:24:41]
-ℹ Agent initialized. Type 'help' for commands or 'exit' to quit. [22:24:41]`
+Enterprise Platform Ready
+✓ 16 features loaded | linux | macos | windows
+✓ Docker sandboxing available
+✓ MCP server support enabled
+
+Type 'help' for commands or 'quit' to exit`
         },
         {
           input: "help",
-          output: `+======================+
-| Available Commands |
-+======================+
+          output: `Commands
+----------------------------------------
+Files
+  @file <path>             - Inject file
+  @directory <path>        - Inject directory
+  read:<file>              - Read file
+  read:<file>:<start>:<count> - Read range
+  write:<file> <content>   - Write file
+  replace:<file>:<old>:<new> - Replace text
+  grep:<pattern>[:dir[:filter]] - Search text
 
-Search & Discovery
-------------------
-  search:query             ─ Search the web with advanced filtering
-  find:pattern             ─ Find files/patterns in current directory
-  explore:path             ─ Explore directory structure
+Sessions
+  /save <name> [tags]       - Save session
+  /resume <name>           - Resume session
+  /sessions               - List sessions
+  /compress               - Compress context
+  remember:<fact>          - Remember fact
+  memory                  - Show memory
+  clear                   - Clear session
+  forget                  - Clear memory
 
-System Operations
------------------
-  cmd:command              ─ Execute shell command with output
-  sudo:command             ─ Execute privileged command
-  ps                       ─ Show running processes
-  env                      ─ Display environment variables
+Web
+  /fetch <url> [format]     - Fetch content
+  search:<query>            - Search web
+  /mcp servers             - List servers
+  /mcp resources <server>   - List resources
+  /mcp tools <server>       - List tools
 
-File Management
----------------
-  read:filename            ─ Read and display file contents
-  write:file content       ─ Write content to file
-  append:file content      ─ Append content to file
-  backup:filename          ─ Create backup of file
-  diff:file1 file2         ─ Compare two files
+Checkpoints
+  /checkpoint <name>        - Create checkpoint
+  /restore <name>          - Restore checkpoint
+  /checkpoints             - List checkpoints
 
-AI & Chat
----------
-  chat                     ─ Enter interactive chat mode
-  analyze:file             ─ AI analysis of file content
-  summarize:text           ─ Generate summary
-  translate:lang text      ─ Translate text
+Themes
+  /theme list              - List themes
+  /theme set <name>         - Set theme
+  /theme preview <name>     - Preview theme
 
-Utility Commands
-----------------
-  help                     ─ Show this comprehensive help
-  version                  ─ Display detailed version info
-  status                   ─ Show system status
-  config                   ─ View/edit configuration
-  history                  ─ Show command history
-  clear                    ─ Clear the screen
-  exit                     ─ Gracefully quit the agent
+Security
+  /auth providers           - List providers
+  /auth set <provider>      - Set provider
+  /auth key <provider> <key> - Set key
+  /sandbox run <command>    - Run sandboxed
+  /sandbox status           - Check status
 
- Tip: Just type naturally to chat with AI, or use 'cmd:' prefix for direct commands `
+Errors
+  /error report             - View errors
+  /error recent <count>     - Show recent
+  /error export <file>      - Export log
+
+System
+  cmd:<command>             - Run command
+  /tools                   - Show tools
+  !                        - Toggle shell
+  help                     - Show help
+  quit                     - Exit
+
+Notes
+Set theme with /theme set dark
+Configure auth with /auth key
+Create checkpoints before changes
+Use /sandbox for safe execution
+----------------------------------------`
         }
       ]
     },
     {
-      title: "Command Execution",
+      title: "Status & Features",
+      commands: [
+        {
+          input: "/status",
+          output: `Status
+----------------------------------------
+Files (4/4)
+   File injection
+   Multi-file operations
+   Context hierarchy
+   Shell integration
+
+Sessions (4/4)
+   Session management
+   Tool registry
+   Configuration
+   Context compression
+
+Extensions (4/4)
+   MCP servers
+   Checkpoints
+   Web fetch
+   File filtering
+
+Security (4/4)
+   Themes
+   Authentication
+   Sandboxing
+   Error handling
+
+16 features active
+----------------------------------------`
+        }
+      ]
+    },
+    {
+      title: "Example Usage",
       commands: [
         {
           input: "cmd:ls -la",
@@ -136,6 +161,16 @@ File 'test.txt' written successfully (27 bytes)`
           input: "read:test.txt",
           output: `[File Content]
 Hello from Llamaware Agent!`
+        },
+        {
+          input: "/theme set dark",
+          output: `Theme set to 'dark'`
+        },
+        {
+          input: "/mcp servers",
+          output: `[MCP] Available Servers:
+- local (http://localhost:8000)
+  Tools: web.fetch, files.list, sandbox.run`
         }
       ]
     }

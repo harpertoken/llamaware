@@ -32,6 +32,15 @@ llamaware-agent
 *.swo
 *~
 
+# Web related
+node_modules/
+web/node_modules/
+web/dist/
+web/.vite/
+web/package-lock.json
+web/*.log
+web/.DS_Store
+
 # OS files
 .DS_Store
 .AppleDouble

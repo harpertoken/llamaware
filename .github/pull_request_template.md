@@ -13,18 +13,18 @@ Brief description of what this PR does.
 - [ ] Test improvements
 
 ### Testing
-- [ ] I have run `make preflight` and all checks pass
-- [ ] I have tested the changes locally
-- [ ] I have added/updated tests as needed
-- [ ] All existing tests pass
+- I have run `make preflight` and all checks pass
+- I have tested the changes locally
+- I have added/updated tests as needed
+- All existing tests pass
 
 ### Checklist
-- [ ] My code follows the project's coding standards
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have checked my code compiles without errors
+- My code follows the project's coding standards
+- I have performed a self-review of my code
+- I have commented my code, particularly in hard-to-understand areas
+- I have made corresponding changes to the documentation
+- My changes generate no new warnings
+- I have checked my code compiles without errors
 
 ### Screenshots (if applicable)
 Add screenshots to help explain your changes.
