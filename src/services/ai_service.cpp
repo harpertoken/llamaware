@@ -31,8 +31,12 @@ namespace Services {
 
     nlohmann::json AIService::create_payload(const std::string& user_input, const std::string& context) {
         std::string system_prompt =
+
             "You are an advanced AI agent with comprehensive codebase analysis and development capabilities:\n\n"
             "BASIC COMMANDS:\n"
+
+            "You are an advanced AI agent with the following capabilities:\n"
+
             "• search:query - Search the web for information\n"
             "• cmd:command - Execute shell commands safely\n"
             "• read:filename - Read file contents\n"
@@ -104,7 +108,11 @@ namespace Services {
                         {{"role", "user"}, {"content", user_input}}
                     }}
                 };
+
             case 4: // Llama latest (local)
+
+            default: // Llama latest (local)
+
                 return {
                     {"model", "llama3.2:latest"},
                     {"stream", false},
@@ -113,6 +121,7 @@ namespace Services {
                         {{"role", "user"}, {"content", user_input}}
                     }}
                 };
+
             case 5: // Llama 3.1 (local)
                 return {
                     {"model", "llama3.1:latest"},

@@ -21,12 +21,16 @@ namespace Data {
     public:
         MemoryManager(const std::string& filename = "data/memory.txt");
         
+
         // Basic memory operations
+
+
         std::vector<std::string> load_memory() const;
         void save_interaction(const std::string& user_input, const std::string& response);
         void clear_memory();
         std::string get_context_string() const;
         size_t get_memory_size() const;
+
         
         // Enhanced memory operations
         void save_fact(const std::string& fact);
@@ -54,5 +58,6 @@ namespace Data {
         // Context compression
         void compress_memory(const std::string& compressed_summary);
         std::string get_compressible_context() const;
+
     };
 }

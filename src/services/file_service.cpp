@@ -3,9 +3,11 @@
 #include <sstream>
 #include <filesystem>
 #include <limits>
+
 #include <regex>
 #include <algorithm>
 #include <cctype>
+
 
 namespace Services {
     static const std::size_t MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
@@ -32,6 +34,7 @@ namespace Services {
             return buffer.str();
         } catch (const std::exception& e) {
             return std::string("Error reading file: ") + e.what();
+
         }
     }
 
@@ -67,6 +70,7 @@ namespace Services {
             return result.str();
         } catch (const std::exception& e) {
             return std::string("Error reading file range: ") + e.what();
+
         }
     }
 
@@ -93,6 +97,7 @@ namespace Services {
             return "File '" + filename + "' written successfully (" + std::to_string(content.length()) + " bytes)";
         } catch (const std::exception& e) {
             return std::string("Error writing file: ") + e.what();
+
         }
     }
 
@@ -263,6 +268,9 @@ namespace Services {
         }
 
         return all_results;
+
+        }
+
     }
 
     bool FileService::file_exists(const std::string& filename) {
@@ -277,6 +285,7 @@ namespace Services {
         std::filesystem::path file_path(filename);
         return file_path.extension().string();
     }
+
 
     bool FileService::is_text_file(const std::string& filename) {
         std::string ext = get_file_extension(filename);
@@ -332,4 +341,5 @@ namespace Services {
             return path;
         }
     }
+
 }

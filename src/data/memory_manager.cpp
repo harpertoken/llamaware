@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem>
 #include <stdexcept>
+
 #include <chrono>
 #include <iomanip>
 #include <sstream>
@@ -10,11 +11,13 @@
 #include <algorithm>
 #include <cstdlib>
 
+
 namespace Data {
 
     MemoryManager::MemoryManager(const std::string& filename) 
         : memory_file_(filename) 
     {
+
         ensure_memory_directory();
         global_memory_file_ = get_global_memory_path();
     }
@@ -32,10 +35,19 @@ namespace Data {
             if (global_path.has_parent_path()) {
                 std::filesystem::create_directories(global_path.parent_path());
             }
+
+        try {
+            // Ensure directory exists if a path is provided
+            std::filesystem::path file_path(filename);
+            if (file_path.has_parent_path()) {
+                std::filesystem::create_directories(file_path.parent_path());
+            }
+
         } catch (const std::filesystem::filesystem_error& e) {
             throw std::runtime_error("Failed to create memory directory: " + std::string(e.what()));
         }
     }
+
 
     std::string MemoryManager::get_timestamp() const {
         auto now = std::chrono::system_clock::now();
@@ -58,6 +70,7 @@ namespace Data {
         std::filesystem::path global_path = std::filesystem::path(home) / ".llamaware" / "LLAMAWARE.md";
         return global_path.string();
     }
+
 
     std::vector<std::string> MemoryManager::load_memory() const {
         std::vector<std::string> memory;
@@ -112,11 +125,14 @@ namespace Data {
             context += memory[i] + "\n";
         }
 
+
         // Add global context
         std::string global_context = get_global_context();
         if (!global_context.empty()) {
             context = global_context + "\n\nRecent interactions:\n" + context;
         }
+
+
 
         return context;
     }
@@ -124,6 +140,7 @@ namespace Data {
     size_t MemoryManager::get_memory_size() const {
         return load_memory().size();
     }
+
 
     void MemoryManager::save_fact(const std::string& fact) {
         std::ofstream file(memory_file_, std::ios::out | std::ios::app);
@@ -504,5 +521,6 @@ namespace Data {
             throw std::runtime_error("Failed to compress memory: " + std::string(e.what()));
         }
     }
+
 
 }
