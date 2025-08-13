@@ -13,8 +13,12 @@ namespace Core {
             TOGETHER_AI = 1,
             LLAMA_3B = 2,
             CEREBRAS = 3,
+
             LLAMA_LATEST = 4,
             LLAMA_31 = 5
+
+            LLAMA_LATEST = 4
+
         };
         
         int mode_;

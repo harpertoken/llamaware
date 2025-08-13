@@ -1,5 +1,7 @@
 #include "services/command_service.h"
+
 #include "utils/platform.h"
+
 #include <cstdio>
 #include <cstring>
 #include <array>
@@ -12,6 +14,7 @@ namespace Services {
     const std::array<std::string, 9> CommandService::dangerous_commands_ = {
         "rm", "sudo rm", "format", "del /", "shutdown", "reboot",
         "mkfs", "fdisk", "dd"
+
     const std::array<std::string, 9> CommandService::dangerous_commands_ = {
         "rm", "sudo rm", "format", "del /", "shutdown", "reboot",
         "mkfs", "fdisk", "dd"
@@ -26,6 +29,15 @@ namespace Services {
             if (std::regex_search(command, pattern)) {
             std::regex pattern("\\b" + std::regex_replace(danger, std::regex(" "), "\\s+") + "\\b");
             if (std::regex_search(command, pattern)) {
+
+    };
+
+    bool CommandService::is_dangerous_command(const std::string& command) {
+        // Token-based matching to avoid substring false positives
+        for (const auto& danger : dangerous_commands_) {
+            std::regex pattern("\\b" + std::regex_replace(danger, std::regex(" "), "\\s+") + "\\b");
+            if (std::regex_search(command, pattern)) {
+
                 return true;
             }
         }
@@ -33,14 +45,21 @@ namespace Services {
     }
 
 
+
     std::string CommandService::execute(const std::string& command) {
         if (is_dangerous_command(command)) {
             return "Error: Dangerous command blocked";
             return "Error: Dangerous command blocked";
+
+    std::string CommandService::execute(const std::string& command) {
+        if (is_dangerous_command(command)) {
+            return "Error: Dangerous command blocked";
+
         }
 
         try {
             auto future = std::async(std::launch::async, [&]() -> std::string {
+
                 FILE* pipe = Utils::Platform::open_process(command + Utils::Platform::get_shell_redirect_both(), "r");
                 if (!pipe) {
                     throw std::runtime_error("Failed to execute command");
@@ -81,6 +100,7 @@ namespace Services {
 
         try {
             auto future = std::async(std::launch::async, [&]() -> std::string {
+
                 FILE* pipe = popen((command + " 2>&1").c_str(), "r"); // capture stderr too
                 if (!pipe) {
                     throw std::runtime_error("Failed to execute command");
