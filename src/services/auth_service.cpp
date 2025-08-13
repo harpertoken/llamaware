@@ -4,7 +4,20 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <random>
+#include <iomanip>
+#include <sstream>
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#include <openssl/kdf.h>
+#include <openssl/err.h>
 #include <nlohmann/json.hpp>
+
+// Initialize static members
+std::map<std::string, Services::AuthProvider> Services::AuthService::providers_;
+std::string Services::AuthService::active_provider_;
+std::vector<unsigned char> Services::AuthService::encryption_key_;
+std::string Services::AuthService::key_file_path_ = "data/encryption_key.bin";
 
 namespace Services {
     
@@ -19,22 +32,314 @@ namespace Services {
         std::filesystem::create_directories("data");
     }
     
-    std::string AuthService::encrypt_credential(const std::string& credential) {
-        // Simple XOR encryption for demonstration
-        // In production, use proper encryption like AES
-        std::string encrypted = credential;
-        const char key = 0x5A; // Simple key
+    std::vector<unsigned char> AuthService::generate_random_bytes(size_t length) {
+        std::vector<unsigned char> buffer(length);
+        if (RAND_bytes(buffer.data(), length) != 1) {
+            throw std::runtime_error("Failed to generate random bytes");
+        }
+        return buffer;
+    }
+
+    std::string AuthService::bytes_to_hex(const std::vector<unsigned char>& bytes) {
+        std::ostringstream oss;
+        oss << std::hex << std::setfill('0');
+        for (unsigned char byte : bytes) {
+            oss << std::setw(2) << static_cast<int>(byte);
+        }
+        return oss.str();
+    }
+
+    std::vector<unsigned char> AuthService::hex_to_bytes(const std::string& hex) {
+        std::vector<unsigned char> bytes;
+        for (size_t i = 0; i < hex.length(); i += 2) {
+            std::string byteString = hex.substr(i, 2);
+            unsigned char byte = (unsigned char) strtol(byteString.c_str(), nullptr, 16);
+            bytes.push_back(byte);
+        }
+        return bytes;
+    }
+
+    bool AuthService::derive_key(const std::string& password, 
+                               const std::vector<unsigned char>& salt,
+                               std::vector<unsigned char>& key) {
+        key.resize(KEY_SIZE);
+        return PKCS5_PBKDF2_HMAC(
+            password.c_str(), password.length(),
+            salt.data(), salt.size(),
+            ITERATIONS, EVP_sha256(),
+            KEY_SIZE, key.data()) == 1;
+    }
+
+    bool AuthService::save_encryption_key() {
+        ensure_auth_directory();
+        std::ofstream key_file(key_file_path_, std::ios::binary);
+        if (!key_file) return false;
         
-        for (char& c : encrypted) {
-            c ^= key;
+        // Generate a random salt
+        auto salt = generate_random_bytes(SALT_SIZE);
+        
+        // Derive a key from the system's username and salt
+        std::vector<unsigned char> derived_key;
+        char username[256];
+        if (getlogin_r(username, sizeof(username)) != 0) {
+            throw std::runtime_error("Failed to get system username");
         }
         
-        return encrypted;
+        if (!derive_key(username, salt, derived_key)) {
+            throw std::runtime_error("Key derivation failed");
+        }
+        
+        // Encrypt the master key with the derived key
+        std::vector<unsigned char> iv = generate_random_bytes(IV_SIZE);
+        std::vector<unsigned char> tag(TAG_SIZE);
+        std::vector<unsigned char> ciphertext(encryption_key_.size() + EVP_MAX_BLOCK_LENGTH);
+        
+        int len;
+        int ciphertext_len;
+        
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx) return false;
+        
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, derived_key.data(), iv.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            return false;
+        }
+        
+        if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, encryption_key_.data(), encryption_key_.size()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            return false;
+        }
+        ciphertext_len = len;
+        
+        if (EVP_EncryptFinal_ex(ctx, ciphertext.data() + len, &len) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            return false;
+        }
+        ciphertext_len += len;
+        
+        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            return false;
+        }
+        
+        EVP_CIPHER_CTX_free(ctx);
+        
+        // Write salt, IV, tag, and ciphertext to file
+        key_file.write(reinterpret_cast<const char*>(salt.data()), salt.size());
+        key_file.write(reinterpret_cast<const char*>(iv.data()), iv.size());
+        key_file.write(reinterpret_cast<const char*>(tag.data()), tag.size());
+        key_file.write(reinterpret_cast<const char*>(ciphertext.data()), ciphertext_len);
+        
+        return true;
     }
     
-    std::string AuthService::decrypt_credential(const std::string& encrypted_credential) {
-        // Simple XOR decryption (XOR is its own inverse)
-        return encrypt_credential(encrypted_credential);
+    bool AuthService::load_or_generate_key() {
+        // Try to load existing key
+        std::ifstream key_file(key_file_path_, std::ios::binary);
+        if (key_file) {
+            // Read salt, IV, tag, and ciphertext
+            std::vector<unsigned char> salt(SALT_SIZE);
+            std::vector<unsigned char> iv(IV_SIZE);
+            std::vector<unsigned char> tag(TAG_SIZE);
+            
+            key_file.read(reinterpret_cast<char*>(salt.data()), SALT_SIZE);
+            key_file.read(reinterpret_cast<char*>(iv.data()), IV_SIZE);
+            key_file.read(reinterpret_cast<char*>(tag.data()), TAG_SIZE);
+            
+            // Read the rest as ciphertext
+            std::vector<unsigned char> ciphertext(
+                (std::istreambuf_iterator<char>(key_file)),
+                std::istreambuf_iterator<char>()
+            );
+            
+            // Derive key from username and salt
+            char username[256];
+            if (getlogin_r(username, sizeof(username)) != 0) {
+                throw std::runtime_error("Failed to get system username");
+            }
+            
+            std::vector<unsigned char> derived_key;
+            if (!derive_key(username, salt, derived_key)) {
+                throw std::runtime_error("Key derivation failed");
+            }
+            
+            // Decrypt the master key
+            std::vector<unsigned char> plaintext(ciphertext.size());
+            int len;
+            int plaintext_len;
+            
+            EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+            if (!ctx) return false;
+            
+            if (EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, 
+                                 derived_key.data(), iv.data()) != 1) {
+                EVP_CIPHER_CTX_free(ctx);
+                return false;
+            }
+            
+            if (EVP_DecryptUpdate(ctx, plaintext.data(), &len, 
+                                ciphertext.data(), ciphertext.size()) != 1) {
+                EVP_CIPHER_CTX_free(ctx);
+                return false;
+            }
+            plaintext_len = len;
+            
+            // Set expected tag value
+            if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, tag.data()) != 1) {
+                EVP_CIPHER_CTX_free(ctx);
+                return false;
+            }
+            
+            // Finalize decryption and check authentication tag
+            int ret = EVP_DecryptFinal_ex(ctx, plaintext.data() + len, &len);
+            EVP_CIPHER_CTX_free(ctx);
+            
+            if (ret <= 0) {
+                // Authentication failed
+                return false;
+            }
+            
+            plaintext_len += len;
+            plaintext.resize(plaintext_len);
+            encryption_key_ = plaintext;
+            return true;
+        }
+        
+        // No existing key, generate a new one
+        encryption_key_ = generate_random_bytes(KEY_SIZE);
+        return save_encryption_key();
+    }
+    
+    bool AuthService::initialize_encryption_key() {
+        try {
+            return load_or_generate_key();
+        } catch (const std::exception& e) {
+            std::cerr << "Encryption key initialization failed: " << e.what() << std::endl;
+            return false;
+        }
+    }
+    
+    std::string AuthService::encrypt_credential(const std::string& credential) {
+        if (encryption_key_.empty() && !initialize_encryption_key()) {
+            throw std::runtime_error("Failed to initialize encryption key");
+        }
+        
+        // Generate random IV
+        std::vector<unsigned char> iv = generate_random_bytes(IV_SIZE);
+        std::vector<unsigned char> tag(TAG_SIZE);
+        std::vector<unsigned char> ciphertext(credential.size() + EVP_MAX_BLOCK_LENGTH);
+        
+        int len;
+        int ciphertext_len;
+        
+        // Create and initialize the encryption context
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx) throw std::runtime_error("Failed to create encryption context");
+        
+        // Initialize the encryption operation with AES-256-GCM
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, 
+                             encryption_key_.data(), iv.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Encryption initialization failed");
+        }
+        
+        // Encrypt the plaintext
+        if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, 
+                            reinterpret_cast<const unsigned char*>(credential.c_str()), 
+                            credential.length()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Encryption update failed");
+        }
+        ciphertext_len = len;
+        
+        // Finalize the encryption
+        if (EVP_EncryptFinal_ex(ctx, ciphertext.data() + len, &len) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Encryption finalization failed");
+        }
+        ciphertext_len += len;
+        
+        // Get the authentication tag
+        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to get authentication tag");
+        }
+        
+        EVP_CIPHER_CTX_free(ctx);
+        
+        // Resize the ciphertext to actual size
+        ciphertext.resize(ciphertext_len);
+        
+        // Combine IV + tag + ciphertext and encode as hex
+        std::vector<unsigned char> combined;
+        combined.reserve(iv.size() + tag.size() + ciphertext.size());
+        combined.insert(combined.end(), iv.begin(), iv.end());
+        combined.insert(combined.end(), tag.begin(), tag.end());
+        combined.insert(combined.end(), ciphertext.begin(), ciphertext.end());
+        
+        return bytes_to_hex(combined);
+    }
+    
+    std::string AuthService::decrypt_credential(const std::string& encrypted_hex) {
+        if (encryption_key_.empty() && !initialize_encryption_key()) {
+            throw std::runtime_error("Failed to initialize encryption key");
+        }
+        
+        // Convert hex string back to bytes
+        std::vector<unsigned char> combined = hex_to_bytes(encrypted_hex);
+        
+        // Extract IV, tag, and ciphertext
+        if (combined.size() < IV_SIZE + TAG_SIZE) {
+            throw std::runtime_error("Invalid encrypted data format");
+        }
+        
+        std::vector<unsigned char> iv(combined.begin(), combined.begin() + IV_SIZE);
+        std::vector<unsigned char> tag(combined.begin() + IV_SIZE, combined.begin() + IV_SIZE + TAG_SIZE);
+        std::vector<unsigned char> ciphertext(combined.begin() + IV_SIZE + TAG_SIZE, combined.end());
+        
+        // Decrypt the ciphertext
+        std::vector<unsigned char> plaintext(ciphertext.size() + EVP_MAX_BLOCK_LENGTH);
+        int len;
+        int plaintext_len;
+        
+        // Create and initialize the decryption context
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx) throw std::runtime_error("Failed to create decryption context");
+        
+        // Initialize the decryption operation with AES-256-GCM
+        if (EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, 
+                             encryption_key_.data(), iv.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Decryption initialization failed");
+        }
+        
+        // Provide the message to be decrypted and obtain the plaintext output
+        if (EVP_DecryptUpdate(ctx, plaintext.data(), &len, 
+                            ciphertext.data(), ciphertext.size()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Decryption update failed");
+        }
+        plaintext_len = len;
+        
+        // Set the expected tag value
+        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, tag.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to set authentication tag");
+        }
+        
+        // Finalize the decryption and check the authentication tag
+        int ret = EVP_DecryptFinal_ex(ctx, plaintext.data() + len, &len);
+        EVP_CIPHER_CTX_free(ctx);
+        
+        if (ret <= 0) {
+            // Authentication failed
+            throw std::runtime_error("Authentication failed - invalid key or corrupted data");
+        }
+        
+        plaintext_len += len;
+        plaintext.resize(plaintext_len);
+        
+        return std::string(plaintext.begin(), plaintext.end());
     }
     
     void AuthService::initialize_default_providers() {
@@ -82,6 +387,11 @@ namespace Services {
     }
     
     void AuthService::initialize() {
+        // Initialize encryption first
+        if (!initialize_encryption_key()) {
+            throw std::runtime_error("Failed to initialize encryption");
+        }
+        
         initialize_default_providers();
         load_auth_config();
         
@@ -92,8 +402,16 @@ namespace Services {
             
             const char* env_key = std::getenv(env_var.c_str());
             if (env_key && provider.api_key.empty()) {
-                provider.api_key = env_key;
-                provider.is_valid = true;
+                try {
+                    // Encrypt the API key before storing it
+                    provider.api_key = encrypt_credential(env_key);
+                    provider.is_valid = true;
+                    // Save the encrypted key to config
+                    save_auth_config();
+                } catch (const std::exception& e) {
+                    std::cerr << "Failed to encrypt API key for " << name 
+                              << ": " << e.what() << std::endl;
+                }
             }
         }
     }

@@ -3,6 +3,8 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <array>
+#include <vector>
 
 namespace Services {
     
@@ -19,13 +21,33 @@ namespace Services {
     
     class AuthService {
     private:
+        static constexpr size_t KEY_SIZE = 32;       // 256 bits for AES-256
+        static constexpr size_t IV_SIZE = 12;        // 96 bits for GCM
+        static constexpr size_t TAG_SIZE = 16;       // 128-bit authentication tag
+        static constexpr size_t SALT_SIZE = 32;      // 256-bit salt for key derivation
+        static constexpr size_t ITERATIONS = 100000; // Key derivation iterations
+        
         static std::map<std::string, AuthProvider> providers_;
         static std::string active_provider_;
+        static std::vector<unsigned char> encryption_key_;
+        static std::string key_file_path_;
+        
         static std::string get_auth_config_path();
         static void ensure_auth_directory();
         static std::string encrypt_credential(const std::string& credential);
         static std::string decrypt_credential(const std::string& encrypted_credential);
         static void initialize_default_providers();
+        
+        // Secure key management
+        static bool initialize_encryption_key();
+        static bool load_or_generate_key();
+        static bool save_encryption_key();
+        static bool derive_key(const std::string& password, 
+                             const std::vector<unsigned char>& salt,
+                             std::vector<unsigned char>& key);
+        static std::vector<unsigned char> generate_random_bytes(size_t length);
+        static std::string bytes_to_hex(const std::vector<unsigned char>& bytes);
+        static std::vector<unsigned char> hex_to_bytes(const std::string& hex);
         
     public:
         // Provider management
