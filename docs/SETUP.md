@@ -13,7 +13,7 @@ Complete setup instructions for Llamaware AI agent with both online and offline 
 curl -fsSL https://ollama.com/install.sh | sh
 
 # 3. Clone and build
-git clone https://github.com/bniladridas/llamaware.git
+git clone https://github.com/harpertoken/llamaware.git
 cd llamaware && mkdir build && cd build && cmake .. && make
 
 # 4. Setup offline models
