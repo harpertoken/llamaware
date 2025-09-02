@@ -1,22 +1,22 @@
 # Global code owners
-* @bniladridas
+* @harpertoken
 
 # Core source code
-/src/ @bniladridas
-/include/ @bniladridas
+/src/ @harpertoken
+/include/ @harpertoken
 
 # Build and configuration
-/CMakeLists.txt @bniladridas
-/Makefile @bniladridas
+/CMakeLists.txt @harpertoken
+/Makefile @harpertoken
 
 # CI/CD and automation
-/.github/ @bniladridas
-/package/scripts/ @bniladridas
+/.github/ @harpertoken
+/package/scripts/ @harpertoken
 
 # Documentation
-/README.md @bniladridas
-/package/docs/ @bniladridas
+/README.md @harpertoken
+/package/docs/ @harpertoken
 
 # Docker and deployment
-/package/docker/ @bniladridas
-/package/managers/ @bniladridas
+/package/docker/ @harpertoken
+/package/managers/ @harpertoken
