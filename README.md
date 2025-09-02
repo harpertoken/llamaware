@@ -242,6 +242,9 @@ If you want to add automated release or deployment workflows, create the followi
 
 For automated binary releases on tag push. This workflow builds the C++ project on multiple platforms and creates a GitHub release.
 
+<details>
+<summary>Click to expand YAML</summary>
+
 ```yaml
 name: Release
 
@@ -344,9 +347,14 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+</details>
+
 ### Web Deployment Workflow
 
 For deploying a React web interface to Vercel on changes to the web/ folder.
+
+<details>
+<summary>Click to expand YAML</summary>
 
 ```yaml
 name: Deploy to Vercel
@@ -389,6 +397,8 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 ```
+
+</details>
 
 ## Troubleshooting
 
