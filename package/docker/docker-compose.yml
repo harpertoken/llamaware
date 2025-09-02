@@ -11,7 +11,7 @@ services:
       - SERPAPI_KEY=${SERPAPI_KEY}
     volumes:
       - llamaware_data:/home/llamaware/data
-      - ./config/.env:/home/llamaware/.env:ro
+      - ../../.env:/home/llamaware/.env:ro
     stdin_open: true
     tty: true
     restart: unless-stopped
