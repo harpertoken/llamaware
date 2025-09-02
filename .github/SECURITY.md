@@ -14,7 +14,7 @@ We actively support the following versions with security updates:
 If you discover a security vulnerability in this project, please report it to us as follows:
 
 1. **Do not** create a public issue on GitHub.
-2. Email the details to [security@yourdomain.com] (replace with actual email).
+2. Email the details to harpertoken@icloud.com.
 3. Provide a detailed description of the vulnerability, including:
    - Steps to reproduce
    - Potential impact
