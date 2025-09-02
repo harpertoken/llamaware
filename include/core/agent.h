@@ -24,6 +24,8 @@ namespace Core {
         bool shell_mode_;
         std::unique_ptr<Data::MemoryManager> memory_;
         std::unique_ptr<Services::AIService> ai_service_;
+        int command_count_;
+        long long token_usage_;
         
         void initialize_mode();
         int get_user_choice(const std::string& prompt, const std::vector<int>& valid_choices, int default_choice);
