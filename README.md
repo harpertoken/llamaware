@@ -13,7 +13,7 @@ Llamaware is an autonomous AI assistant that understands codebases and accelerat
 - [Enterprise Features](#enterprise-features)
 - [Quick Start](#quick-start)
 - [AI Providers](#ai-providers)
-- [Web Interface](#web-interface)
+
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
 - [Docker Deployment](#docker-deployment)
@@ -86,22 +86,6 @@ cmake .. && make
 - **Ollama Integration**: Local Llama models (3.2:3b, 3.2:latest, 3.1:latest)
 - **Privacy-First**: No data sent to external services
 - **Resource Efficient**: Runs on local hardware
-
-## Web Interface
-
-Professional React showcase demonstrating all enterprise features:
-
-```bash
-cd web
-npm install
-npm start
-```
-
-Features:
-- Interactive terminal demonstrations
-- Feature showcase with animations
-- Cross-platform installation guides
-- Responsive design for all devices
 
 ## Architecture
 
@@ -241,7 +225,7 @@ $ exit                          # Return to agent mode
 │   ├── services/          # AI, file, web services
 │   ├── data/              # Memory management
 │   └── utils/             # UI and utilities
-├── web/                   # React web interface
+
 ├── package/               # Distribution packages
 │   ├── docker/           # Container setup
 │   ├── binary/           # Binary distributions
