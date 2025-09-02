@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     nlohmann-json3-dev \
     libcurl4-openssl-dev \
+    libssl-dev \
     curl \
     git \
     && rm -rf /var/lib/apt/lists/*
@@ -17,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 # Build CPR from source since it's not in Ubuntu repos
 RUN git clone https://github.com/libcpr/cpr.git /tmp/cpr && \
     cd /tmp/cpr && \
-    cmake -S . -B build -DCPR_USE_SYSTEM_CURL=ON -DCMAKE_BUILD_TYPE=Release && \
+    cmake -S . -B build -DCPR_USE_SYSTEM_CURL=ON -DCPR_ENABLE_SSL=ON -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build --parallel && \
     cmake --install build && \
     rm -rf /tmp/cpr
@@ -32,7 +33,7 @@ COPY . .
 RUN mkdir build && cd build && \
     cmake .. && \
     make && \
-    cp package/cli/bin/llamaware-agent /usr/local/bin/
+    cp bin/llamaware-agent /usr/local/bin/
 
 # Create data directory
 RUN mkdir -p /app/data
@@ -45,7 +46,7 @@ USER llamaware
 WORKDIR /home/llamaware
 
 # Copy configuration template
-COPY --chown=llamaware:llamaware package/cli/.env.example .env
+COPY --chown=llamaware:llamaware .env.example .env
 
 # Expose any ports if needed (none for this CLI app)
 # EXPOSE 8080

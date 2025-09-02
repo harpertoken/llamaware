@@ -1,0 +1,55 @@
+# Build artifacts
+build/
+*.o
+*.so
+*.a
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# CI/CD
+.github/
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Node modules (if any)
+node_modules/
+
+# Package artifacts
+package/dist/
+package/binary/
+package/managers/
+package/docs/
+
+# Test files
+test/
+tests/
+*_test.cpp
+*_test.h
+
+# Cache files
+.cache/
+__pycache__/
+
+# Environment files (will be mounted as volume)
+.env
