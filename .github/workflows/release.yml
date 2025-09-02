@@ -149,69 +149,15 @@ jobs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
     
-    - name: Create release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          llamaware-agent-linux-x64/llamaware-agent-linux-x64
-          llamaware-agent-macos-x64/llamaware-agent-macos-x64
-          llamaware-agent-windows-x64/llamaware-agent-windows-x64
-        body: |
-          ## llamaware agent ${{ github.ref_name }}
-          
-          ai agent with 16 enterprise features.
-          
-          **files:** `@file`, multi-file ops, context, shell  
-          **sessions:** save/resume, tools, config, compression  
-          **extensions:** mcp, checkpoints, web, filtering  
-          **security:** themes, auth, sandbox, errors
-          
-          ### installation
-          
-          **linux:**
-          ```bash
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/llamaware-agent-linux-x64
-          chmod +x llamaware-agent-linux-x64
-          sudo mv llamaware-agent-linux-x64 /usr/local/bin/llamaware-agent
-          ```
-          
-          **macos:**
-          ```bash
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/llamaware-agent-macos-x64
-          chmod +x llamaware-agent-macos-x64
-          sudo mv llamaware-agent-macos-x64 /usr/local/bin/llamaware-agent
-          ```
-          
-          **windows:**
-          ```powershell
-          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/llamaware-agent-windows-x64" -OutFile "llamaware-agent.exe"
-          # Add to PATH or move to desired location
-          ```
-          
-          ### usage
-          
-          ```bash
-          llamaware-agent
-          > @file src/main.cpp
-          > /save project
-          > /checkpoint v1
-          > /theme set dark
-          ```
-          
-          ### providers
-          
-          **online:**
-          ```bash
-          export TOGETHER_API_KEY="your-key"
-          export CEREBRAS_API_KEY="your-key"
-          ```
-          
-          **offline:**
-          ```bash
-          ollama serve
-          ollama pull llama3.2:3b
-          ```
-        draft: false
-        prerelease: false
+     - name: Create release
+       uses: softprops/action-gh-release@v1
+       with:
+         files: |
+           llamaware-agent-linux-x64/llamaware-agent-linux-x64
+           llamaware-agent-macos-x64/llamaware-agent-macos-x64
+           llamaware-agent-windows-x64/llamaware-agent-windows-x64
+         generate_release_notes: true
+         draft: false
+         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
