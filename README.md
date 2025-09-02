@@ -240,7 +240,7 @@ If you want to add automated release or deployment workflows, create the followi
 
 ### Release Workflow
 
-For automated binary releases on tag push:
+For automated binary releases on tag push. This workflow builds the C++ project on multiple platforms and creates a GitHub release.
 
 ```yaml
 name: Release
@@ -248,10 +248,10 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'  # Trigger on version tags
 
 permissions:
-  contents: write
+  contents: write  # Allow creating releases
 
 jobs:
   build-release:
@@ -274,6 +274,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # Install build dependencies for each OS
     - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -289,10 +290,9 @@ jobs:
 
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
-      run: |
-        vcpkg install cpr nlohmann-json --triplet x64-windows
-      shell: cmd
+      run: vcpkg install cpr nlohmann-json --triplet x64-windows
 
+    # Build the project
     - name: Build release (Linux/macOS)
       if: matrix.os != 'windows-latest'
       run: |
@@ -304,8 +304,8 @@ jobs:
       run: |
         cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
         cmake --build build --config Release
-      shell: cmd
 
+    # Prepare artifact
     - name: Rename binary
       run: |
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
@@ -339,23 +339,23 @@ jobs:
           llamaware-agent-linux-x64/llamaware-agent-linux-x64
           llamaware-agent-macos-x64/llamaware-agent-macos-x64
           llamaware-agent-windows-x64/llamaware-agent-windows-x64
-        generate_release_notes: true
+        generate_release_notes: true  # Auto-generate release notes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Web Deployment Workflow
 
-For deploying a web interface to Vercel:
+For deploying a React web interface to Vercel on changes to the web/ folder.
 
 ```yaml
 name: Deploy to Vercel
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # Trigger on main branch pushes
     paths:
-      - 'web/**'
+      - 'web/**'  # Only when web folder changes
 
 jobs:
   deploy:
@@ -369,23 +369,22 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: '18.x'  # Use Node.js 18
 
       - name: Install dependencies
-        working-directory: web
-        run: npm ci
+        working-directory: web  # Run in web directory
+        run: npm ci  # Clean install
 
       - name: Build
         working-directory: web
-        run: npm run build
+        run: npm run build  # Build production bundle
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
       - name: Deploy to Vercel
         working-directory: web
-        run: |
-          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }}  # Deploy to production
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
