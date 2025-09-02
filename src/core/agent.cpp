@@ -35,11 +35,13 @@
 // Using the Mode enum from agent.h instead of separate constants
 
 namespace Core {
-    Agent::Agent() : mode_(MODE_UNSET), 
-                    api_key_(""), 
+    Agent::Agent() : mode_(MODE_UNSET),
+                    api_key_(""),
                     shell_mode_(false),
                     memory_(std::make_unique<Data::MemoryManager>()),
-                    ai_service_(nullptr) {}
+                    ai_service_(nullptr),
+                    command_count_(0),
+                    token_usage_(0) {}
                     
     Agent::~Agent() = default;
 
@@ -161,6 +163,7 @@ namespace Core {
     }
 
     void Agent::process_user_input(const std::string& input) {
+        command_count_++;
         std::string trimmed_input = trim_copy(input);
         
         // Handle @ file injection commands
@@ -832,10 +835,11 @@ namespace Core {
 
     void Agent::show_session_stats() {
         std::cout << "Session Statistics:" << std::endl;
-        std::cout << "  Mode: " << (mode_ == MODE_TOGETHER ? "Together AI" : 
+        std::cout << "  Mode: " << (mode_ == MODE_TOGETHER ? "Together AI" :
                                    mode_ == MODE_CEREBRAS ? "Cerebras" : "Local Ollama") << std::endl;
         std::cout << "  Shell Mode: " << (shell_mode_ ? "Active" : "Inactive") << std::endl;
-        // TODO: Add more statistics like token usage, command count, etc.
+        std::cout << "  Commands Processed: " << command_count_ << std::endl;
+        std::cout << "  Token Usage: " << token_usage_ << std::endl;
     }
 
     void Agent::handle_context_management(const std::string& command) {
