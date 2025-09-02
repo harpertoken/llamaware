@@ -40,6 +40,7 @@ jobs:
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
+        brew uninstall cmake
         brew install cpr nlohmann-json cmake
     
     - name: Install Chocolatey and dependencies (Windows)
