@@ -1,8 +1,8 @@
 
 # Llamaware
 
-[![CI](https://github.com/bniladridas/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/bniladridas/llamaware/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/bniladridas/llamaware/actions/workflows/codeql.yml/badge.svg)](https://github.com/bniladridas/llamaware/actions/workflows/codeql.yml)
+[![CI](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/harpertoken/llamaware/actions/workflows/codeql.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/codeql.yml)
 
 **Professional AI Agent with 16 Enterprise Features**
 
@@ -58,7 +58,7 @@ Llamaware is an autonomous AI assistant that understands codebases and accelerat
 
 ```bash
 # Clone repository
-git clone https://github.com/bniladridas/llamaware.git
+git clone https://github.com/harpertoken/llamaware.git
 cd llamaware
 
 # Install dependencies
@@ -105,13 +105,6 @@ Features:
 
 ## Architecture
 
-```
-src/
-├── core/           # Agent logic and command routing
-├── services/       # AI, file, web, command services
-├── data/           # Memory management and persistence
-├── utils/          # UI and utilities
-└── main.cpp        # Application entry point
 ```
 src/
 ├── core/           # Agent logic and command routing
