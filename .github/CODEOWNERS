@@ -1,22 +1,2 @@
 # Global code owners
 * @harpertoken
-
-# Core source code
-/src/ @harpertoken
-/include/ @harpertoken
-
-# Build and configuration
-/CMakeLists.txt @harpertoken
-/Makefile @harpertoken
-
-# CI/CD and automation
-/.github/ @harpertoken
-/package/scripts/ @harpertoken
-
-# Documentation
-/README.md @harpertoken
-/package/docs/ @harpertoken
-
-# Docker and deployment
-/package/docker/ @harpertoken
-/package/managers/ @harpertoken
