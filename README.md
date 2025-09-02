@@ -16,7 +16,7 @@ Llamaware is an autonomous AI assistant that understands codebases and accelerat
 
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
-- [Docker Deployment](#docker-deployment)
+
 - [Usage Examples](#usage-examples)
 - [Security Features](#security-features)
 - [Documentation](#documentation)
@@ -118,41 +118,7 @@ sudo apt install nlohmann-json3-dev cmake build-essential git libcurl4-openssl-d
 vcpkg install cpr nlohmann-json
 ```
 
-## Docker Deployment
 
-### Quick Start with Docker Compose
-```bash
-cd package/docker
-docker-compose up --build
-```
-
-### Advanced Docker Setup
-
-#### With Ollama (Offline Mode)
-```bash
-cd package/docker
-docker-compose --profile ollama up --build
-```
-
-#### Environment Configuration
-Create a `.env` file with your API keys:
-```bash
-TOGETHER_API_KEY="your-together-key"
-CEREBRAS_API_KEY="your-cerebras-key"
-SERPAPI_KEY="your-serpapi-key"
-```
-
-#### Manual Docker Commands
-```bash
-# Build image
-make docker-build
-
-# Run container
-docker run -it --rm \
-  -v $(pwd)/.env:/home/llamaware/.env:ro \
-  -v llamaware_data:/home/llamaware/data \
-  llamaware/agent
-```
 
 ## Usage Examples
 
@@ -227,7 +193,6 @@ $ exit                          # Return to agent mode
 │   └── utils/             # UI and utilities
 
 ├── package/               # Distribution packages
-│   ├── docker/           # Container setup
 │   ├── binary/           # Binary distributions
 │   └── scripts/          # Build automation
 ├── docs/                  # Documentation
