@@ -234,6 +234,163 @@ $ exit                          # Return to agent mode
 └── include/              # C++ headers
 ```
 
+## Optional CI/CD Workflows
+
+If you want to add automated release or deployment workflows, create the following files in `.github/workflows/`.
+
+### Release Workflow
+
+For automated binary releases on tag push:
+
+```yaml
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+            artifact: llamaware-agent
+          - os: macos-latest
+            platform: macos-x64
+            artifact: llamaware-agent
+          - os: windows-latest
+            platform: windows-x64
+            artifact: llamaware-agent.exe
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
+        git clone --depth=1 https://github.com/libcpr/cpr.git
+        cmake -S cpr -B cpr/build -DBUILD_CPR_TESTS=OFF -DCPR_USE_SYSTEM_CURL=ON
+        sudo cmake --build cpr/build --target install
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install cpr nlohmann-json cmake
+
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        vcpkg install cpr nlohmann-json --triplet x64-windows
+      shell: cmd
+
+    - name: Build release (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build
+
+    - name: Build release (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
+        cmake --build build --config Release
+      shell: cmd
+
+    - name: Rename binary
+      run: |
+        if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          mv build/bin/Release/llamaware-agent.exe llamaware-agent-${{ matrix.platform }}
+        else
+          mv build/bin/llamaware-agent llamaware-agent-${{ matrix.platform }}
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: llamaware-agent-${{ matrix.platform }}
+        path: llamaware-agent-${{ matrix.platform }}
+
+  create-release:
+    name: Create Release
+    needs: build-release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          llamaware-agent-linux-x64/llamaware-agent-linux-x64
+          llamaware-agent-macos-x64/llamaware-agent-macos-x64
+          llamaware-agent-windows-x64/llamaware-agent-windows-x64
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Web Deployment Workflow
+
+For deploying a web interface to Vercel:
+
+```yaml
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'web/**'
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Build
+        working-directory: web
+        run: npm run build
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Deploy to Vercel
+        working-directory: web
+        run: |
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+```
+
 ## Troubleshooting
 
 ### Build Issues
