@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # Mock AI providers
+  mock-together:
+    image: nginx:alpine
+    container_name: mock-together
+    ports:
+      - "8081:80"
+    volumes:
+      - ./tests/mocks/together.conf:/etc/nginx/conf.d/default.conf
+      - ./tests/mocks/together_responses:/usr/share/nginx/html
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mock-cerebras:
+    image: nginx:alpine
+    container_name: mock-cerebras
+    ports:
+      - "8082:80"
+    volumes:
+      - ./tests/mocks/cerebras.conf:/etc/nginx/conf.d/default.conf
+      - ./tests/mocks/cerebras_responses:/usr/share/nginx/html
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama mock (simple echo server)
+  mock-ollama:
+    image: python:3.9-alpine
+    container_name: mock-ollama
+    ports:
+      - "11434:11434"
+    command: >
+      python -c "
+      import socket
+      import json
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      s.bind(('0.0.0.0', 11434))
+      s.listen(1)
+      while True:
+          conn, addr = s.accept()
+          data = conn.recv(1024)
+          if data:
+              response = {'response': 'Mock Ollama response', 'done': True}
+              conn.sendall(json.dumps(response).encode())
+          conn.close()
+      "
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "11434"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Test runner
+  e2e-tests:
+    build:
+      context: package/docker
+      dockerfile: Dockerfile
+    container_name: llamaware-e2e-tests
+    depends_on:
+      mock-together:
+        condition: service_healthy
+      mock-cerebras:
+        condition: service_healthy
+      mock-ollama:
+        condition: service_healthy
+    environment:
+      - TOGETHER_API_KEY=test-key
+      - CEREBRAS_API_KEY=test-key
+      - SERPAPI_KEY=test-key
+      - OLLAMA_HOST=http://mock-ollama:11434
+    volumes:
+      - .:/app
+      - ./tests:/app/tests
+    working_dir: /app
+    command: >
+      bash -c "
+      mkdir -p build &&
+      cd build &&
+      cmake .. -DCMAKE_BUILD_TYPE=Release &&
+      make -j$(nproc) &&
+      make test &&
+      echo 'Running E2E tests...' &&
+      cd tests/e2e &&
+      ./run_e2e_tests.sh &&
+      echo 'E2E tests completed'
+      "
+    stdin_open: true
+    tty: true
+
+volumes:
+  llamaware_data:
+    driver: local

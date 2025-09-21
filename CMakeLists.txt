@@ -141,6 +141,9 @@ find_package(nlohmann_json 3.9.1 REQUIRED)
 # Fetch CPR with explicit configuration
 include(FetchContent)
 
+# Enable testing
+enable_testing()
+
 # Clear any cached CPR variables
 unset(CPR_LIBRARIES CACHE)
 unset(CPR_INCLUDE_DIRS CACHE)
@@ -169,6 +172,15 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(cpr)
+
+# Fetch Google Test
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.14.0
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(googletest)
 
 # Ensure proper linking on all platforms
 target_link_libraries(cpr PRIVATE 
@@ -254,6 +266,12 @@ set(ALL_SOURCES
     ${UTILS_SOURCES}
     ${DATA_SOURCES}
 )
+
+# Test executable
+add_executable(llamaware-tests tests/main_test.cpp)
+target_include_directories(llamaware-tests PRIVATE ${gtest_SOURCE_DIR}/include)
+target_link_libraries(llamaware-tests gtest_main)
+add_test(NAME basic_tests COMMAND llamaware-tests)
 
 # Main executable
 add_executable(llamaware-agent src/main.cpp ${ALL_SOURCES})
