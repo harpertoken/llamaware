@@ -2,7 +2,7 @@ class Llamaware < Formula
   desc "Professional AI agent with command execution and file operations"
   homepage "https://github.com/harpertoken/llamaware"
   url "https://github.com/harpertoken/llamaware/archive/v0.1.tar.gz"
-  sha256 "YOUR_SHA256_HERE"
+  sha256 "ebd9b17dc6289f975d835484d420a1026d126bdf99603d6226dfb6d932c6fe9f"
   license "MIT"
 
   depends_on "cmake" => :build
