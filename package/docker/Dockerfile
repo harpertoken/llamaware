@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 LABEL maintainer="bniladridas"
 LABEL description="Llamaware Agent - Professional AI Agent"
-LABEL version="2.0.0"
+LABEL version="0.1"
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     nlohmann-json3-dev \
     libcurl4-openssl-dev \
     libssl-dev \
+    zlib1g-dev \
     curl \
     git \
     && rm -rf /var/lib/apt/lists/*

@@ -287,7 +287,24 @@ for dir in "${REQUIRED_DIRS[@]}"; do
 done
 print_success "Package structure validation passed"
 
-# 11. Security Check (basic)
+# 11. Code Quality Check
+print_status "Running code quality checks..."
+if command -v clang-tidy > /dev/null 2>&1; then
+    if [ -f "build/compile_commands.json" ]; then
+        CLANG_TIDY_COUNT=$(make clang-tidy 2>&1 | grep -c "warnings generated" || echo "0")
+        if [ "$CLANG_TIDY_COUNT" -gt 0 ]; then
+            print_warning "Clang-tidy found $CLANG_TIDY_COUNT files with warnings"
+        else
+            print_success "Clang-tidy passed with no warnings"
+        fi
+    else
+        print_warning "Clang-tidy available but no compilation database found"
+    fi
+else
+    print_warning "Clang-tidy not installed - recommended for code quality"
+fi
+
+# 12. Security Check (basic)
 print_status "Running basic security checks..."
 if grep -r "system(" src/ include/ > /dev/null 2>&1; then
     print_warning "Direct system() calls found - review for security"

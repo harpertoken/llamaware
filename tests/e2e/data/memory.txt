@@ -1,0 +1,359 @@
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: cmd:git status
+Assistant: Command completed
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---
+User: read:./test_data/test.txt
+Assistant: test content
+
+---
+User: [File not found: directory] src/
+Assistant: Error: AI service returned status code 0 - 
+---
+User: !echo 'shell test'
+Assistant: Command completed
+---
+User: /mcp servers
+Assistant: MCP command executed
+---
+User: /checkpoint e2e_test
+Assistant: Checkpoint command executed
+---
+User: search:test query
+Assistant: Error: SERPAPI_KEY is missing.
+---
+User: cmd:git status
+Assistant: Command completed
+---
+User: /theme set dark
+Assistant: Theme command executed
+---
+User: /auth providers
+Assistant: Auth command executed
+---
+User: /sandbox run "echo sandbox"
+Assistant: Sandbox command executed
+---
+User: invalid_command
+Assistant: Error: AI service returned status code 0 - 
+---
+User: [File not found: file] README.md
+Assistant: Error: AI service returned status code 0 - 
+---

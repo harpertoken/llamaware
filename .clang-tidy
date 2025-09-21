@@ -1,0 +1,11 @@
+---
+Checks: >
+  -*,
+  bugprone-use-after-move,
+  clang-analyzer-core.NullDereference,
+  modernize-use-nullptr,
+  performance-unnecessary-copy-initialization
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+FormatStyle: file

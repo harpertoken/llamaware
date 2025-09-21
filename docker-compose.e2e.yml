@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Mock AI providers
+  mock-together:
+    image: nginx:alpine
+    container_name: mock-together
+    ports:
+      - "8081:80"
+    volumes:
+      - ./tests/mocks/together.conf:/etc/nginx/conf.d/default.conf
+      - ./tests/mocks/together_responses:/usr/share/nginx/html
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mock-cerebras:
+    image: nginx:alpine
+    container_name: mock-cerebras
+    ports:
+      - "8082:80"
+    volumes:
+      - ./tests/mocks/cerebras.conf:/etc/nginx/conf.d/default.conf
+      - ./tests/mocks/cerebras_responses:/usr/share/nginx/html
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama mock (HTTP server)
+  mock-ollama:
+    image: python:3.9-alpine
+    container_name: mock-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./tests/mocks/mock_ollama.py:/app/mock_ollama.py
+    command: python -u /app/mock_ollama.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Test runner
+  e2e-tests:
+    build:
+      context: .
+      dockerfile: package/docker/Dockerfile
+    container_name: llamaware-e2e-tests
+    depends_on:
+      mock-together:
+        condition: service_healthy
+      mock-cerebras:
+        condition: service_healthy
+      mock-ollama:
+        condition: service_healthy
+    environment:
+      - TOGETHER_API_KEY=test-key
+      - CEREBRAS_API_KEY=test-key
+      - SERPAPI_KEY=test-key
+      - OLLAMA_HOST=http://mock-ollama:11434
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: /app/tests/e2e/run_tests_in_docker.sh
+    stdin_open: true
+    tty: true
+
+volumes:
+  llamaware_data:
+    driver: local
