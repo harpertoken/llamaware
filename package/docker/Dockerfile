@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     nlohmann-json3-dev \
     libcurl4-openssl-dev \
     libssl-dev \
+    zlib1g-dev \
     curl \
     git \
     && rm -rf /var/lib/apt/lists/*
