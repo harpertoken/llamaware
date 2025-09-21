@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.14)
-project(LlamawareAgent VERSION 2.0.0 LANGUAGES CXX)
+project(LlamawareAgent VERSION 0.1 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Generate compile_commands.json for clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Build configuration
 if(NOT CMAKE_BUILD_TYPE)
@@ -16,10 +19,23 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 if(MSVC)
     add_compile_options(/W4 /WX /MP /EHsc)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:DebugDLL>")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+    endif()
+endif()
+
+# Clang-Tidy configuration
+find_program(CLANG_TIDY_EXE NAMES clang-tidy PATHS /opt/homebrew/opt/llvm@18/bin /opt/homebrew/opt/llvm/bin /usr/local/opt/llvm/bin)
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+    message(STATUS "Clang-Tidy found: ${CLANG_TIDY_EXE}")
+else()
+    message(STATUS "Clang-Tidy not found - install LLVM: brew install llvm")
 endif()
 
 # Find dependencies
@@ -141,6 +157,9 @@ find_package(nlohmann_json 3.9.1 REQUIRED)
 # Fetch CPR with explicit configuration
 include(FetchContent)
 
+# Enable testing
+enable_testing()
+
 # Clear any cached CPR variables
 unset(CPR_LIBRARIES CACHE)
 unset(CPR_INCLUDE_DIRS CACHE)
@@ -169,6 +188,16 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(cpr)
+
+# Fetch Google Test
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.14.0
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(googletest)
 
 # Ensure proper linking on all platforms
 target_link_libraries(cpr PRIVATE 
@@ -255,8 +284,33 @@ set(ALL_SOURCES
     ${DATA_SOURCES}
 )
 
+# Create library with all sources
+add_library(llamaware_lib ${ALL_SOURCES})
+target_include_directories(llamaware_lib PUBLIC 
+    include
+    ${CURL_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIRS}
+)
+target_link_libraries(llamaware_lib PUBLIC 
+    ${CURL_LIBRARIES}
+    cpr::cpr 
+    nlohmann_json::nlohmann_json
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    ${ZLIB_TARGET}
+    ${CMAKE_DL_LIBS}
+)
+
+# Test executable
+add_executable(llamaware-tests tests/main_test.cpp)
+target_include_directories(llamaware-tests PRIVATE ${googletest_SOURCE_DIR}/include include)
+target_link_libraries(llamaware-tests llamaware_lib gtest_main)
+add_test(NAME basic_tests COMMAND llamaware-tests)
+
 # Main executable
-add_executable(llamaware-agent src/main.cpp ${ALL_SOURCES})
+add_executable(llamaware-agent src/main.cpp)
+target_link_libraries(llamaware-agent llamaware_lib)
 
 # Set target properties
 set_target_properties(llamaware-agent PROPERTIES
@@ -268,41 +322,13 @@ set_target_properties(llamaware-agent PROPERTIES
     SKIP_BUILD_RPATH FALSE
 )
 
-# Include directories
-target_include_directories(llamaware-agent PRIVATE 
-    ${CURL_INCLUDE_DIRS}
-    ${OPENSSL_INCLUDE_DIR}
-    ${ZLIB_INCLUDE_DIRS}  # Add zlib include directories
-)
-
-# Common linking for all platforms
-if(TARGET nlohmann_json::nlohmann_json)
-    target_link_libraries(llamaware-agent PRIVATE 
-        ${CURL_LIBRARIES}
-        cpr::cpr 
-        nlohmann_json::nlohmann_json
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        ${ZLIB_TARGET}  # Use the platform-appropriate zlib target
-        ${CMAKE_DL_LIBS}
+# On macOS, add additional settings
+if(APPLE)
+    target_link_options(llamaware-agent PRIVATE
+        -Wl,-rpath,@loader_path/../lib
+        -Wl,-rpath,/usr/local/lib
+        -Wl,-rpath,/opt/homebrew/lib
     )
-    
-    # On macOS, add additional settings
-    if(APPLE)
-        target_link_options(llamaware-agent PRIVATE
-            -Wl,-rpath,@loader_path/../lib
-            -Wl,-rpath,/usr/local/lib
-            -Wl,-rpath,/opt/homebrew/lib
-        )
-    endif()
-else()
-    target_include_directories(llamaware-agent PRIVATE ${nlohmann_json_INCLUDE_DIRS})
-    target_link_libraries(llamaware-agent PRIVATE 
-        cpr::cpr 
-        ${OPENSSL_LIBRARIES}
-        ZLIB::ZLIB
-    )
-    target_include_directories(llamaware-agent PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()
 
 # Installation
@@ -357,6 +383,28 @@ add_custom_target(test-quick
     DEPENDS llamaware-agent
     COMMENT "Quick functionality test"
 )
+
+# Clang-Tidy target
+if(CLANG_TIDY_EXE)
+    add_custom_target(clang-tidy
+        COMMAND ${CLANG_TIDY_EXE} --config-file=${CMAKE_SOURCE_DIR}/.clang-tidy -p ${CMAKE_BINARY_DIR} ${ALL_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang-tidy on all source files"
+    )
+endif()
+
+# Code coverage target (requires lcov)
+find_program(LCOV_EXE lcov)
+if(LCOV_EXE)
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/coverage
+        COMMAND ctest --output-on-failure
+        COMMAND ${LCOV_EXE} --capture --directory ${CMAKE_BINARY_DIR} --output-file ${CMAKE_BINARY_DIR}/coverage/coverage.info --exclude '/usr/*' --exclude '*/tests/*' --exclude '*/_deps/*'
+        COMMAND ${LCOV_EXE} --list ${CMAKE_BINARY_DIR}/coverage/coverage.info
+        DEPENDS llamaware-tests
+        COMMENT "Running tests and generating code coverage report"
+    )
+endif()
 
 # Add preflight target (comprehensive pre-deployment checks)
 add_custom_target(preflight
