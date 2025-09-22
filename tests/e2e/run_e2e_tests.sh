@@ -19,6 +19,9 @@ BINARY_PATH="/usr/local/bin/llamaware-agent"
 TEST_DATA_DIR="/tmp/llamaware_test_data"
 LOG_FILE="e2e_test.log"
 
+# Ensure test mode is set
+export TEST_MODE=1
+
 # Print header
 print_header() {
     echo -e "\n${YELLOW}=== $1 ===${NC}"
@@ -81,7 +84,7 @@ run_command() {
             # Wait for the prompt with a longer timeout
             expect {
                 -timeout 120
-                "Ready - Type a command:" {
+                "> " {
                     send_log "Successfully got prompt\n"
                 }
                 timeout {
