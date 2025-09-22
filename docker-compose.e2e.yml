@@ -48,6 +48,7 @@ services:
     build:
       context: .
       dockerfile: package/docker/Dockerfile
+      target: builder  # Build only the builder stage for tests
     container_name: llamaware-e2e-tests
     depends_on:
       mock-together:
@@ -62,13 +63,18 @@ services:
       - SERPAPI_KEY=test-key
       - OLLAMA_HOST=http://mock-ollama:11434
       - TEST_MODE=1
+      - BUILDKIT_INLINE_CACHE=1  # Enable build cache
     volumes:
       - .:/app
+      - /app/build  # Persist build directory between builds
+      - /root/.cache  # Cache for build artifacts
     working_dir: /app
     user: root
-    command: sh -c "/app/tests/e2e/run_tests_in_docker.sh"
-    stdin_open: true
-    tty: true
+    command: ["bash", "-c", "ulimit -c unlimited && /app/tests/e2e/run_tests_in_docker.sh"]
+    security_opt:
+      - seccomp:unconfined  # For better debugging
+    cap_add:
+      - SYS_PTRACE  # For debugging
     stop_grace_period: 10s
     stop_signal: SIGTERM
     healthcheck:
@@ -80,8 +86,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2G
+          cpus: '2'  # Limit CPU usage to 2 cores
+          memory: 4G  # Increased memory limit
           pids: 1024
+    tmpfs:
+      - /tmp:exec,mode=1777  # Use tmpfs for temporary files
 
 volumes:
   llamaware_data:
