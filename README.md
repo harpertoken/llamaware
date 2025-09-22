@@ -20,6 +20,27 @@ Llamaware supports both online and offline modes:
 * **Cerebras**: Llama-4-Maverick-17B
 * **Offline**: Ollama (llama3.2:3b, latest)
 
+## Running Tests
+
+### Unit Tests
+```bash
+# Build and run unit tests
+cmake -S . -B build && cmake --build build
+cd build && ctest --output-on-failure
+```
+
+### End-to-End (E2E) Tests
+```bash
+# Start test containers in detached mode
+docker-compose -f docker-compose.e2e.yml up -d
+
+# Run the tests
+docker-compose -f docker-compose.e2e.yml logs -f e2e-tests
+
+# Stop and clean up
+docker-compose -f docker-compose.e2e.yml down
+```
+
 ## Documentation
 
 Guides are available to help with setup, usage, and development:
