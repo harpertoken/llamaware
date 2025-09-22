@@ -99,14 +99,3 @@ else
     exit $result
 fi
 
-# Cleanup function to ensure proper shutdown
-cleanup() {
-    echo "=== Cleaning up test environment ==="
-    # Kill any remaining processes
-    pkill -P $$ || true
-    # Exit with the test result
-    exit $result
-}
-
-# Set up trap to ensure cleanup runs on exit
-trap cleanup EXIT
