@@ -69,6 +69,11 @@ services:
     command: /app/tests/e2e/run_tests_in_docker.sh
     stdin_open: true
     tty: true
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          pids: 1024
 
 volumes:
   llamaware_data:
