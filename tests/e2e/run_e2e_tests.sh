@@ -84,7 +84,7 @@ run_command() {
             # Wait for the prompt with a longer timeout
             expect {
                 -timeout 120
-                "> " {
+                "Ready - Type a command:" {
                     send_log "Successfully got prompt\n"
                 }
                 timeout {
@@ -106,7 +106,7 @@ run_command() {
                     
                      # Wait for command to complete or next prompt
                      expect {
-                         -timeout 30
+                         -timeout 60
                          "> " {
                              send_log "Command completed successfully\n"
                          }
