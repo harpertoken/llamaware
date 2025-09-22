@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 project(LlamawareAgent VERSION 0.1 LANGUAGES CXX)
 
+# Include FetchContent for downloading dependencies
+include(FetchContent)
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -154,57 +157,70 @@ message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
 # Find nlohmann_json
 find_package(nlohmann_json 3.9.1 REQUIRED)
 
-# Fetch CPR with explicit configuration
-include(FetchContent)
+# Find CPR - using 1.10.5 which is installed in the Docker image
+find_package(cpr 1.10.5 REQUIRED)
+
+if(NOT TARGET cpr::cpr)
+    # If the target doesn't exist, create it
+    add_library(cpr::cpr INTERFACE IMPORTED)
+    find_library(CPR_LIBRARY cpr)
+    if(CPR_LIBRARY)
+        message(STATUS "Found CPR library: ${CPR_LIBRARY}")
+        target_link_libraries(cpr::cpr INTERFACE ${CPR_LIBRARY} CURL::libcurl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_TARGET})
+        target_include_directories(cpr::cpr INTERFACE /usr/local/include)
+    else()
+        message(FATAL_ERROR "Could not find CPR library. Please install it or set CPR_DIR to the directory containing cpr-config.cmake")
+    endif()
+endif()
+
+message(STATUS "Using CPR: ${CPR_LIBRARY}")
 
 # Enable testing
 enable_testing()
 
-# Clear any cached CPR variables
-unset(CPR_LIBRARIES CACHE)
-unset(CPR_INCLUDE_DIRS CACHE)
-
-# Configure CPR
-set(CPR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "" FORCE)
-set(CPR_ENABLE_SSL ON CACHE BOOL "" FORCE)
-set(CPR_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
-set(CPR_FORCE_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
-
-# Always use OpenSSL on all platforms
-set(CPR_USE_OPENSSL ON CACHE BOOL "" FORCE)
-set(CPR_USE_OPENSSL_DEFAULT_IMPLEMENTATION ON CACHE BOOL "" FORCE)
-set(CPR_USE_OPENSSL_AUTO_IMPLEMENTATION OFF CACHE BOOL "" FORCE)
-set(CPR_FORCE_OPENSSL_BACKEND ON CACHE BOOL "" FORCE)
-set(CPR_FORCE_DARWINSSL_BACKEND OFF CACHE BOOL "" FORCE)
-
-# Fetch and make available
-FetchContent_Declare(
-    cpr
-    GIT_REPOSITORY https://github.com/libcpr/cpr.git
-    GIT_TAG 1.11.0
-    GIT_SHALLOW TRUE
-)
-
-FetchContent_MakeAvailable(cpr)
-
 # Fetch Google Test
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG v1.14.0
-    GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(googletest)
 
-# Ensure proper linking on all platforms
-target_link_libraries(cpr PRIVATE 
-    OpenSSL::SSL 
-    OpenSSL::Crypto
-    ${ZLIB_TARGET}  # Use the appropriate zlib target for this platform
-)
+# Only fetch and build gtest if not already found
+if(NOT TARGET gtest)
+    message(STATUS "Downloading and building Google Test...")
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+        GIT_SHALLOW TRUE
+    )
+    
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    
+    # Make sure we're not overriding compiler flags
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+    set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
+    set(BUILD_GTEST ON CACHE BOOL "" FORCE)
+    
+    FetchContent_MakeAvailable(googletest)
+    
+    # Create an interface library for gtest to make it easier to link
+    if(NOT TARGET gtest_all_tests)
+        add_library(gtest_all_tests INTERFACE)
+        target_link_libraries(gtest_all_tests
+            INTERFACE
+                GTest::GTest
+                GTest::Main
+        )
+    endif()
+endif()
+
+# Only set up the cpr target if we're building it ourselves
+if(TARGET cpr)
+    # Ensure proper linking on all platforms for our local cpr build
+    target_link_libraries(cpr PRIVATE 
+        OpenSSL::SSL 
+        OpenSSL::Crypto
+        ${ZLIB_TARGET}  # Use the appropriate zlib target for this platform
+    )
+endif()
 
 # On macOS, add additional settings
 if(APPLE)

@@ -1,75 +1,105 @@
-FROM ubuntu:22.04
+# Build stage
+FROM ubuntu:22.04 as builder
 
 LABEL maintainer="bniladridas"
-LABEL description="Llamaware Agent - Professional AI Agent"
+LABEL description="Llamaware Agent - Build Stage"
 LABEL version="0.1"
 
 # Set environment variables to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Etc/UTC \
-    DEBCONF_NONINTERACTIVE_SEEN=true
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    BUILD_DEPS="build-essential cmake git" \
+    RUNTIME_DEPS="libcurl4-openssl-dev libssl-dev zlib1g-dev"
 
-# First install tzdata alone to avoid interactive prompts
+# Install build dependencies
 RUN apt-get update && \
     ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-    apt-get install -y --no-install-recommends tzdata && \
+    apt-get install -y --no-install-recommends tzdata $BUILD_DEPS $RUNTIME_DEPS \
+    nlohmann-json3-dev \
+    libgtest-dev \
+    libgmock-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    zlib1g-dev \
+    python3 \
+    python3-pip \
+    expect && \
+    python3 -m pip install pytest && \
     dpkg-reconfigure --frontend noninteractive tzdata && \
     rm -rf /var/lib/apt/lists/*
 
-# Install remaining dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    cmake \
-    nlohmann-json3-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    zlib1g-dev \
-    curl \
-    git \
-    valgrind \
-    expect \
+# Configure git to skip SSL verification (temporary for build)
+RUN git config --global http.sslVerify false
+
+# Install additional build tools
+RUN apt-get update && \
+    apt-get install -y wget && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download and install CPR from release tarball
+WORKDIR /tmp
+RUN wget https://github.com/libcpr/cpr/archive/refs/tags/1.10.5.tar.gz -O cpr-1.10.5.tar.gz && \
+    tar -xzf cpr-1.10.5.tar.gz && \
+    mkdir -p cpr-1.10.5/build && \
+    cd cpr-1.10.5/build && \
+    cmake .. \
+        -DCPR_USE_SYSTEM_CURL=ON \
+        -DCPR_ENABLE_SSL=ON \
+        -DCPR_BUILD_TESTS=OFF \
+        -DCPR_FORCE_USE_OPENSSL_FOR_SSL=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    cmake --build . --parallel $(nproc) && \
+    cmake --install . && \
+    cd / && rm -rf /tmp/cpr-1.10.5 /tmp/cpr-1.10.5.tar.gz && \
+    ldconfig
+
+# Build the application
+WORKDIR /app
+COPY . .
+RUN mkdir -p build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_PREFIX_PATH=/usr/local \
+        -DCMAKE_MODULE_PATH=/usr/local/lib/cmake/cpr && \
+    cmake --build . --parallel $(nproc) && \
+    make install
+
+# Runtime stage
+FROM ubuntu:22.04
+
+LABEL maintainer="bniladridas"
+LABEL description="Llamaware Agent - Runtime"
+LABEL version="0.1"
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libcurl4 \
+    libssl3 \
+    zlib1g \
     python3 \
     python3-pip && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies for testing
-RUN pip3 install pytest requests
+# Install Python test dependencies
+RUN pip3 install --no-cache-dir pytest requests
 
-# Build CPR from source since it's not in Ubuntu repos
-RUN git clone https://github.com/libcpr/cpr.git /tmp/cpr && \
-    cd /tmp/cpr && \
-    cmake -S . -B build -DCPR_USE_SYSTEM_CURL=ON -DCPR_ENABLE_SSL=ON -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build build --parallel && \
-    cmake --install build && \
-    rm -rf /tmp/cpr
+# Copy built binary from builder
+COPY --from=builder /usr/local/bin/llamaware-agent /usr/local/bin/
+COPY --from=builder /usr/local/lib/libcpr* /usr/local/lib/
 
-# Create app directory
-WORKDIR /app
+# Create non-root user and set up environment
+RUN useradd -m -s /bin/bash llamaware && \
+    mkdir -p /app/data && \
+    chown -R llamaware:llamaware /app/data
 
-# Copy source code
-COPY . .
-
-# Build the application
-RUN mkdir build && cd build && \
-    cmake .. && \
-    make && \
-    cp bin/llamaware-agent /usr/local/bin/
-
-# Create data directory
-RUN mkdir -p /app/data
-
-# Create non-root user
-RUN useradd -m -s /bin/bash llamaware
 USER llamaware
-
-# Set working directory
 WORKDIR /home/llamaware
 
 # Copy configuration template
 COPY --chown=llamaware:llamaware .env.example .env
-
-# Expose any ports if needed (none for this CLI app)
-# EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
