@@ -66,9 +66,17 @@ services:
       - .:/app
     working_dir: /app
     user: root
-    command: /app/tests/e2e/run_tests_in_docker.sh
+    command: sh -c "/app/tests/e2e/run_tests_in_docker.sh"
     stdin_open: true
     tty: true
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/tests/e2e/.e2e_success"]
+      interval: 5s
+      timeout: 30s
+      retries: 1
+      start_period: 30s
     deploy:
       resources:
         limits:

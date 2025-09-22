@@ -2,6 +2,19 @@
 set -e
 set -o pipefail
 
+# Cleanup function to ensure proper shutdown
+cleanup() {
+    local exit_code=$?
+    echo "=== Cleaning up test environment ==="
+    # Kill any remaining child processes
+    pkill -P $$ 2>/dev/null || true
+    # Exit with the appropriate status code
+    exit $exit_code
+}
+
+# Set up trap to ensure cleanup runs on exit
+trap cleanup EXIT INT TERM
+
 # Print environment for debugging
 echo "=== Environment ==="
 printenv | sort
@@ -72,6 +85,7 @@ if [ $result -eq 0 ]; then
     echo "=== E2E tests completed successfully in ${duration}s ==="
     echo "=== Test logs saved to /app/tests/e2e/e2e_test.log ==="
     touch /app/tests/e2e/.e2e_success
+    # Exit with success code
     exit 0
 else
     echo "=== E2E tests failed after ${duration}s (exit code: $result) ==="
@@ -81,5 +95,18 @@ else
     cat "$TEST_DATA_DIR/"expect_*.log 2>/dev/null || echo "No debug logs available"
     echo "========================="
     echo "=== Full test log available in /app/tests/e2e/e2e_test.log ==="
-    exit 1
+    # Exit with failure code
+    exit $result
 fi
+
+# Cleanup function to ensure proper shutdown
+cleanup() {
+    echo "=== Cleaning up test environment ==="
+    # Kill any remaining processes
+    pkill -P $$ || true
+    # Exit with the test result
+    exit $result
+}
+
+# Set up trap to ensure cleanup runs on exit
+trap cleanup EXIT
