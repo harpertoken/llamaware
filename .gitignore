@@ -78,4 +78,5 @@ vcpkg_installed/
 # Temporary files
 *.tmp
 *.temp
-*.bak 
+*.bak # Ignore temporary test input files
+tests/e2e/input_*.txt
