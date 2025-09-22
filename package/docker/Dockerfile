@@ -2,18 +2,38 @@ FROM ubuntu:22.04
 
 LABEL maintainer="bniladridas"
 LABEL description="Llamaware Agent - Professional AI Agent"
-LABEL version="2.0.0"
+LABEL version="0.1"
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
+# Set environment variables to avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=Etc/UTC \
+    DEBCONF_NONINTERACTIVE_SEEN=true
+
+# First install tzdata alone to avoid interactive prompts
+RUN apt-get update && \
+    ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+    apt-get install -y --no-install-recommends tzdata && \
+    dpkg-reconfigure --frontend noninteractive tzdata && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install remaining dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     nlohmann-json3-dev \
     libcurl4-openssl-dev \
     libssl-dev \
+    zlib1g-dev \
     curl \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    valgrind \
+    expect \
+    python3 \
+    python3-pip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies for testing
+RUN pip3 install pytest requests
 
 # Build CPR from source since it's not in Ubuntu repos
 RUN git clone https://github.com/libcpr/cpr.git /tmp/cpr && \

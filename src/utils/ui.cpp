@@ -231,9 +231,9 @@ namespace Utils {
         print_system_info(mode, model);
         print_quick_help();
 
-        std::cout << Color::BOLD << "Ready" << Color::RESET << " - Type a command:\n";
+        std::cout << "Ready - Type a command:\n";
 
-        std::cout << Color::BOLD << "Ready" << Color::RESET << " - Type a command or chat naturally:\n";
+        std::cout << "Ready - Type a command or chat naturally:\n";
 
     }
 
