@@ -11,6 +11,19 @@ cmake-build-*/
 data/memory.txt
 data/*.log
 *.log
+tests/e2e/data/*.txt
+
+# Cache directories
+.cache/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.py[cod]
+*$py.class
+
+# Test artifacts
+test_data/
+tests/e2e/test_data/
 
 # Compiled Object files
 *.o

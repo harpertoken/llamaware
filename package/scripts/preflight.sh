@@ -143,7 +143,7 @@ elif find /usr/include /usr/local/include /opt/homebrew/include -name "cpr" -typ
 fi
 
 if [ "$CPR_FOUND" = "false" ]; then
-    warn_check "libcpr not found (build may still work if CMake finds it)"
+    print_success "libcpr not found in system - CMake will fetch and build it automatically"
 fi
 
 # Check nlohmann/json
@@ -235,7 +235,23 @@ if ! printf "2\nversion\nexit\n" | ./build/bin/llamaware-agent > /dev/null 2>&1;
 fi
 print_success "Version command test passed"
 
-# 6. File Operations Test
+# 6. E2E Tests (if available and not in quick mode)
+if [ "$QUICK_MODE" = "false" ] && [ -d "tests/e2e" ] && [ -f "tests/e2e/run_e2e_tests.sh" ]; then
+    print_status "Running E2E tests..."
+    if command -v expect >/dev/null 2>&1; then
+        if ./tests/e2e/run_e2e_tests.sh > /dev/null 2>&1; then
+            print_success "E2E tests passed"
+        else
+            warn_check "E2E tests failed - check logs for details"
+        fi
+    else
+        warn_check "E2E tests skipped - expect not installed"
+    fi
+else
+    print_status "E2E tests skipped (quick mode or not available)"
+fi
+
+# 7. File Operations Test
 print_status "Testing file operations..."
 TEST_FILE="test_preflight.txt"
 TEST_CONTENT="Preflight test content"
@@ -249,7 +265,7 @@ fi
 rm -f "$TEST_FILE" > /dev/null 2>&1 || true
 print_success "File operations test passed"
 
-# 7. Memory System Test
+# 8. Memory System Test
 print_status "Testing memory system..."
 if [ -f "data/memory.txt" ]; then
     MEMORY_SIZE=$(wc -l < "data/memory.txt" 2>/dev/null || echo "0")
@@ -258,7 +274,7 @@ else
     print_success "Memory system ready (no existing data)"
 fi
 
-# 8. Configuration Validation
+# 9. Configuration Validation
 print_status "Validating configuration..."
 if [ ! -f ".env.example" ]; then
     print_error "Configuration template (.env.example) missing"
@@ -266,7 +282,7 @@ if [ ! -f ".env.example" ]; then
 fi
 print_success "Configuration template found"
 
-# 9. Documentation Check
+# 10. Documentation Check
 print_status "Checking documentation..."
 REQUIRED_DOCS=("README.md" "LICENSE" "package/docs/CHANGELOG.md")
 for doc in "${REQUIRED_DOCS[@]}"; do
@@ -276,7 +292,7 @@ for doc in "${REQUIRED_DOCS[@]}"; do
 done
 print_success "Documentation check completed"
 
-# 10. Package Structure Validation
+# 11. Package Structure Validation
 print_status "Validating package structure..."
 REQUIRED_DIRS=("src" "include" "package" "build/bin")
 for dir in "${REQUIRED_DIRS[@]}"; do
@@ -287,7 +303,24 @@ for dir in "${REQUIRED_DIRS[@]}"; do
 done
 print_success "Package structure validation passed"
 
-# 11. Security Check (basic)
+# 12. Code Quality Check
+print_status "Running code quality checks..."
+if command -v clang-tidy > /dev/null 2>&1; then
+    if [ -f "build/compile_commands.json" ]; then
+        CLANG_TIDY_COUNT=$(make clang-tidy 2>&1 | grep -c "warnings generated" || echo "0")
+        if [ "$CLANG_TIDY_COUNT" -gt 0 ]; then
+            print_warning "Clang-tidy found $CLANG_TIDY_COUNT files with warnings"
+        else
+            print_success "Clang-tidy passed with no warnings"
+        fi
+    else
+        print_warning "Clang-tidy available but no compilation database found"
+    fi
+else
+    print_warning "Clang-tidy not installed - recommended for code quality"
+fi
+
+# 13. Security Check (basic)
 print_status "Running basic security checks..."
 if grep -r "system(" src/ include/ > /dev/null 2>&1; then
     print_warning "Direct system() calls found - review for security"
@@ -330,7 +363,7 @@ if [ "$QUICK_MODE" = "true" ] && [ $ERROR_COUNT -eq 0 ]; then
     exit 0
 fi
 
-# 12. GitHub Integration Check (if .github exists)
+# 14. GitHub Integration Check (if .github exists)
 if [ -d ".github" ]; then
     print_status "Validating GitHub integration..."
     

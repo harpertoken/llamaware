@@ -41,11 +41,11 @@ package/binary/
 package/managers/
 package/docs/
 
-# Test files
-test/
-tests/
-*_test.cpp
-*_test.h
+# Test files (keep for E2E builds)
+# test/
+# tests/
+# *_test.cpp
+# *_test.h
 
 # Cache files
 .cache/
