@@ -35,7 +35,7 @@ cd /tmp/app
 mkdir -p build
 cd build
 cmake ..
-make
+make -j1
 
 # Set binary path for E2E tests
 export BINARY_PATH="/usr/local/bin/llamaware-agent"
