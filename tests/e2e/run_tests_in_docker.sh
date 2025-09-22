@@ -83,5 +83,3 @@ else
     echo "=== Full test log available in /app/tests/e2e/e2e_test.log ==="
     exit 1
 fi
-
-exit 0
