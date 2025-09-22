@@ -8,12 +8,16 @@ cleanup() {
     echo "=== Cleaning up test environment ==="
     # Kill any remaining child processes
     pkill -P $$ 2>/dev/null || true
-    # Exit with the appropriate status code
-    exit $exit_code
+    # Return the exit code without exiting
+    return $exit_code
 }
 
-# Set up trap to ensure cleanup runs on exit
-trap cleanup EXIT INT TERM
+# Set up trap to ensure cleanup runs on exit and preserves exit code
+handle_exit() {
+    cleanup
+    exit $?
+}
+trap handle_exit EXIT INT TERM
 
 # Print environment for debugging
 echo "=== Environment ==="
