@@ -1,7 +1,5 @@
 # Llamaware
 
-[![Build Status](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions)
-
 Llamaware is a professional AI agent for development, built to be stable, extensible, and secure. It provides core features for file operations, session handling, extensions, and provider support.
 
 ## Build Status
