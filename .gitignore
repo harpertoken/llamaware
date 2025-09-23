@@ -37,6 +37,15 @@ cmake-build-*/
 *.data
 *.db
 *.sqlite
+*.gcda
+*.gcno
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
 
 # Runtime data
 data/memory.txt
@@ -58,6 +67,10 @@ tests/e2e/test_data/
 tests/e2e/*.log
 tests/e2e/.e2e_failed
 tests/e2e/test_*.txt
+tests/e2e/*.log
+tests/e2e/expect*.log
+tests/e2e/*.gcov
+tests/e2e/coverage/
 e2e_test.log
 
 # Test mock data
@@ -68,6 +81,10 @@ tests/mocks/*_responses/
 *.tmp
 *.temp
 pr*.md
+*.log
+*.gcov
+coverage/
+htmlcov/
 
 # Compiled Object files
 *.o
@@ -76,9 +93,20 @@ pr*.md
 *.dylib
 *.dll
 
-# Executables
-*.exe
-*.out
+# Build and cache directories
+build/
+bin/
+lib/
+.cache/
+.coverage
+.coverage.*
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+__pycache__/
+*.py[cod]
+*$py.class
 agent
 llamaware-agent
 
