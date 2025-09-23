@@ -6,6 +6,30 @@ build/
 bin/
 lib/
 cmake-build-*/
+*.sln
+*.vcxproj*
+*.vcxproj.*
+*.sdf
+*.opensdf
+*.suo
+*.user
+*.tlog/
+*.log
+*.tlog
+*.lastbuildstate
+*.idb
+*.pdb
+*.ilk
+*.exp
+*.manifest
+*.dll
+*.exe
+*.dylib
+*.so
+*.a
+*.lib
+*.dll.a
+*.dll.lib
 
 # Runtime data
 data/memory.txt
@@ -24,6 +48,8 @@ __pycache__/
 # Test artifacts
 test_data/
 tests/e2e/test_data/
+tests/e2e/*.log
+e2e_test.log
 
 # Compiled Object files
 *.o
@@ -39,11 +65,14 @@ agent
 llamaware-agent
 
 # IDE files
+.vs/
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.DS_Store
+Thumbs.db
 
 # Web related
 node_modules/
