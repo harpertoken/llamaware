@@ -1,16 +1,29 @@
 #pragma once
-#include <string>
 
 // Define DLL export/import macros for Windows
 #if defined(_WIN32) || defined(_WIN64)
     #ifdef LLAMAWARE_LIBRARY
         #define LLAMAWARE_API __declspec(dllexport)
+        // Disable warning about STL types in the interface
+        #pragma warning(disable: 4251)
     #else
         #define LLAMAWARE_API __declspec(dllimport)
+    #endif
+    
+    // Enable secure CRT functions
+    #ifndef _CRT_SECURE_NO_WARNINGS
+        #define _CRT_SECURE_NO_WARNINGS
+    #endif
+    
+    // Disable min/max macros from windows.h
+    #ifndef NOMINMAX
+        #define NOMINMAX
     #endif
 #else
     #define LLAMAWARE_API __attribute__((visibility("default")))
 #endif
+
+#include <string>
 
 namespace Utils {
     namespace Config {

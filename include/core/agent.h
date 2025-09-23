@@ -1,8 +1,17 @@
 #pragma once
+#include "utils/config.h"  // For LLAMAWARE_API
+
+// Forward declarations for STL types
 #include <string>
 #include <memory>
 #include <vector>
-#include "utils/config.h"  // For LLAMAWARE_API
+
+// Forward declare STL types that will be used in the interface
+namespace std {
+    template class LLAMAWARE_API std::allocator<char>;
+    template class LLAMAWARE_API std::basic_string<char, std::char_traits<char>, std::allocator<char>>;
+    template <class T, class D> class LLAMAWARE_API unique_ptr;
+}
 
 namespace Data { class MemoryManager; }
 namespace Services { class AIService; }
