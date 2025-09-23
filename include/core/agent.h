@@ -2,12 +2,13 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include "utils/config.h"  // For LLAMAWARE_API
 
 namespace Data { class MemoryManager; }
 namespace Services { class AIService; }
 
 namespace Core {
-    class Agent {
+    class LLAMAWARE_API Agent {
     public:
         enum Mode {
             MODE_UNSET = 0,

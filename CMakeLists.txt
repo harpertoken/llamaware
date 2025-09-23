@@ -42,12 +42,19 @@ if(CLANG_TIDY_EXE)
  endif()
 
 # Find dependencies
+find_package(Threads REQUIRED)
+
 # Find zlib with platform-specific logic
 if(APPLE)
     # On macOS, prefer pkg-config as it's more reliable with Homebrew
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
     message(STATUS "Found zlib using pkg-config: ${ZLIB_LINK_LIBRARIES}")
+    
+    # On macOS, we need to explicitly link with the C++ standard library
+    if(APPLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif()
     set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
     set(ZLIB_LIBRARIES PkgConfig::ZLIB)
     set(ZLIB_TARGET PkgConfig::ZLIB)
@@ -362,12 +369,31 @@ target_include_directories(llamaware_lib PUBLIC
     ${OPENSSL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
 )
+
 # Set compile definitions for symbol visibility
 target_compile_definitions(llamaware_lib PRIVATE LLAMAWARE_LIBRARY)
 set_target_properties(llamaware_lib PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN ON
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+    POSITION_INDEPENDENT_CODE ON
 )
+
+# Set platform-specific compiler flags
+if(MSVC)
+    target_compile_options(llamaware_lib PRIVATE /W4 /WX /EHsc)
+    target_compile_definitions(llamaware_lib PRIVATE _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(llamaware_lib PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
+        CXX_VISIBILITY_PRESET default
+    )
+    target_compile_definitions(llamaware_lib PUBLIC "LLAMAWARE_API=__declspec(dllexport)")
+else()
+    target_compile_options(llamaware_lib PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_definitions(llamaware_lib PUBLIC "LLAMAWARE_API=__attribute__((visibility(\"default\")))")
+endif()
+
 # Link dependencies as PRIVATE to avoid exposing them
 target_link_libraries(llamaware_lib PRIVATE
     ${CURL_LIBRARIES}
@@ -377,9 +403,14 @@ target_link_libraries(llamaware_lib PRIVATE
     OpenSSL::Crypto
     ${ZLIB_TARGET}
     ${CMAKE_DL_LIBS}
+    Threads::Threads
 )
-# Export symbols that need to be visible
-target_compile_definitions(llamaware_lib PUBLIC "LLAMAWARE_API=__attribute__((visibility(\"default\")))")
+
+# Set additional linker flags for macOS
+if(APPLE)
+    target_link_options(llamaware_lib PRIVATE -stdlib=libc++)
+    target_link_libraries(llamaware_lib PRIVATE "-framework CoreFoundation" "-framework Security")
+endif()
 
 # Main executable
 add_executable(llamaware-agent src/main.cpp)
