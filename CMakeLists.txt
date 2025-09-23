@@ -195,7 +195,7 @@ if(NOT CPR_FOUND)
     FetchContent_Declare(
         cpr
         GIT_REPOSITORY https://github.com/libcpr/cpr.git
-        GIT_TAG 1.10.0
+        GIT_TAG 1.10.5  # Updated to a more recent version
     )
     
     # Prevent building tests and examples
@@ -203,7 +203,23 @@ if(NOT CPR_FOUND)
     set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "")
     set(CPR_BUILD_TESTS_VERBOSE OFF CACHE BOOL "")
     
+    # Add compiler flags to suppress deprecation warnings
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+    endif()
+    
+    # Make sure we're using a compatible version of CPR
+    set(CPR_CURL_NOSIGNAL ON CACHE BOOL "")
+    
+    # Make the directory to suppress warnings about missing directory
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/_deps/cpr-build")
+    
     FetchContent_MakeAvailable(cpr)
+    
+    # Add the include directory if it exists
+    if(EXISTS "${CMAKE_BINARY_DIR}/_deps/cpr-src/include")
+        target_include_directories(cpr PUBLIC "${CMAKE_BINARY_DIR}/_deps/cpr-src/include")
+    endif()
     
     if(TARGET cpr::cpr)
         message(STATUS "CPR downloaded and built from source")
