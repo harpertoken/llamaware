@@ -374,7 +374,16 @@ target_link_libraries(llamaware_lib PUBLIC
 # Test executable
 add_executable(llamaware-tests tests/main_test.cpp)
 target_include_directories(llamaware-tests PRIVATE include)
-target_link_libraries(llamaware-tests llamaware_lib gtest_main)
+target_link_libraries(llamaware-tests PRIVATE 
+    llamaware_lib 
+    gtest_main 
+    ${CURL_LIBRARIES}
+    cpr::cpr 
+    nlohmann_json::nlohmann_json
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    ${ZLIB_TARGET}
+)
 add_test(NAME basic_tests COMMAND llamaware-tests)
 
 # Main executable
