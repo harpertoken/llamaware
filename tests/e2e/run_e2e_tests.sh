@@ -4,7 +4,7 @@
 
 set -e -o pipefail
 
-BINARY_PATH="/usr/local/bin/llamaware-agent"
+BINARY_PATH="${PWD}/build/bin/llamaware-agent"
 TEST_DATA_DIR="./test_data"
 LOG_FILE="./e2e_test.log"
 
@@ -15,8 +15,8 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Test configuration
-BINARY_PATH="/usr/local/bin/llamaware-agent"
-TEST_DATA_DIR="/tmp/llamaware_test_data"
+BINARY_PATH="${PWD}/build/bin/llamaware-agent"
+TEST_DATA_DIR="${PWD}/tests/e2e/test_data"
 LOG_FILE="e2e_test.log"
 
 # Ensure test mode is set
@@ -454,12 +454,12 @@ test_version_check() {
     
     # Create a simple test script with expect to handle interactive mode
     local test_script="${TEST_DATA_DIR}/simple_test.sh"
-    cat > "$test_script" << 'EOL'
+    cat > "$test_script" << EOL
 #!/usr/bin/expect -f
 set timeout 10
 
 # Start the application
-spawn /usr/local/bin/llamaware-agent
+spawn $BINARY_PATH
 
 expect {
     # Look for the mode selection prompt
@@ -544,7 +544,7 @@ test_file_read() {
 set timeout 30
 
 # Start the application
-spawn /usr/local/bin/llamaware-agent
+spawn $BINARY_PATH
 
 expect {
     # Handle mode selection
@@ -635,14 +635,14 @@ test_file_write() {
     
     # Create an expect script for the file write test
     local test_script="${TEST_DATA_DIR}/test_write.sh"
-    cat > "$test_script" << 'EOL'
+    cat > "$test_script" << EOL
 #!/usr/bin/expect -f
 set timeout 30
-set test_file [lindex $argv 0]
-set test_content [lindex $argv 1]
+set test_file "$test_file"
+set test_content "$test_content"
 
 # Start the application
-spawn /usr/local/bin/llamaware-agent
+spawn $BINARY_PATH
 
 expect {
     # Handle mode selection
@@ -652,7 +652,10 @@ expect {
     }
     # Look for command prompt
     -re {>\s*$} {
-        # Send write command
+        # Get just the filename without path for display
+        set display_file [file tail "$test_file"]
+        
+        # Send write command without quotes
         send "write:$test_file $test_content\r"
         expect {
             -re {File.*written successfully|File.*saved} {
@@ -660,27 +663,36 @@ expect {
                 after 1000
                 
                 # Verify the file was created
-                if {[file exists $test_file]} {
-                    set fh [open $test_file r]
-                    set content [read $fh]
-                    close $fh
+                if {[file exists "$test_file"]} {
+                    # Read the file content directly from the file system
+                    set fh [open "$test_file" r]
+                    set content [read \$fh]
+                    close \$fh
                     
                     # Trim whitespace for comparison
-                    set content [string trim $content]
+                    set content [string trim \$content]
                     set expected [string trim "$test_content"]
                     
-                    if {$content == $expected} {
+                    # Debug output
+                    puts "Expected content: '\$expected'"
+                    puts "Actual content: '\$content'"
+                    
+                    if {\$content == \$expected} {
                         puts "TEST_PASSED: File write successful"
                         send "exit\r"
                         exit 0
                     } else {
                         puts "ERROR: File content does not match expected"
-                        puts "Expected: '$expected'"
-                        puts "Got: '$content'"
+                        puts "Expected: '\$expected'"
+                        puts "Got: '\$content'"
                         exit 1
                     }
                 } else {
+                    # Debug: List the directory contents
                     puts "ERROR: File was not created at $test_file"
+                    puts "Directory contents:"
+                    catch {exec ls -la [file dirname "$test_file"]} dir_list
+                    puts "$dir_list"
                     exit 1
                 }
             }
@@ -745,14 +757,14 @@ test_file_read_after_write() {
     
     # Create an expect script for the file read test
     local test_script="${TEST_DATA_DIR}/test_read_after_write.sh"
-    cat > "$test_script" << 'EOL'
+    cat > "$test_script" << EOL
 #!/usr/bin/expect -f
 set timeout 30
-set test_file [lindex $argv 0]
-set expected_content [lindex $argv 1]
+set test_file [lindex \$argv 0]
+set expected_content [lindex \$argv 1]
 
 # Start the application
-spawn /usr/local/bin/llamaware-agent
+spawn $BINARY_PATH
 
 expect {
     # Handle mode selection

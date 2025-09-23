@@ -2,7 +2,7 @@
 set timeout 10
 
 # Start the application
-spawn /usr/local/bin/llamaware-agent
+spawn ${PWD}/build/bin/llamaware-agent
 
 expect {
     # Look for the mode selection prompt

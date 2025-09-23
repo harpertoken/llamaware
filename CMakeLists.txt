@@ -157,23 +157,30 @@ message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
 # Find nlohmann_json
 find_package(nlohmann_json 3.9.1 REQUIRED)
 
-# Find CPR - using 1.10.5 which is installed in the Docker image
+# Find CPR - using 1.10.5 which is installed in the Docker container
 find_package(cpr 1.10.5 REQUIRED)
 
 if(NOT TARGET cpr::cpr)
-    # If the target doesn't exist, create it
-    add_library(cpr::cpr INTERFACE IMPORTED)
-    find_library(CPR_LIBRARY cpr)
-    if(CPR_LIBRARY)
-        message(STATUS "Found CPR library: ${CPR_LIBRARY}")
-        target_link_libraries(cpr::cpr INTERFACE ${CPR_LIBRARY} CURL::libcurl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_TARGET})
-        target_include_directories(cpr::cpr INTERFACE /usr/local/include)
+    # Try to find the installed CPR package
+    find_package(cpr 1.10.5 QUIET)
+    
+    if(TARGET cpr::cpr)
+        # Use the found target
+        message(STATUS "Using system CPR target")
     else()
-        message(FATAL_ERROR "Could not find CPR library. Please install it or set CPR_DIR to the directory containing cpr-config.cmake")
+        # Fallback: Create our own target
+        message(STATUS "Creating custom CPR target")
+        add_library(cpr::cpr INTERFACE IMPORTED)
+        find_library(CPR_LIBRARY cpr)
+        if(CPR_LIBRARY)
+            message(STATUS "Found CPR library: ${CPR_LIBRARY}")
+            target_link_libraries(cpr::cpr INTERFACE ${CPR_LIBRARY} CURL::libcurl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_TARGET})
+            target_include_directories(cpr::cpr INTERFACE /opt/homebrew/include)
+        else()
+            message(FATAL_ERROR "Could not find CPR library. Please install it via 'brew install cpr' or set CPR_DIR to the directory containing cpr-config.cmake")
+        endif()
     endif()
 endif()
-
-message(STATUS "Using CPR: ${CPR_LIBRARY}")
 
 # Enable testing
 enable_testing()
@@ -232,13 +239,13 @@ if(APPLE)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     set(CMAKE_MACOSX_RPATH TRUE)
     
-    # Add compiler and linker flags
-    target_compile_options(cpr PRIVATE
+    # Add compiler and linker flags to all targets
+    add_compile_options(
         -march=armv8.4-a+fp16+rcpc+dotprod+crypto
         -Wno-deprecated-declarations
     )
     
-    target_link_options(cpr PRIVATE
+    add_link_options(
         -Wl,-no_weak_imports
     )
     
@@ -246,11 +253,11 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8.4-a+fp16+rcpc+dotprod+crypto -Wno-deprecated-declarations")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-no_weak_imports")
     
-    # Add OpenSSL include directories
-    target_include_directories(cpr PRIVATE ${OPENSSL_INCLUDE_DIR})
+    # Add OpenSSL include directories to all targets
+    include_directories(${OPENSSL_INCLUDE_DIR})
     
-    # Ensure we're using OpenSSL
-    target_compile_definitions(cpr PRIVATE
+    # Add OpenSSL definitions to all targets
+    add_compile_definitions(
         CURL_USE_OPENSSL=1
         CURL_USE_DARWINSSL=0
         CURL_USE_SECTRANSP=0
