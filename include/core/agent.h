@@ -8,9 +8,11 @@
 
 // Forward declare STL types that will be used in the interface
 namespace std {
-    template class LLAMAWARE_API std::allocator<char>;
-    template class LLAMAWARE_API std::basic_string<char, std::char_traits<char>, std::allocator<char>>;
-    template <class T, class D> class LLAMAWARE_API unique_ptr;
+    // Don't export std::unique_ptr as it causes conflicts with the standard library
+    template <class T, class D> class unique_ptr;
+    // Explicitly instantiate commonly used templates
+    template class LLAMAWARE_API allocator<char>;
+    template class LLAMAWARE_API basic_string<char, char_traits<char>, allocator<char>>;
 }
 
 namespace Data { class MemoryManager; }

@@ -21,6 +21,19 @@
     #endif
 #else
     #define LLAMAWARE_API __attribute__((visibility("default")))
+    // On non-Windows, we can use visibility attributes for better control
+    #ifdef __GNUC__
+        #define LLAMAWARE_LOCAL __attribute__((visibility("hidden")))
+    #else
+        #define LLAMAWARE_LOCAL
+    #endif
+#endif
+
+// Disable exporting of STL templates
+#ifdef _MSC_VER
+    #define LLAMAWARE_NO_EXPORT_TEMPLATE template class LLAMAWARE_API
+#else
+    #define LLAMAWARE_NO_EXPORT_TEMPLATE extern template class LLAMAWARE_API
 #endif
 
 #include <string>
