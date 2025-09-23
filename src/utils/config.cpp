@@ -1,4 +1,9 @@
 #include "utils/config.h"
+
+// Define the LLAMAWARE_LIBRARY macro to ensure proper symbol export
+#ifndef LLAMAWARE_LIBRARY
+#define LLAMAWARE_LIBRARY
+#endif
 #include <fstream>
 #include <sstream>
 #include <cstdlib>

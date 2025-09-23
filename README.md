@@ -1,489 +1,216 @@
-
 # Llamaware
 
+Llamaware is a professional AI agent for development, built to be stable, extensible, and secure. It provides core features for file operations, session handling, extensions, and provider support.
+
+## Build Status
+
 [![CI](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/harpertoken/llamaware/actions/workflows/codeql.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/codeql.yml)
+[![E2E Tests](https://github.com/harpertoken/llamaware/actions/workflows/e2e.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/e2e.yml)
 
-**Professional AI Agent with 16 Enterprise Features**
+## System Requirements
 
-Llamaware is an autonomous AI assistant that understands codebases and accelerates development through natural language interaction. It provides a comprehensive development environment with advanced file operations, session management, extensibility, and security features.
-
-## Table of Contents
-
-- [Enterprise Features](#enterprise-features)
-- [Quick Start](#quick-start)
-- [AI Providers](#ai-providers)
-
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Docker Deployment](#docker-deployment)
-- [Usage Examples](#usage-examples)
-- [Security Features](#security-features)
-- [Documentation](#documentation)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Enterprise Features
-
-**16 features across 4 categories:**
-
-### Files (4 features)
-- **File Injection**: `@file` and `@directory` commands for context management
-- **Advanced Operations**: Read, write, replace, and search with validation
-- **Context Integration**: Hierarchical context with LLAMAWARE.md files
-- **Shell Integration**: Interactive shell with toggle mode
-
-### Sessions (4 features)
-- **Session Management**: Save/resume conversations and project state
-- **Tool Registry**: Comprehensive tool management and discovery
-- **Configuration**: Layered configuration system with persistence
-- **Compression**: AI-powered context compression for efficiency
-
-### Extensions (4 features)
-- **MCP Support**: Model Context Protocol server integration
-- **Checkpointing**: File-based checkpoints with backup/restore
-- **Web Integration**: Advanced web fetch and search capabilities
-- **Filtering**: Git-aware advanced file filtering
-
-### Security (4 features)
-- **Themes**: Multi-theme system with ANSI color support
-- **Authentication**: Provider management and secure credential storage
-- **Sandboxing**: Docker-based execution environment
-- **Error Handling**: Enhanced validation and error reporting
+- **Supported Platforms**:
+  - ✅ Linux (Ubuntu 20.04+)
+  - ✅ macOS (11.0+)
+  - ✅ Windows (MSVC 2019+)
+- **Compiler**: C++17 compatible (GCC 9+, Clang 10+, or MSVC 2019+)
+- **Build System**: CMake 3.14+
+- **Version Control**: Git
+- **Dependencies**:
+  - cpr 1.10.0+
+  - nlohmann-json 3.10.0+
+  - OpenSSL 1.1.1+
 
 ## Quick Start
 
-### Native Installation
+### Ubuntu/Debian
+
+1. Install build dependencies:
+   ```bash
+   sudo apt update
+   sudo apt install -y build-essential cmake git libcurl4-openssl-dev
+   ```
+
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/harpertoken/llamaware.git
+   cd llamaware
+   ```
+
+3. Build the project:
+   ```bash
+   make install-deps-ubuntu  # Installs remaining dependencies
+   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+   cmake --build build --config Release -- -j$(nproc)
+   ```
+
+4. Run the agent:
+   ```bash
+   ./build/bin/llamaware-agent
+   ```
+
+### macOS
+
+1. Install Xcode command line tools and Homebrew if not already installed.
+2. Install dependencies:
+   ```bash
+   brew install cmake
+   ```
+3. Clone and build as shown in the Ubuntu instructions.
+
+## Configuration
+
+Create a `.env` file in the project root with your configuration:
+
+```env
+# Example configuration
+LOG_LEVEL=info
+API_KEY=your_api_key_here
+```
+
+## Development
+
+### Building with Debug Symbols
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --config Debug
+```
+
+### Running Tests
+```bash
+# Unit tests
+make test
+
+# End-to-end tests
+make test-e2e
+
+# Run tests in Docker
+make test-e2e-docker
+```
+
+## Basic Commands
+
+Once the agent is running, you can interact with it using simple commands:
 
 ```bash
-# Clone repository
-git clone https://github.com/harpertoken/llamaware.git
-cd llamaware
-
-# Install dependencies
-# macOS
-brew install cpr nlohmann-json cmake
-
-# Ubuntu/Debian
-sudo apt install nlohmann-json3-dev cmake build-essential git libcurl4-openssl-dev
-
-# Build
-mkdir build && cd build
-cmake .. && make
-
-# Run
-./bin/llamaware-agent
+version                # Show version information
+search:query           # Search (e.g., search:weather in New York)
+cmd:command            # Execute a system command (e.g., cmd:ls -la)
+read:/path/to/file.txt # Read a file
+write:/path/to/file content  # Write content to a file
+help                   # Show help information
+exit | quit            # Exit the agent
 ```
 
-## AI Providers
+### Example Session
 
-### Online Mode (Cloud AI)
-- **Together AI**: Meta Llama-3.3-70B with free tier
-- **Cerebras**: Ultra-fast Llama-4-Maverick with streaming
+Enter the container, start the agent, and try a few commands:
 
-### Offline Mode (Local AI)
-- **Ollama Integration**: Local Llama models (3.2:3b, 3.2:latest, 3.1:latest)
-- **Privacy-First**: No data sent to external services
-- **Resource Efficient**: Runs on local hardware
-
-## Architecture
-
-```
-src/
-├── core/           # Agent logic and command routing
-├── services/       # AI, file, web, command services
-├── data/           # Memory management and persistence
-├── utils/          # UI, validation, and configuration
-└── main.cpp        # Application entry point
-```
-
-## Prerequisites
-
-### System Requirements
-- **OS**: Linux, macOS, or Windows
-- **RAM**: 8GB minimum (16GB+ recommended for offline mode)
-- **Storage**: 10GB+ for models and data
-- **C++17**: Compatible compiler (GCC 9+, Clang 10+, MSVC 2019+)
-
-### Dependencies
 ```bash
-# macOS
-brew install cpr nlohmann-json cmake
+docker exec -it llamaware-agent /bin/bash
+llamaware-agent
 
-# Ubuntu/Debian
-sudo apt install nlohmann-json3-dev cmake build-essential git libcurl4-openssl-dev
-
-# Windows (via vcpkg)
-vcpkg install cpr nlohmann-json
+# Inside the agent
+version
+cmd:ls -la
+search:current time
+exit
 ```
 
-## Docker Deployment
+### Advanced Usage
 
-### Quick Start with Docker Compose
+**Environment Variables**
+Set API keys in the `.env` file at the project root. The container automatically loads them.
+
+**Ollama Integration**
+The Ollama API is available at `http://localhost:11434`.
+List models with:
+
 ```bash
-cd package/docker
-docker-compose up --build
+curl http://localhost:11434/api/tags
 ```
 
-### Advanced Docker Setup
+**Persistent Data**
+Data is stored in Docker volumes. Check volumes with:
 
-#### With Ollama (Offline Mode)
 ```bash
-cd package/docker
-docker-compose --profile ollama up --build
+docker volume ls
 ```
 
-#### Environment Configuration
-Create a `.env` file with your API keys:
+### Troubleshooting
+
+If commands fail:
+
 ```bash
-TOGETHER_API_KEY="your-together-key"
-CEREBRAS_API_KEY="your-cerebras-key"
-SERPAPI_KEY="your-serpapi-key"
+# Verify container is running
+docker ps
+
+# View logs
+docker logs llamaware-agent
 ```
 
-#### Manual Docker Commands
+Restart the agent:
+
 ```bash
-# Build image
-make docker-build
-
-# Run container
-docker run -it --rm \
-  -v $(pwd)/.env:/home/llamaware/.env:ro \
-  -v llamaware_data:/home/llamaware/data \
-  llamaware/agent
+docker-compose -f package/docker/docker-compose.yml restart llamaware-agent
 ```
 
-## Usage Examples
+## Providers
 
-### Basic Commands
+Llamaware supports both online and offline modes:
+
+* **Together AI**: Llama-3.3-70B
+* **Cerebras**: Llama-4-Maverick-17B
+* **Offline**: Ollama (llama3.2:3b, latest)
+
+## Running Tests
+
+### Unit Tests
+
 ```bash
-# File operations
-> @file src/main.cpp              # Inject file into context
-> @directory src/                 # Inject entire directory
-> read:src/main.cpp               # Read file content
-> write:output.txt Hello World    # Write to file
-> grep:TODO:src:*.cpp             # Search for patterns
-
-# AI interaction
-> What is this codebase about?     # Ask questions
-> search:modern C++ patterns      # Web search
-> remember:strict TypeScript      # Store facts
-
-# Session management
-> /save project                   # Save current session
-> /resume project                 # Resume saved session
-> /checkpoint v1.0                # Create checkpoint
-> /compress                       # Compress context
+cmake -S . -B build && cmake --build build
+cd build && ctest --output-on-failure
 ```
 
-### Advanced Features
+### End-to-End (E2E) Tests
+
 ```bash
-# MCP (Model Context Protocol)
-> /mcp servers                    # List available servers
-> /mcp tools ollama               # List server tools
-
-# Web integration
-> /fetch https://api.github.com/user json
-> search:latest React patterns
-
-# Security & theming
-> /theme set dark                 # Change theme
-> /auth providers                 # List auth providers
-> /sandbox run "npm test"         # Run in sandbox
+docker-compose -f docker-compose.e2e.yml up -d
+docker-compose -f docker-compose.e2e.yml logs -f e2e-tests
+docker-compose -f docker-compose.e2e.yml down
 ```
-
-### Interactive Shell
-```bash
-> !                             # Toggle shell mode
-$ ls -la                        # Execute shell commands
-$ git status                    # Git operations
-$ exit                          # Return to agent mode
-```
-
-## Security Features
-
-- **Encrypted Credentials**: AES-256-GCM encryption for API keys
-- **Command Validation**: All commands validated before execution
-- **Sandbox Execution**: Docker-based sandboxing for safe operations
-- **Secure Storage**: Cross-platform secure credential management
-- **Input Sanitization**: Comprehensive parameter validation
-- **Error Handling**: Enhanced error reporting and recovery
 
 ## Documentation
 
-### Core Documentation
-- **[Setup Guide](docs/SETUP.md)** - Complete installation and configuration
-- **[Commands Reference](docs/COMMANDS.md)** - All 16 enterprise features
-- **[Architecture](docs/ARCHITECTURE.md)** - System design and components
-- **[Development](docs/DEVELOPMENT.md)** - Contributing and development workflow
+Guides are available to help with setup, usage, and development:
 
-### Project Structure
-```
-├── src/                    # C++ source code
-│   ├── core/              # Agent logic
-│   ├── services/          # AI, file, web services
-│   ├── data/              # Memory management
-│   └── utils/             # UI and utilities
+* [Setup](docs/SETUP.md)
+* [Commands](docs/COMMANDS.md)
+* [Development](docs/DEVELOPMENT.md)
+* [Development Workflow](docs/DEVELOPMENT-WORKFLOW.md)
+* [CI/CD Pipeline](docs/CI-CD.md)
 
-├── package/               # Distribution packages
-│   ├── docker/           # Container setup
-│   ├── binary/           # Binary distributions
-│   └── scripts/          # Build automation
-├── docs/                  # Documentation
-└── include/              # C++ headers
-```
+## Code Structure
 
-## Optional CI/CD Workflows
+* **Main Integration**: `src/core/agent.cpp` – central agent logic and command routing
+* **Services**: `src/services/` – AI, file operations, web, git, MCP, and more
+* **Core Components**: `src/core/` – agent class and shared functionality
+* **Utilities**: `src/utils/` – configuration, UI, validation helpers
 
-If you want to add automated release or deployment workflows, create the following files in `.github/workflows/`.
+## Testing
 
-### Release Workflow
+Run end-to-end tests locally:
 
-For automated binary releases on tag push. This workflow builds the C++ project on multiple platforms and creates a GitHub release.
-
-<details>
-<summary>Click to expand YAML</summary>
-
-```yaml
-name: Release
-
-on:
-  push:
-    tags:
-      - 'v*'  # Trigger on version tags
-
-permissions:
-  contents: write  # Allow creating releases
-
-jobs:
-  build-release:
-    name: Build Release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux-x64
-            artifact: llamaware-agent
-          - os: macos-latest
-            platform: macos-x64
-            artifact: llamaware-agent
-          - os: windows-latest
-            platform: windows-x64
-            artifact: llamaware-agent.exe
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    # Install build dependencies for each OS
-    - name: Install dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt update
-        sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
-        git clone --depth=1 https://github.com/libcpr/cpr.git
-        cmake -S cpr -B cpr/build -DBUILD_CPR_TESTS=OFF -DCPR_USE_SYSTEM_CURL=ON
-        sudo cmake --build cpr/build --target install
-
-    - name: Install dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: brew install cpr nlohmann-json cmake
-
-    - name: Install dependencies (Windows)
-      if: matrix.os == 'windows-latest'
-      run: vcpkg install cpr nlohmann-json --triplet x64-windows
-
-    # Build the project
-    - name: Build release (Linux/macOS)
-      if: matrix.os != 'windows-latest'
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-        cmake --build build
-
-    - name: Build release (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
-        cmake --build build --config Release
-
-    # Prepare artifact
-    - name: Rename binary
-      run: |
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          mv build/bin/Release/llamaware-agent.exe llamaware-agent-${{ matrix.platform }}
-        else
-          mv build/bin/llamaware-agent llamaware-agent-${{ matrix.platform }}
-        fi
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: llamaware-agent-${{ matrix.platform }}
-        path: llamaware-agent-${{ matrix.platform }}
-
-  create-release:
-    name: Create Release
-    needs: build-release
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-
-    - name: Create release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          llamaware-agent-linux-x64/llamaware-agent-linux-x64
-          llamaware-agent-macos-x64/llamaware-agent-macos-x64
-          llamaware-agent-windows-x64/llamaware-agent-windows-x64
-        generate_release_notes: true  # Auto-generate release notes
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-</details>
-
-### Web Deployment Workflow
-
-For deploying a React web interface to Vercel on changes to the web/ folder.
-
-<details>
-<summary>Click to expand YAML</summary>
-
-```yaml
-name: Deploy to Vercel
-
-on:
-  push:
-    branches: [ main ]  # Trigger on main branch pushes
-    paths:
-      - 'web/**'  # Only when web folder changes
-
-jobs:
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'  # Use Node.js 18
-
-      - name: Install dependencies
-        working-directory: web  # Run in web directory
-        run: npm ci  # Clean install
-
-      - name: Build
-        working-directory: web
-        run: npm run build  # Build production bundle
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Deploy to Vercel
-        working-directory: web
-        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }}  # Deploy to production
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-```
-
-</details>
-
-## Troubleshooting
-
-### Build Issues
 ```bash
-# Clean and rebuild
-make clean
-mkdir build && cd build
-cmake .. && make
-
-# Check dependencies
-cmake --version
-pkg-config --exists nlohmann_json
+./tests/e2e/run_e2e_tests.sh
 ```
 
-### API Configuration
+Or in Docker:
+
 ```bash
-# Verify API keys
-echo $TOGETHER_API_KEY
-echo $CEREBRAS_API_KEY
-
-# Test API connectivity
-curl -H "Authorization: Bearer $TOGETHER_API_KEY" \
-     https://api.together.xyz/v1/models
-```
-
-### Offline Mode Issues
-```bash
-# Check Ollama service
-curl http://localhost:11434/api/tags
-
-# Start Ollama if needed
-ollama serve &
-
-# Download models
-ollama pull llama3.2:3b
-ollama list
-```
-
-### Performance Optimization
-```bash
-# Memory limits (optional)
-export OLLAMA_MAX_LOADED_MODELS=1
-
-# Thread configuration
-export OLLAMA_NUM_PARALLEL=4
-```
-
-## Contributing
-
-We welcome contributions! Please see our [Development Guide](docs/DEVELOPMENT.md) for:
-
-- Development setup and workflow
-- Code standards and testing
-- Pull request guidelines
-- Pre-push validation steps
-
-### Quick Development Setup
-```bash
-# Fork and clone
-git clone https://github.com/your-username/llamaware.git
-cd llamaware
-
-# Install dependencies
-make install-deps-ubuntu  # or install-deps-mac
-
-# Build in debug mode
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Debug .. && make
-
-# Run tests
-make test
+./tests/e2e/run_tests_in_docker.sh
 ```
 
 ## License
 
-Llamaware is licensed under the [MIT License](LICENSE).
-
-## Acknowledgments
-
-- **Together AI** for providing free access to Llama models
-- **Cerebras** for ultra-fast inference capabilities
-- **Ollama** for local AI model support
-- **Open Source Community** for the amazing libraries and tools
-
----
-
-**Built for developers, by developers**
+MIT

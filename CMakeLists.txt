@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 3.14)
-project(LlamawareAgent VERSION 2.0.0 LANGUAGES CXX)
+project(LlamawareAgent VERSION 0.1 LANGUAGES CXX)
+
+# Include FetchContent for downloading dependencies
+include(FetchContent)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Generate compile_commands.json for clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Build configuration
 if(NOT CMAKE_BUILD_TYPE)
@@ -16,19 +22,39 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 if(MSVC)
     add_compile_options(/W4 /WX /MP /EHsc)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:DebugDLL>")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+    endif()
 endif()
 
+# Clang-Tidy configuration
+find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+    message(STATUS "Clang-Tidy found: ${CLANG_TIDY_EXE}")
+ else()
+     message(STATUS "Clang-Tidy not found. Please install it via your system's package manager (e.g., 'brew install llvm' or 'apt install clang-tidy').")
+ endif()
+
 # Find dependencies
+find_package(Threads REQUIRED)
+
 # Find zlib with platform-specific logic
 if(APPLE)
     # On macOS, prefer pkg-config as it's more reliable with Homebrew
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
     message(STATUS "Found zlib using pkg-config: ${ZLIB_LINK_LIBRARIES}")
+    
+    # On macOS, we need to explicitly link with the C++ standard library
+    if(APPLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif()
     set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
     set(ZLIB_LIBRARIES PkgConfig::ZLIB)
     set(ZLIB_TARGET PkgConfig::ZLIB)
@@ -138,44 +164,123 @@ message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
 # Find nlohmann_json
 find_package(nlohmann_json 3.9.1 REQUIRED)
 
-# Fetch CPR with explicit configuration
-include(FetchContent)
+# Find CPR - try to find the package first
+set(CPR_MIN_VERSION "1.10.0")
+set(CPR_FOUND FALSE)
 
-# Clear any cached CPR variables
-unset(CPR_LIBRARIES CACHE)
-unset(CPR_INCLUDE_DIRS CACHE)
+# First try to find CPR using config mode
+find_package(cpr ${CPR_MIN_VERSION} QUIET)
 
-# Configure CPR
-set(CPR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "" FORCE)
-set(CPR_ENABLE_SSL ON CACHE BOOL "" FORCE)
-set(CPR_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
-set(CPR_FORCE_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
+if(TARGET cpr::cpr)
+    message(STATUS "Found CPR (config mode): ${cpr_VERSION}")
+    set(CPR_FOUND TRUE)
+else()
+    # If not found, try to find the library directly
+    find_library(CPR_LIBRARY NAMES cpr)
+    find_path(CPR_INCLUDE_DIR NAMES cpr/cpr.h)
+    
+    if(CPR_LIBRARY AND CPR_INCLUDE_DIR)
+        message(STATUS "Found CPR (library): ${CPR_LIBRARY}")
+        add_library(cpr::cpr INTERFACE IMPORTED)
+        target_include_directories(cpr::cpr INTERFACE ${CPR_INCLUDE_DIR})
+        target_link_libraries(cpr::cpr INTERFACE 
+            ${CPR_LIBRARY} 
+            CURL::libcurl 
+            OpenSSL::SSL 
+            OpenSSL::Crypto 
+            ${ZLIB_TARGET}
+        )
+        set(CPR_FOUND TRUE)
+    endif()
+endif()
 
-# Always use OpenSSL on all platforms
-set(CPR_USE_OPENSSL ON CACHE BOOL "" FORCE)
-set(CPR_USE_OPENSSL_DEFAULT_IMPLEMENTATION ON CACHE BOOL "" FORCE)
-set(CPR_USE_OPENSSL_AUTO_IMPLEMENTATION OFF CACHE BOOL "" FORCE)
-set(CPR_FORCE_OPENSSL_BACKEND ON CACHE BOOL "" FORCE)
-set(CPR_FORCE_DARWINSSL_BACKEND OFF CACHE BOOL "" FORCE)
+if(NOT CPR_FOUND)
+    # If still not found, try to fetch it using FetchContent
+    message(STATUS "CPR not found, downloading using FetchContent...")
+    include(FetchContent)
+    
+    FetchContent_Declare(
+        cpr
+        GIT_REPOSITORY https://github.com/libcpr/cpr.git
+        GIT_TAG 1.10.5  # Updated to a more recent version
+    )
+    
+    # Prevent building tests and examples
+    set(CPR_BUILD_TESTS OFF CACHE BOOL "")
+    set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "")
+    set(CPR_BUILD_TESTS_VERBOSE OFF CACHE BOOL "")
+    
+    # Add compiler flags to suppress deprecation warnings
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+    endif()
+    
+    # Make sure we're using a compatible version of CPR
+    set(CPR_CURL_NOSIGNAL ON CACHE BOOL "")
+    
+    # Make the directory to suppress warnings about missing directory
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/_deps/cpr-build")
+    
+    FetchContent_MakeAvailable(cpr)
+    
+    # Add the include directory if it exists
+    if(EXISTS "${CMAKE_BINARY_DIR}/_deps/cpr-src/include")
+        target_include_directories(cpr PUBLIC "${CMAKE_BINARY_DIR}/_deps/cpr-src/include")
+    endif()
+    
+    if(TARGET cpr::cpr)
+        message(STATUS "CPR downloaded and built from source")
+        set(CPR_FOUND TRUE)
+    else()
+        message(FATAL_ERROR "Failed to find or build CPR. Please install it manually or check your network connection.")
+    endif()
+endif()
+# Enable testing
+enable_testing()
 
-# Fetch and make available
-FetchContent_Declare(
-    cpr
-    GIT_REPOSITORY https://github.com/libcpr/cpr.git
-    GIT_TAG 1.10.5
-    GIT_SHALLOW TRUE
-)
+# Fetch Google Test
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(cpr)
+# Only fetch and build gtest if not already found
+if(NOT TARGET gtest)
+    message(STATUS "Downloading and building Google Test...")
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+        GIT_SHALLOW TRUE
+    )
+    
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    
+    # Make sure we're not overriding compiler flags
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+    set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
+    set(BUILD_GTEST ON CACHE BOOL "" FORCE)
+    
+    FetchContent_MakeAvailable(googletest)
+    
+    # Create an interface library for gtest to make it easier to link
+    if(NOT TARGET gtest_all_tests)
+        add_library(gtest_all_tests INTERFACE)
+        target_link_libraries(gtest_all_tests
+            INTERFACE
+                GTest::GTest
+                GTest::Main
+        )
+    endif()
+endif()
 
-# Ensure proper linking on all platforms
-target_link_libraries(cpr PRIVATE 
-    OpenSSL::SSL 
-    OpenSSL::Crypto
-    ${ZLIB_TARGET}  # Use the appropriate zlib target for this platform
-)
+# Only set up the cpr target if we're building it ourselves
+if(TARGET cpr)
+    # Ensure proper linking on all platforms for our local cpr build
+    target_link_libraries(cpr PRIVATE 
+        OpenSSL::SSL 
+        OpenSSL::Crypto
+        ${ZLIB_TARGET}  # Use the appropriate zlib target for this platform
+    )
+endif()
 
 # On macOS, add additional settings
 if(APPLE)
@@ -187,13 +292,13 @@ if(APPLE)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     set(CMAKE_MACOSX_RPATH TRUE)
     
-    # Add compiler and linker flags
-    target_compile_options(cpr PRIVATE
+    # Add compiler and linker flags to all targets
+    add_compile_options(
         -march=armv8.4-a+fp16+rcpc+dotprod+crypto
         -Wno-deprecated-declarations
     )
     
-    target_link_options(cpr PRIVATE
+    add_link_options(
         -Wl,-no_weak_imports
     )
     
@@ -201,11 +306,11 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8.4-a+fp16+rcpc+dotprod+crypto -Wno-deprecated-declarations")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-no_weak_imports")
     
-    # Add OpenSSL include directories
-    target_include_directories(cpr PRIVATE ${OPENSSL_INCLUDE_DIR})
+    # Add OpenSSL include directories to all targets
+    include_directories(${OPENSSL_INCLUDE_DIR})
     
-    # Ensure we're using OpenSSL
-    target_compile_definitions(cpr PRIVATE
+    # Add OpenSSL definitions to all targets
+    add_compile_definitions(
         CURL_USE_OPENSSL=1
         CURL_USE_DARWINSSL=0
         CURL_USE_SECTRANSP=0
@@ -255,8 +360,78 @@ set(ALL_SOURCES
     ${DATA_SOURCES}
 )
 
+# Create library with all sources
+add_library(llamaware_lib ${ALL_SOURCES})
+target_include_directories(llamaware_lib PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    ${CURL_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIRS}
+)
+
+# Set compile definitions for symbol visibility
+target_compile_definitions(llamaware_lib PRIVATE LLAMAWARE_LIBRARY)
+set_target_properties(llamaware_lib PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+    POSITION_INDEPENDENT_CODE ON
+)
+
+# Set platform-specific compiler flags
+if(MSVC)
+    target_compile_options(llamaware_lib PRIVATE /W4 /WX /EHsc)
+    target_compile_definitions(llamaware_lib PRIVATE _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(llamaware_lib PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
+        CXX_VISIBILITY_PRESET default
+    )
+    target_compile_definitions(llamaware_lib PUBLIC "LLAMAWARE_API=__declspec(dllexport)")
+else()
+    target_compile_options(llamaware_lib PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_definitions(llamaware_lib PUBLIC "LLAMAWARE_API=__attribute__((visibility(\"default\")))")
+endif()
+
+# Link dependencies as PRIVATE to avoid exposing them
+target_link_libraries(llamaware_lib PRIVATE
+    ${CURL_LIBRARIES}
+    cpr::cpr 
+    nlohmann_json::nlohmann_json
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    ${ZLIB_TARGET}
+    ${CMAKE_DL_LIBS}
+    Threads::Threads
+)
+
+# Set additional linker flags for macOS
+if(APPLE)
+    target_link_options(llamaware_lib PRIVATE -stdlib=libc++)
+    target_link_libraries(llamaware_lib PRIVATE "-framework CoreFoundation" "-framework Security")
+endif()
+
 # Main executable
-add_executable(llamaware-agent src/main.cpp ${ALL_SOURCES})
+add_executable(llamaware-agent src/main.cpp)
+target_include_directories(llamaware-agent PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(llamaware-agent PRIVATE 
+    llamaware_lib
+)
+
+# Test executable
+add_executable(llamaware-tests tests/main_test.cpp src/utils/version.cpp)
+target_include_directories(llamaware-tests PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(llamaware-tests PRIVATE 
+    llamaware_lib 
+    gtest_main 
+    gtest
+)
+add_test(NAME basic_tests COMMAND llamaware-tests)
 
 # Set target properties
 set_target_properties(llamaware-agent PROPERTIES
@@ -268,41 +443,13 @@ set_target_properties(llamaware-agent PROPERTIES
     SKIP_BUILD_RPATH FALSE
 )
 
-# Include directories
-target_include_directories(llamaware-agent PRIVATE 
-    ${CURL_INCLUDE_DIRS}
-    ${OPENSSL_INCLUDE_DIR}
-    ${ZLIB_INCLUDE_DIRS}  # Add zlib include directories
-)
-
-# Common linking for all platforms
-if(TARGET nlohmann_json::nlohmann_json)
-    target_link_libraries(llamaware-agent PRIVATE 
-        ${CURL_LIBRARIES}
-        cpr::cpr 
-        nlohmann_json::nlohmann_json
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        ${ZLIB_TARGET}  # Use the platform-appropriate zlib target
-        ${CMAKE_DL_LIBS}
+# On macOS, add additional settings
+if(APPLE)
+    target_link_options(llamaware-agent PRIVATE
+        -Wl,-rpath,@loader_path/../lib
+        -Wl,-rpath,/usr/local/lib
+        -Wl,-rpath,/opt/homebrew/lib
     )
-    
-    # On macOS, add additional settings
-    if(APPLE)
-        target_link_options(llamaware-agent PRIVATE
-            -Wl,-rpath,@loader_path/../lib
-            -Wl,-rpath,/usr/local/lib
-            -Wl,-rpath,/opt/homebrew/lib
-        )
-    endif()
-else()
-    target_include_directories(llamaware-agent PRIVATE ${nlohmann_json_INCLUDE_DIRS})
-    target_link_libraries(llamaware-agent PRIVATE 
-        cpr::cpr 
-        ${OPENSSL_LIBRARIES}
-        ZLIB::ZLIB
-    )
-    target_include_directories(llamaware-agent PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()
 
 # Installation
@@ -357,6 +504,30 @@ add_custom_target(test-quick
     DEPENDS llamaware-agent
     COMMENT "Quick functionality test"
 )
+
+# Clang-Tidy target
+if(CLANG_TIDY_EXE)
+    add_custom_target(clang-tidy
+        COMMAND ${CLANG_TIDY_EXE} --config-file=${CMAKE_SOURCE_DIR}/.clang-tidy -p ${CMAKE_BINARY_DIR} ${ALL_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang-tidy on all source files"
+    )
+endif()
+
+# Code coverage target (requires lcov)
+find_program(LCOV_EXE lcov)
+find_program(GENHTML_EXE genhtml)
+if(LCOV_EXE)
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/coverage
+        COMMAND ctest --output-on-failure
+        COMMAND ${LCOV_EXE} --capture --directory ${CMAKE_BINARY_DIR} --output-file ${CMAKE_BINARY_DIR}/coverage/coverage.info --exclude '/usr/*' --exclude '*/tests/*' --exclude '*/_deps/*'
+        COMMAND ${LCOV_EXE} --list ${CMAKE_BINARY_DIR}/coverage/coverage.info
+        COMMAND ${GENHTML_EXE} ${CMAKE_BINARY_DIR}/coverage/coverage.info --output-directory ${CMAKE_BINARY_DIR}/coverage/html
+        DEPENDS llamaware-tests
+        COMMENT "Running tests and generating code coverage report"
+    )
+endif()
 
 # Add preflight target (comprehensive pre-deployment checks)
 add_custom_target(preflight

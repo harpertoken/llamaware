@@ -6,11 +6,85 @@ build/
 bin/
 lib/
 cmake-build-*/
+*.sln
+*.vcxproj*
+*.vcxproj.*
+*.sdf
+*.opensdf
+*.suo
+*.user
+*.tlog/
+*.log
+*.tlog
+*.lastbuildstate
+*.idb
+*.pdb
+*.ilk
+*.exp
+*.manifest
+*.dll
+*.exe
+*.dylib
+*.so
+*.a
+*.lib
+*.dll.a
+*.dll.lib
+
+# Binary files
+*.bin
+*.dat
+*.data
+*.db
+*.sqlite
+*.gcda
+*.gcno
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
 
 # Runtime data
 data/memory.txt
 data/*.log
 *.log
+tests/e2e/data/*.txt
+
+# Cache directories
+.cache/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.py[cod]
+*$py.class
+
+# Test artifacts
+test_data/
+tests/e2e/test_data/
+tests/e2e/*.log
+tests/e2e/.e2e_failed
+tests/e2e/test_*.txt
+tests/e2e/*.log
+tests/e2e/expect*.log
+tests/e2e/*.gcov
+tests/e2e/coverage/
+e2e_test.log
+
+# Test mock data
+tests/mocks/*.conf
+tests/mocks/*_responses/
+
+# Temporary files
+*.tmp
+*.temp
+pr*.md
+*.log
+*.gcov
+coverage/
+htmlcov/
 
 # Compiled Object files
 *.o
@@ -19,18 +93,32 @@ data/*.log
 *.dylib
 *.dll
 
-# Executables
-*.exe
-*.out
+# Build and cache directories
+build/
+bin/
+lib/
+.cache/
+.coverage
+.coverage.*
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+__pycache__/
+*.py[cod]
+*$py.class
 agent
 llamaware-agent
 
 # IDE files
+.vs/
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.DS_Store
+Thumbs.db
 
 # Web related
 node_modules/
@@ -65,4 +153,5 @@ vcpkg_installed/
 # Temporary files
 *.tmp
 *.temp
-*.bak 
+*.bak # Ignore temporary test input files
+tests/e2e/input_*.txt

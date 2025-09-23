@@ -551,15 +551,15 @@ namespace Services {
                     sandbox.working_directory = sandbox_json.value("working_directory", "/workspace");
                     
                     if (sandbox_json.contains("volumes")) {
-                        sandbox.volumes = sandbox_json["volumes"];
+                        sandbox.volumes = sandbox_json["volumes"].get<std::vector<std::string>>();
                     }
                     
                     if (sandbox_json.contains("environment_vars")) {
-                        sandbox.environment_vars = sandbox_json["environment_vars"];
+                        sandbox.environment_vars = sandbox_json["environment_vars"].get<std::map<std::string, std::string>>();
                     }
                     
                     if (sandbox_json.contains("allowed_commands")) {
-                        sandbox.allowed_commands = sandbox_json["allowed_commands"];
+                        sandbox.allowed_commands = sandbox_json["allowed_commands"].get<std::vector<std::string>>();
                     }
                     
                     sandbox_configs_[name] = sandbox;
