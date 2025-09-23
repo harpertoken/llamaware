@@ -157,31 +157,61 @@ message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
 # Find nlohmann_json
 find_package(nlohmann_json 3.9.1 REQUIRED)
 
-# Find CPR - using 1.12.0 which is installed on the system
-find_package(cpr 1.12.0 REQUIRED)
+# Find CPR - try to find the package first
+set(CPR_MIN_VERSION "1.10.0")
+set(CPR_FOUND FALSE)
 
-if(NOT TARGET cpr::cpr)
-    # Try to find the installed CPR package
-    find_package(cpr 1.12.0 QUIET)
+# First try to find CPR using config mode
+find_package(cpr ${CPR_MIN_VERSION} QUIET)
+
+if(TARGET cpr::cpr)
+    message(STATUS "Found CPR (config mode): ${cpr_VERSION}")
+    set(CPR_FOUND TRUE)
+else()
+    # If not found, try to find the library directly
+    find_library(CPR_LIBRARY NAMES cpr)
+    find_path(CPR_INCLUDE_DIR NAMES cpr/cpr.h)
     
-    if(TARGET cpr::cpr)
-        # Use the found target
-        message(STATUS "Using system CPR target")
-    else()
-        # Fallback: Create our own target
-        message(STATUS "Creating custom CPR target")
+    if(CPR_LIBRARY AND CPR_INCLUDE_DIR)
+        message(STATUS "Found CPR (library): ${CPR_LIBRARY}")
         add_library(cpr::cpr INTERFACE IMPORTED)
-        find_library(CPR_LIBRARY cpr)
-        if(CPR_LIBRARY)
-            message(STATUS "Found CPR library: ${CPR_LIBRARY}")
-            target_link_libraries(cpr::cpr INTERFACE ${CPR_LIBRARY} CURL::libcurl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_TARGET})
-            target_include_directories(cpr::cpr INTERFACE /opt/homebrew/include)
-        else()
-            message(FATAL_ERROR "Could not find CPR library. Please install it via 'brew install cpr' or set CPR_DIR to the directory containing cpr-config.cmake")
-        endif()
+        target_include_directories(cpr::cpr INTERFACE ${CPR_INCLUDE_DIR})
+        target_link_libraries(cpr::cpr INTERFACE 
+            ${CPR_LIBRARY} 
+            CURL::libcurl 
+            OpenSSL::SSL 
+            OpenSSL::Crypto 
+            ${ZLIB_TARGET}
+        )
+        set(CPR_FOUND TRUE)
     endif()
 endif()
 
+if(NOT CPR_FOUND)
+    # If still not found, try to fetch it using FetchContent
+    message(STATUS "CPR not found, downloading using FetchContent...")
+    include(FetchContent)
+    
+    FetchContent_Declare(
+        cpr
+        GIT_REPOSITORY https://github.com/libcpr/cpr.git
+        GIT_TAG 1.10.0
+    )
+    
+    # Prevent building tests and examples
+    set(CPR_BUILD_TESTS OFF CACHE BOOL "")
+    set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "")
+    set(CPR_BUILD_TESTS_VERBOSE OFF CACHE BOOL "")
+    
+    FetchContent_MakeAvailable(cpr)
+    
+    if(TARGET cpr::cpr)
+        message(STATUS "CPR downloaded and built from source")
+        set(CPR_FOUND TRUE)
+    else()
+        message(FATAL_ERROR "Failed to find or build CPR. Please install it manually or check your network connection.")
+    endif()
+endif()
 # Enable testing
 enable_testing()
 
