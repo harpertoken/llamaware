@@ -8,12 +8,12 @@
 
 // Forward declare STL types that will be used in the interface
 namespace std {
-    // Don't export std::unique_ptr as it causes conflicts with the standard library
-    template <class T, class D> class unique_ptr;
     // Explicitly instantiate commonly used templates
     template class LLAMAWARE_API allocator<char>;
     template class LLAMAWARE_API basic_string<char, char_traits<char>, allocator<char>>;
 }
+
+// Forward declarations for our own types
 
 namespace Data { class MemoryManager; }
 namespace Services { class AIService; }
