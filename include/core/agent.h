@@ -6,12 +6,9 @@
 #include <memory>
 #include <vector>
 
-// Forward declare STL types that will be used in the interface
-namespace std {
-    // Explicitly instantiate commonly used templates
-    template class LLAMAWARE_API allocator<char>;
-    template class LLAMAWARE_API basic_string<char, char_traits<char>, allocator<char>>;
-}
+// Forward declarations for STL types
+#include <string>
+#include <memory>
 
 // Forward declarations for our own types
 
@@ -34,10 +31,15 @@ namespace Core {
         Mode mode_;
         std::string api_key_;
         bool shell_mode_;
+        // Using raw pointers with PIMPL idiom would be better for ABI stability
         std::unique_ptr<Data::MemoryManager> memory_;
         std::unique_ptr<Services::AIService> ai_service_;
         int command_count_;
         long long token_usage_;
+        
+        // Disable copying
+        Agent(const Agent&) = delete;
+        Agent& operator=(const Agent&) = delete;
         
         void initialize_mode();
         int get_user_choice(const std::string& prompt, const std::vector<int>& valid_choices, int default_choice);
