@@ -356,12 +356,20 @@ set(ALL_SOURCES
 # Create library with all sources
 add_library(llamaware_lib ${ALL_SOURCES})
 target_include_directories(llamaware_lib PUBLIC 
-    include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
     ${CURL_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
 )
-target_link_libraries(llamaware_lib PUBLIC 
+# Set compile definitions for symbol visibility
+target_compile_definitions(llamaware_lib PRIVATE LLAMAWARE_LIBRARY)
+set_target_properties(llamaware_lib PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
+# Link dependencies as PRIVATE to avoid exposing them
+target_link_libraries(llamaware_lib PRIVATE
     ${CURL_LIBRARIES}
     cpr::cpr 
     nlohmann_json::nlohmann_json
@@ -370,34 +378,27 @@ target_link_libraries(llamaware_lib PUBLIC
     ${ZLIB_TARGET}
     ${CMAKE_DL_LIBS}
 )
+# Export symbols that need to be visible
+target_compile_definitions(llamaware_lib PUBLIC "LLAMAWARE_API=__attribute__((visibility(\"default\")))")
 
 # Main executable
 add_executable(llamaware-agent src/main.cpp)
+target_include_directories(llamaware-agent PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 target_link_libraries(llamaware-agent PRIVATE 
     llamaware_lib
-    ${CURL_LIBRARIES}
-    cpr::cpr 
-    nlohmann_json::nlohmann_json
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    ${ZLIB_TARGET}
-    ${CMAKE_DL_LIBS}
 )
 
 # Test executable
 add_executable(llamaware-tests tests/main_test.cpp src/utils/version.cpp)
-target_include_directories(llamaware-tests PRIVATE include)
+target_include_directories(llamaware-tests PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 target_link_libraries(llamaware-tests PRIVATE 
     llamaware_lib 
     gtest_main 
     gtest
-    ${CURL_LIBRARIES}
-    cpr::cpr 
-    nlohmann_json::nlohmann_json
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    ${ZLIB_TARGET}
-    ${CMAKE_DL_LIBS}
 )
 add_test(NAME basic_tests COMMAND llamaware-tests)
 
