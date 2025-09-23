@@ -1,18 +1,82 @@
 # Llamaware
 
-At commit hash **ade4cd57e9d8c4538d33b64c30dee9a079a878fe**, Llamaware introduces itself as a professional AI agent for development. It is built to be stable, extensible, and secure, with core features for file operations, session handling, extensions, and provider support.
+Llamaware is a professional AI agent for development, built to be stable, extensible, and secure. It provides core features for file operations, session handling, extensions, and provider support.
+
+## System Requirements
+
+- Linux or macOS (Windows support coming soon)
+- C++17 compatible compiler (GCC 9+, Clang 10+, or MSVC 2019+)
+- CMake 3.14+
+- Git
 
 ## Quick Start
 
-Getting started is straightforward. Install dependencies, build the project, and run the agent:
+### Ubuntu/Debian
 
+1. Install build dependencies:
+   ```bash
+   sudo apt update
+   sudo apt install -y build-essential cmake git libcurl4-openssl-dev
+   ```
+
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/harpertoken/llamaware.git
+   cd llamaware
+   ```
+
+3. Build the project:
+   ```bash
+   make install-deps-ubuntu  # Installs remaining dependencies
+   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+   cmake --build build --config Release -- -j$(nproc)
+   ```
+
+4. Run the agent:
+   ```bash
+   ./build/bin/llamaware-agent
+   ```
+
+### macOS
+
+1. Install Xcode command line tools and Homebrew if not already installed.
+2. Install dependencies:
+   ```bash
+   brew install cmake
+   ```
+3. Clone and build as shown in the Ubuntu instructions.
+
+## Configuration
+
+Create a `.env` file in the project root with your configuration:
+
+```env
+# Example configuration
+LOG_LEVEL=info
+API_KEY=your_api_key_here
+```
+
+## Development
+
+### Building with Debug Symbols
 ```bash
-make install-deps-ubuntu
-cmake -S . -B build && cmake --build build
-./build/bin/llamaware-agent
-````
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --config Debug
+```
 
-### Basic Commands
+### Running Tests
+```bash
+# Unit tests
+make test
+
+# End-to-end tests
+make test-e2e
+
+# Run tests in Docker
+make test-e2e-docker
+```
+
+## Basic Commands
 
 Once the agent is running, you can interact with it using simple commands:
 
