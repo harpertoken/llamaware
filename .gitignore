@@ -31,6 +31,13 @@ cmake-build-*/
 *.dll.a
 *.dll.lib
 
+# Binary files
+*.bin
+*.dat
+*.data
+*.db
+*.sqlite
+
 # Runtime data
 data/memory.txt
 data/*.log
@@ -49,7 +56,18 @@ __pycache__/
 test_data/
 tests/e2e/test_data/
 tests/e2e/*.log
+tests/e2e/.e2e_failed
+tests/e2e/test_*.txt
 e2e_test.log
+
+# Test mock data
+tests/mocks/*.conf
+tests/mocks/*_responses/
+
+# Temporary files
+*.tmp
+*.temp
+pr*.md
 
 # Compiled Object files
 *.o
