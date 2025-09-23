@@ -187,6 +187,8 @@ Guides are available to help with setup, usage, and development:
 * [Setup](docs/SETUP.md)
 * [Commands](docs/COMMANDS.md)
 * [Development](docs/DEVELOPMENT.md)
+* [Development Workflow](docs/DEVELOPMENT-WORKFLOW.md)
+* [CI/CD Pipeline](docs/CI-CD.md)
 
 ## Code Structure
 
