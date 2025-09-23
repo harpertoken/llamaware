@@ -157,12 +157,12 @@ message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
 # Find nlohmann_json
 find_package(nlohmann_json 3.9.1 REQUIRED)
 
-# Find CPR - using 1.10.5 which is installed in the Docker container
-find_package(cpr 1.10.5 REQUIRED)
+# Find CPR - using 1.12.0 which is installed on the system
+find_package(cpr 1.12.0 REQUIRED)
 
 if(NOT TARGET cpr::cpr)
     # Try to find the installed CPR package
-    find_package(cpr 1.10.5 QUIET)
+    find_package(cpr 1.12.0 QUIET)
     
     if(TARGET cpr::cpr)
         # Use the found target
