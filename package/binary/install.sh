@@ -5,41 +5,19 @@ set -e
 
 INSTALL_DIR="/usr/local/bin"
 CONFIG_DIR="$HOME/.llamaware"
-VERSION="2.0.0"
+VERSION="0.1"
 
-echo "Installing Llamaware Agent v${VERSION}..."
+echo "Installing Llamaware v${VERSION}..."
 
-# Check system
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    PLATFORM="macos"
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    PLATFORM="linux"
-else
-    echo "ERROR: Unsupported platform: $OSTYPE"
-    exit 1
-fi
+# Detect platform
+[[ "$OSTYPE" == "darwin"* ]] && PLATFORM="macos" || PLATFORM="linux"
 
-# Create config directory
+# Install
 mkdir -p "$CONFIG_DIR"
+sudo cp "llamaware-agent-${PLATFORM}" "$INSTALL_DIR/llamaware-agent" && sudo chmod +x "$INSTALL_DIR/llamaware-agent" || { echo "Binary not found"; exit 1; }
 
-# Copy binary
-if [ -f "llamaware-agent-${PLATFORM}" ]; then
-    sudo cp "llamaware-agent-${PLATFORM}" "$INSTALL_DIR/llamaware-agent"
-    sudo chmod +x "$INSTALL_DIR/llamaware-agent"
-else
-    echo "ERROR: Binary not found for platform: $PLATFORM"
-    exit 1
-fi
-
-# Copy example config
-if [ ! -f "$CONFIG_DIR/.env" ]; then
-    cp .env.example "$CONFIG_DIR/.env"
-    echo "Configuration template created at $CONFIG_DIR/.env"
-fi
-
-# Create data directory
+# Config
+[ -f "$CONFIG_DIR/.env" ] || cp .env.example "$CONFIG_DIR/.env"
 mkdir -p "$CONFIG_DIR/data"
 
-echo "Llamaware Agent installed successfully!"
-echo "Edit $CONFIG_DIR/.env with your API keys"
-echo "Run with: llamaware-agent"
+echo "Installed. Edit $CONFIG_DIR/.env and run: llamaware-agent"

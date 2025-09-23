@@ -1,7 +1,7 @@
 # Llamaware Agent Makefile
 # Professional AI Agent with Command Execution
 
-.PHONY: all build clean test package install docker-build preflight preflight-quick preflight-full preflight-ci setup install-deps-mac install-deps-ubuntu help
+.PHONY: all build clean test test-e2e test-e2e-docker package install docker-build preflight preflight-quick preflight-full preflight-ci setup install-deps-mac install-deps-ubuntu help
 
 # Default target
 all: build
@@ -23,6 +23,16 @@ clean:
 test: build
 	@echo "Running basic tests..."
 	@printf "2\\nexit\\n" | ./build/bin/llamaware-agent
+
+# Run E2E tests locally
+test-e2e: build
+	@echo "Running E2E tests locally..."
+	@./tests/e2e/run_e2e_tests.sh
+
+# Run E2E tests in Docker
+test-e2e-docker:
+	@echo "Running E2E tests in Docker..."
+	@docker-compose -f docker-compose.e2e.yml up --build --abort-on-container-exit
 
 # Create distribution package
 package: build
@@ -95,6 +105,8 @@ help:
 	@echo "  build              Build the project"
 	@echo "  clean              Clean build artifacts"
 	@echo "  test               Run basic tests"
+	@echo "  test-e2e           Run E2E tests locally"
+	@echo "  test-e2e-docker    Run E2E tests in Docker"
 	@echo "  package            Create distribution package"
 	@echo ""
 	@echo "Installation:"
@@ -117,6 +129,7 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make build         # Build the project"
+	@echo "  make test-e2e      # Run E2E tests"
 	@echo "  make preflight     # Run preflight checks"
 	@echo "  make package       # Create distribution"
 	@echo "  make install       # Install locally"

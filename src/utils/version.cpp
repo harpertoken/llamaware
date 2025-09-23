@@ -8,7 +8,10 @@ namespace Version {
     }
 
     const char* get_build_info() {
-        static const std::string build_info = std::string(LLAMAWARE_BUILD_DATE) + " " + LLAMAWARE_BUILD_TIME;
+        static std::string build_info;
+        if (build_info.empty()) {
+            build_info = std::string(LLAMAWARE_BUILD_DATE) + " " + LLAMAWARE_BUILD_TIME;
+        }
         return build_info.c_str();
     }
 

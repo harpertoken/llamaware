@@ -9,13 +9,14 @@ namespace Utils {
 
     // ===== Color Codes =====
     namespace Color {
-        const std::string RESET   = "\033[0m";
-        const std::string GREEN   = "\033[32m";
-        const std::string YELLOW  = "\033[33m";
-        const std::string RED     = "\033[31m";
-        const std::string CYAN    = "\033[36m";
-        const std::string BOLD    = "\033[1m";
-        const std::string DIM     = "\033[2m";
+        // Exported color constants
+        LLAMAWARE_API const std::string RESET   = "\033[0m";
+        LLAMAWARE_API const std::string GREEN   = "\033[32m";
+        LLAMAWARE_API const std::string YELLOW  = "\033[33m";
+        LLAMAWARE_API const std::string RED     = "\033[31m";
+        LLAMAWARE_API const std::string CYAN    = "\033[36m";
+        LLAMAWARE_API const std::string BOLD    = "\033[1m";
+        LLAMAWARE_API const std::string DIM     = "\033[2m";
     }
 
     // ===== Logo =====
@@ -231,9 +232,9 @@ namespace Utils {
         print_system_info(mode, model);
         print_quick_help();
 
-        std::cout << Color::BOLD << "Ready" << Color::RESET << " - Type a command:\n";
+        std::cout << "Ready - Type a command:\n";
 
-        std::cout << Color::BOLD << "Ready" << Color::RESET << " - Type a command or chat naturally:\n";
+        std::cout << "Ready - Type a command or chat naturally:\n";
 
     }
 

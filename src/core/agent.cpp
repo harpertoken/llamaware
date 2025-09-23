@@ -97,6 +97,13 @@ namespace Core {
     }
 
     void Agent::initialize_mode() {
+        // Check for test mode - skip interactive prompts
+        if (std::getenv("TEST_MODE")) {
+            mode_ = MODE_LLAMA_3B;
+            Utils::UI::print_success("llama3.2:3b (test mode)");
+            return;
+        }
+
         // Simplified mode selection with consistent numbering
         int choice = get_user_choice("Mode [1=Online / 2=Offline] (default 2): ", {1, 2}, 2);
 
