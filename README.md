@@ -7,7 +7,7 @@ Llamaware is a professional AI agent for development, built to be stable, extens
 ## Build Status
 
 [![CI](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml)
-[![Build and Test](https://github.com/harpertoken/llamaware/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/build-and-test.yml)
+[![E2E Tests](https://github.com/harpertoken/llamaware/actions/workflows/e2e.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/e2e.yml)
 
 ## System Requirements
 
