@@ -371,24 +371,35 @@ target_link_libraries(llamaware_lib PUBLIC
     ${CMAKE_DL_LIBS}
 )
 
-# Test executable
-add_executable(llamaware-tests tests/main_test.cpp)
-target_include_directories(llamaware-tests PRIVATE include)
-target_link_libraries(llamaware-tests PRIVATE 
-    llamaware_lib 
-    gtest_main 
+# Main executable
+add_executable(llamaware-agent src/main.cpp)
+target_link_libraries(llamaware-agent PRIVATE 
+    llamaware_lib
     ${CURL_LIBRARIES}
     cpr::cpr 
     nlohmann_json::nlohmann_json
     OpenSSL::SSL
     OpenSSL::Crypto
     ${ZLIB_TARGET}
+    ${CMAKE_DL_LIBS}
+)
+
+# Test executable
+add_executable(llamaware-tests tests/main_test.cpp src/utils/version.cpp)
+target_include_directories(llamaware-tests PRIVATE include)
+target_link_libraries(llamaware-tests PRIVATE 
+    llamaware_lib 
+    gtest_main 
+    gtest
+    ${CURL_LIBRARIES}
+    cpr::cpr 
+    nlohmann_json::nlohmann_json
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    ${ZLIB_TARGET}
+    ${CMAKE_DL_LIBS}
 )
 add_test(NAME basic_tests COMMAND llamaware-tests)
-
-# Main executable
-add_executable(llamaware-agent src/main.cpp)
-target_link_libraries(llamaware-agent llamaware_lib)
 
 # Set target properties
 set_target_properties(llamaware-agent PROPERTIES
