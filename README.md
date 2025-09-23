@@ -1,13 +1,27 @@
 # Llamaware
 
+[![Build Status](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions)
+
 Llamaware is a professional AI agent for development, built to be stable, extensible, and secure. It provides core features for file operations, session handling, extensions, and provider support.
+
+## Build Status
+
+[![CI](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml)
+[![Build and Test](https://github.com/harpertoken/llamaware/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/build-and-test.yml)
 
 ## System Requirements
 
-- Linux or macOS (Windows support coming soon)
-- C++17 compatible compiler (GCC 9+, Clang 10+, or MSVC 2019+)
-- CMake 3.14+
-- Git
+- **Supported Platforms**:
+  - ✅ Linux (Ubuntu 20.04+)
+  - ✅ macOS (11.0+)
+  - ✅ Windows (MSVC 2019+)
+- **Compiler**: C++17 compatible (GCC 9+, Clang 10+, or MSVC 2019+)
+- **Build System**: CMake 3.14+
+- **Version Control**: Git
+- **Dependencies**:
+  - cpr 1.10.0+
+  - nlohmann-json 3.10.0+
+  - OpenSSL 1.1.1+
 
 ## Quick Start
 
