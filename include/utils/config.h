@@ -2,13 +2,25 @@
 
 // Define DLL export/import macros for Windows
 #if defined(_WIN32) || defined(_WIN64)
-    #ifdef LLAMAWARE_LIBRARY
-        #define LLAMAWARE_API __declspec(dllexport)
-        // Disable warning about STL types in the interface
-        #pragma warning(disable: 4251)
-    #else
-        #define LLAMAWARE_API __declspec(dllimport)
+    #ifndef LLAMAWARE_API
+        #ifdef LLAMAWARE_LIBRARY
+            #define LLAMAWARE_API __declspec(dllexport)
+        #else
+            #define LLAMAWARE_API __declspec(dllimport)
+        #endif
     #endif
+    
+    // Disable warning about STL types in the interface
+    #ifndef _HAS_CXX17
+        #define _HAS_CXX17 1
+    #endif
+    
+    #ifndef _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING
+        #define _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING
+    #endif
+    
+    #pragma warning(disable: 4251)  // Disable warning about STL types in the interface
+    #pragma warning(disable: 4275)  // Disable warning about non dll-interface class used as base
     
     // Enable secure CRT functions
     #ifndef _CRT_SECURE_NO_WARNINGS
@@ -20,12 +32,19 @@
         #define NOMINMAX
     #endif
 #else
-    #define LLAMAWARE_API __attribute__((visibility("default")))
+    #ifndef LLAMAWARE_API
+        #define LLAMAWARE_API __attribute__((visibility("default")))
+    #endif
+    
     // On non-Windows, we can use visibility attributes for better control
     #ifdef __GNUC__
-        #define LLAMAWARE_LOCAL __attribute__((visibility("hidden")))
+        #ifndef LLAMAWARE_LOCAL
+            #define LLAMAWARE_LOCAL __attribute__((visibility("hidden")))
+        #endif
     #else
-        #define LLAMAWARE_LOCAL
+        #ifndef LLAMAWARE_LOCAL
+            #define LLAMAWARE_LOCAL
+        #endif
     #endif
 #endif
 
