@@ -13,6 +13,6 @@ This directory contains documentation related to packaging, distribution, and de
 
 ## Guides
 
-- [Binary Installation](binary/install.sh)
-- [Docker Deployment](docker/)
-- [Homebrew Package](managers/homebrew/llamaware.rb)
+- [Binary Installation](../binary/install.sh)
+- [Docker Deployment](../docker/)
+- [Homebrew Package](../managers/homebrew/llamaware.rb)
