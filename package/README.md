@@ -13,6 +13,8 @@ package/
 └── dist/             # Generated files
 ```
 
+Note: The `dist/` folder contains generated files from the build process and is ignored in .gitignore.
+
 ## Distribution Methods
 - Binary: Pre-compiled binaries with installers
 - Container: Docker images and orchestration
