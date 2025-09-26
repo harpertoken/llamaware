@@ -35,11 +35,10 @@ git clone https://github.com/harpertoken/llamaware.git
 cd llamaware
 
 # Create build directory and run CMake
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
 # Build the project
-make -j$(sysctl -n hw.logicalcpu)
+cmake --build build -- -j$(sysctl -n hw.logicalcpu)
 ```
 
 ## Troubleshooting
