@@ -24,7 +24,7 @@ This document outlines the specific requirements and steps for building Llamawar
 
 3. Install required dependencies:
    ```bash
-   brew install cmake pkg-config openssl@3
+   brew install cmake pkg-config openssl@3 cpr nlohmann-json
    ```
 
 ## Building the Project
