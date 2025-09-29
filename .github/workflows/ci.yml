@@ -138,7 +138,7 @@ jobs:
       run: cmake --build build --target coverage
 
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: build/coverage/coverage.info
         flags: unittests
