@@ -1,5 +1,16 @@
 name: llamaware-agent
 description: automated health checks and issue management
+version: 1.0.0
+
+maintainers:
+  - name: Niladri Das
+    email: bniladridas@icloud.com
+    github: bniladridas
+
+triggers:
+  - pull_request
+  - issues
+  - issue_comment
 
 features:
   - health_checks
@@ -10,3 +21,13 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+
+notes: This bot posts progress bars and TODO sub-issues automatically.
+
+dependencies:
+  - name: nlohmann-json3-dev
+    version: latest
+  - name: cmake
+    version: ">=3.25"
+
+documentation_url: https://github.com/harpertoken/llamaware
