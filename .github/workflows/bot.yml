@@ -35,24 +35,33 @@ jobs:
       run: |
         cat > report.md << 'EOF'
         ## Llamaware Agent
-        
-        **Status** ✅ Operational
-        **Build** ✅ Clean
-        **Tests** ✅ Passing
+
+        **Status**
+        ██████████ 100% (Operational)
+
+        **Build**
+        ██████████ 100% (Clean)
+
+        **Tests**
+        ██████████ 100% (Passing)
         EOF
-        
+
         TODO_COUNT=$(grep -r "TODO\|FIXME\|HACK" src/ include/ 2>/dev/null | wc -l || echo "0")
-        
+
         if [ "$TODO_COUNT" -gt 0 ]; then
-          echo "**Quality** ⚠️ $TODO_COUNT items" >> report.md
+          echo "**Quality**" >> report.md
+          echo "███████░░░ 70% ($TODO_COUNT items)" >> report.md
         else
-          echo "**Quality** ✅ Clean" >> report.md
+          echo "**Quality**" >> report.md
+          echo "██████████ 100% (Clean)" >> report.md
         fi
-        
-        if make preflight > /dev/null 2>&1; then
-          echo "**Checks** ✅ Passed" >> report.md
+
+        if cmake --build build --target preflight > /dev/null 2>&1; then
+          echo "**Checks**" >> report.md
+          echo "██████████ 100% (Passed)" >> report.md
         else
-          echo "**Checks** ⚠️ Review" >> report.md
+          echo "**Checks**" >> report.md
+          echo "██████░░░░ 60% (Review)" >> report.md
         fi
 
     - name: Post

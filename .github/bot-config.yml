@@ -3,7 +3,7 @@ description: automated health checks and issue management
 
 features:
   - health_checks
-  - todo_management  
+  - todo_management
   - milestone_assignment
 
 permissions:
