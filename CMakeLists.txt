@@ -44,24 +44,21 @@ if(CLANG_TIDY_EXE)
 # Find dependencies
 find_package(Threads REQUIRED)
 
-# Find zlib with platform-specific logic
+# Find zlib with platform-specific logic, fallback to FetchContent
+set(ZLIB_FOUND FALSE)
 if(APPLE)
     # On macOS, prefer pkg-config as it's more reliable with Homebrew
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
-    message(STATUS "Found zlib using pkg-config: ${ZLIB_LINK_LIBRARIES}")
-    
-    # On macOS, we need to explicitly link with the C++ standard library
-    if(APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(ZLIB QUIET IMPORTED_TARGET zlib)
+        if(ZLIB_FOUND)
+            message(STATUS "Found zlib using pkg-config: ${ZLIB_LINK_LIBRARIES}")
+            set(ZLIB_TARGET PkgConfig::ZLIB)
+        endif()
     endif()
-    set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
-    set(ZLIB_LIBRARIES PkgConfig::ZLIB)
-    set(ZLIB_TARGET PkgConfig::ZLIB)
 elseif(WIN32)
     # On Windows, first try to find zlib via vcpkg
-    find_package(ZLIB REQUIRED)
-    
+    find_package(ZLIB QUIET)
     if(ZLIB_FOUND)
         message(STATUS "Found zlib via vcpkg: ${ZLIB_LIBRARIES}")
         # Create an imported target for zlib if it doesn't exist
@@ -71,34 +68,44 @@ elseif(WIN32)
             target_include_directories(zlib_imported INTERFACE ${ZLIB_INCLUDE_DIRS})
         endif()
         set(ZLIB_TARGET zlib_imported)
-    else()
-        message(FATAL_ERROR "zlib not found. Please install it using vcpkg: vcpkg install zlib:x64-windows")
     endif()
 else()
     # Linux/other Unix-like systems
-    find_package(ZLIB REQUIRED)
+    find_package(ZLIB QUIET)
     if(ZLIB_FOUND)
         set(ZLIB_TARGET ZLIB::ZLIB)
     else()
-        find_package(PkgConfig)
-        if(PKG_CONFIG_FOUND)
-            pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
-            set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS})
-            set(ZLIB_TARGET PkgConfig::ZLIB)
-        else()
-            message(FATAL_ERROR "zlib not found and pkg-config not available")
+        find_package(PkgConfig QUIET)
+        if(PkgConfig_FOUND)
+            pkg_check_modules(ZLIB QUIET IMPORTED_TARGET zlib)
+            if(ZLIB_FOUND)
+                set(ZLIB_TARGET PkgConfig::ZLIB)
+            endif()
         endif()
     endif()
+endif()
+
+if(NOT ZLIB_FOUND)
+    message(STATUS "zlib not found, downloading using FetchContent...")
+    FetchContent_Declare(
+        zlib
+        GIT_REPOSITORY https://github.com/madler/zlib.git
+        GIT_TAG v1.3
+    )
+    FetchContent_MakeAvailable(zlib)
+    set(ZLIB_TARGET zlib)
+    set(ZLIB_FOUND TRUE)
 endif()
 
 # Find libcurl
 find_package(CURL REQUIRED)
 
-# Use Homebrew's OpenSSL on macOS/arm64
+# Find OpenSSL, fallback to FetchContent
+set(OPENSSL_FOUND FALSE)
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for macOS" FORCE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
-    
+
     # Use Homebrew's OpenSSL on macOS/arm64
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
         # Try to find Homebrew's OpenSSL
@@ -109,8 +116,15 @@ if(APPLE)
                 OUTPUT_VARIABLE OPENSSL_ROOT_DIR
                 OUTPUT_STRIP_TRAILING_WHITESPACE
             )
-            set(OPENSSL_ROOT_DIR ${OPENSSL_ROOT_DIR} CACHE PATH "OpenSSL root directory")
-            
+            if(EXISTS ${OPENSSL_ROOT_DIR})
+                set(OPENSSL_ROOT_DIR ${OPENSSL_ROOT_DIR} CACHE PATH "OpenSSL root directory")
+                find_package(OpenSSL QUIET)
+                if(OpenSSL_FOUND)
+                    set(OPENSSL_FOUND TRUE)
+                    message(STATUS "Using Homebrew's OpenSSL: ${OPENSSL_INCLUDE_DIR}")
+                endif()
+            endif()
+
             # Also find Homebrew's curl if available
             execute_process(
                 COMMAND ${HOMEBREW} --prefix curl
@@ -124,34 +138,45 @@ if(APPLE)
             endif()
         endif()
     endif()
-    
-    # Find OpenSSL with the updated path
-    find_package(OpenSSL REQUIRED)
-    
-    message(STATUS "Using OpenSSL: ${OPENSSL_INCLUDE_DIR} : ${OPENSSL_LIBRARIES}")
-    
-    # Add compiler and linker flags
+
+    if(NOT OPENSSL_FOUND)
+        find_package(OpenSSL QUIET)
+        if(OpenSSL_FOUND)
+            set(OPENSSL_FOUND TRUE)
+        endif()
+    endif()
+else()
+    # On other platforms, use system OpenSSL
+    find_package(OpenSSL QUIET)
+    if(OpenSSL_FOUND)
+        set(OPENSSL_FOUND TRUE)
+    endif()
+
+    # Ensure we have libcurl
+    if(NOT CURL_FOUND)
+        find_package(CURL QUIET)
+    endif()
+endif()
+
+if(NOT OPENSSL_FOUND)
+    message(STATUS "OpenSSL not found, downloading using FetchContent...")
+    FetchContent_Declare(
+        openssl
+        GIT_REPOSITORY https://github.com/openssl/openssl.git
+        GIT_TAG openssl-3.2.0
+    )
+    set(OPENSSL_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(openssl)
+    set(OPENSSL_FOUND TRUE)
+endif()
+
+# Add compiler and linker flags for macOS
+if(APPLE)
     add_compile_options(-march=armv8.4-a+fp16+rcpc+dotprod+crypto)
     add_link_options(-Wl,-no_weak_imports)
-    
-    # Set rpath for macOS
     set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     set(CMAKE_MACOSX_RPATH TRUE)
-else()
-    # On other platforms, use system OpenSSL
-    find_package(OpenSSL REQUIRED)
-    
-    # Ensure we have libcurl
-    if(NOT CURL_FOUND)
-        find_package(CURL REQUIRED)
-    endif()
-    
-    # On Windows, rely on vcpkg for zlib
-    if(WIN32)
-        find_package(ZLIB REQUIRED)
-        message(STATUS "Using zlib: ${ZLIB_LIBRARIES}")
-    endif()
 endif()
 
 # Make sure we have the curl include directory
@@ -162,7 +187,16 @@ endif()
 message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
 
 # Find nlohmann_json
-find_package(nlohmann_json 3.9.1 REQUIRED)
+find_package(nlohmann_json 3.9.1 QUIET)
+if(NOT nlohmann_json_FOUND)
+    message(STATUS "nlohmann_json not found, downloading using FetchContent...")
+    FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.11.2
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
 
 # Find CPR - try to find the package first
 set(CPR_MIN_VERSION "1.10.0")
