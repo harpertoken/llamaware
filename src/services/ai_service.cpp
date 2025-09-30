@@ -89,7 +89,7 @@ namespace Services {
             "CODEBASE ANALYSIS:\n"
             "• analyze:path - Analyze codebase structure, file types, and project configuration\n"
             "• components:path - Find main components and their relationships\n"
-            "• todos:path - Find all TODO/FIXME/HACK comments in codebase\n"
+            "• todos:path - Find all task comments in codebase\n"
             "• tree:path - Display directory tree structure\n\n"
             "GIT INTEGRATION:\n"
             "• git:log - Show recent git commit history\n"
@@ -103,14 +103,14 @@ namespace Services {
             "CAPABILITIES:\n"
             "- Understand codebase structure and relationships\n"
             "- Analyze git history and track changes\n"
-            "- Find and prioritize TODO comments\n"
+            "- Find and prioritize task comments\n"
             "- Advanced text search and replacement with context validation\n"
             "- Structured memory system for facts and preferences\n"
             "- File operations with safety checks and path validation\n"
             "- Enhanced error handling and user feedback\n\n"
             "When users ask about codebase analysis, use analyze: or components: commands.\n"
             "For git-related questions, use git: commands.\n"
-            "For finding TODOs or technical debt, use todos: command.\n"
+            "For finding tasks or technical debt, use todos: command.\n"
             "For complex file editing, use replace: instead of write: when modifying existing content.\n"
             "Use grep: to search for code patterns or text across multiple files.\n"
             "Remember important user preferences and facts using remember:.\n"
@@ -256,6 +256,9 @@ namespace Services {
                 case Core::Agent::MODE_LLAMA_31:
                     // No API key needed for local
                     break;
+                case Core::Agent::MODE_UNSET:
+                    // No action
+                    break;
             }
             
             // Use WebService to make the HTTP request
@@ -294,6 +297,7 @@ return parse_cerebras_stream(response.content);
                 case Core::Agent::MODE_GROQ: // Groq
                 case Core::Agent::MODE_DEEPSEEK: // DeepSeek
                 case Core::Agent::MODE_OPENAI: // OpenAI
+                case Core::Agent::MODE_CEREBRAS: // Cerebras
                     if (json_response.contains("choices") && !json_response["choices"].empty()) {
                         auto& choice = json_response["choices"][0];
                         if (choice.contains("message") && choice["message"].contains("content")) {
@@ -311,6 +315,9 @@ return parse_cerebras_stream(response.content);
                     } else if (json_response.contains("response")) {
                         return json_response["response"].get<std::string>();
                     }
+                    break;
+                case Core::Agent::MODE_UNSET:
+                    // No action
                     break;
             }
             

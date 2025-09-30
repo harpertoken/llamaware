@@ -13,6 +13,7 @@
 #include "services/auth_service.h"
 #include "services/error_service.h"
 #include "services/sandbox_service.h"
+#include "services/github_service.h"
 #include "data/memory_manager.h"
 #include "utils/ui.h"
 #include "utils/config.h"
@@ -441,9 +442,9 @@ namespace Core {
             }
             auto todos = Services::CodebaseService::find_todos(path);
             if (todos.empty()) {
-                result = "No TODO/FIXME/HACK comments found";
+                result = "No task comments found";
             } else {
-                result = "Found " + std::to_string(todos.size()) + " TODO/FIXME/HACK comments:\n";
+                result = "Found " + std::to_string(todos.size()) + " task comments:\n";
                 for (const auto& todo : todos) {
                     result += todo + "\n";
                 }
@@ -472,6 +473,54 @@ namespace Core {
             }
             result = Services::CodebaseService::get_directory_tree(path, 3);
             memory_->save_interaction("tree:" + path, result);
+        }
+        else if (input.rfind("github:", 0) == 0) {
+            std::string params = trim_copy(input.substr(7));
+            auto parse_repo_spec = [](const std::string& repo_spec, std::string& owner, std::string& repo) -> bool {
+                size_t slash_pos = repo_spec.find('/');
+                if (slash_pos != std::string::npos) {
+                    owner = repo_spec.substr(0, slash_pos);
+                    repo = repo_spec.substr(slash_pos + 1);
+                    return true;
+                }
+                return false;
+            };
+            if (params.rfind("repo:", 0) == 0) {
+                std::string repo_spec = trim_copy(params.substr(5));
+                std::string owner, repo;
+                if (parse_repo_spec(repo_spec, owner, repo)) {
+                    result = Services::GitHubService::get_repo_info(owner, repo);
+                } else {
+                    result = "Usage: github:repo:owner/repo";
+                }
+            } else if (params.rfind("issues:", 0) == 0) {
+                std::string repo_spec = trim_copy(params.substr(7));
+                std::string owner, repo;
+                if (parse_repo_spec(repo_spec, owner, repo)) {
+                    auto issues = Services::GitHubService::get_issues(owner, repo);
+                    if (issues.empty()) {
+                        result = "No issues found";
+                    } else {
+                        result = "Found " + std::to_string(issues.size()) + " issues:\n";
+                        for (const auto& issue : issues) {
+                            result += "#" + std::to_string(issue.number) + ": " + issue.title + "\n";
+                        }
+                    }
+                } else {
+                    result = "Usage: github:issues:owner/repo";
+                }
+            } else if (params.rfind("health:", 0) == 0) {
+                std::string repo_spec = trim_copy(params.substr(7));
+                std::string owner, repo;
+                if (parse_repo_spec(repo_spec, owner, repo)) {
+                    result = Services::GitHubService::run_health_check(owner, repo);
+                } else {
+                    result = "Usage: github:health:owner/repo";
+                }
+            } else {
+                result = "Usage: github:repo:owner/repo, github:issues:owner/repo, github:health:owner/repo";
+            }
+            memory_->save_interaction("github:" + params, result);
         }
         else {
             result = "Unknown command";
@@ -715,7 +764,6 @@ namespace Core {
     }
 
     bool Agent::should_skip_file(const std::string& file_path, const std::string& ext) {
-        // Skip binary files and common ignore patterns
         std::vector<std::string> skip_extensions = {
             ".exe", ".dll", ".so", ".dylib", ".a", ".lib", ".obj", ".o",
             ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg",
@@ -726,8 +774,7 @@ namespace Core {
         for (const auto& skip_ext : skip_extensions) {
             if (ext == skip_ext) return true;
         }
-        
-        // Skip common directories
+
         if (file_path.find("node_modules") != std::string::npos ||
             file_path.find(".git") != std::string::npos ||
             file_path.find("build") != std::string::npos ||
@@ -763,6 +810,9 @@ namespace Core {
         std::cout << "  /auth <cmd>           - Authentication management (providers/keys)" << std::endl;
         std::cout << "  /sandbox <cmd>        - Sandboxed command execution" << std::endl;
         std::cout << "  /error <cmd>          - Error management and reporting" << std::endl;
+        std::cout << "  /github repo:owner/repo - Get repository info" << std::endl;
+        std::cout << "  /github issues:owner/repo - List repository issues" << std::endl;
+        std::cout << "  /github health:owner/repo - Run health check" << std::endl;
         std::cout << "  /quit or /exit        - Exit the program" << std::endl;
         std::cout << std::endl;
         std::cout << "File injection commands:" << std::endl;
@@ -824,7 +874,7 @@ namespace Core {
         std::cout << "  Project Analysis:" << std::endl;
         std::cout << "    analyze:[path]              - Analyze project structure" << std::endl;
         std::cout << "    components:[path]           - Find main components" << std::endl;
-        std::cout << "    todos:[path]                - Find TODO comments" << std::endl;
+        std::cout << "    todos:[path]                - Find task comments" << std::endl;
         std::cout << "    tree:[path]                 - Show directory tree" << std::endl;
         std::cout << "  Git Operations:" << std::endl;
         std::cout << "    git:status                  - Show git status" << std::endl;
@@ -835,6 +885,10 @@ namespace Core {
         std::cout << "    search:query                - Web search" << std::endl;
         std::cout << "    remember:fact               - Save to memory" << std::endl;
         std::cout << "    memory                      - Show memories" << std::endl;
+        std::cout << "  GitHub Operations:" << std::endl;
+        std::cout << "    github:repo:owner/repo      - Get repository info" << std::endl;
+        std::cout << "    github:issues:owner/repo    - List repository issues" << std::endl;
+        std::cout << "    github:health:owner/repo    - Run health check" << std::endl;
     }
 
     void Agent::show_memory_context() {
