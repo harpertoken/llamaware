@@ -409,6 +409,7 @@ set_target_properties(llamaware_lib PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     POSITION_INDEPENDENT_CODE ON
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
 # Set platform-specific compiler flags
@@ -463,6 +464,14 @@ target_link_libraries(llamaware-tests PRIVATE
     gtest
 )
 add_test(NAME basic_tests COMMAND llamaware-tests)
+
+# Set target properties for test executable
+set_target_properties(llamaware-tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+    MACOSX_RPATH ON
+    INSTALL_RPATH "@executable_path/lib"
+    BUILD_WITH_INSTALL_RPATH TRUE
+)
 
 # Set target properties
 set_target_properties(llamaware-agent PROPERTIES
