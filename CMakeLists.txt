@@ -152,10 +152,7 @@ else()
         set(OPENSSL_FOUND TRUE)
     endif()
 
-    # Ensure we have libcurl
-    if(NOT CURL_FOUND)
-        find_package(CURL QUIET)
-    endif()
+
 endif()
 
 if(NOT OPENSSL_FOUND)
@@ -163,7 +160,7 @@ if(NOT OPENSSL_FOUND)
     FetchContent_Declare(
         openssl
         GIT_REPOSITORY https://github.com/openssl/openssl.git
-        GIT_TAG openssl-3.2.0
+        GIT_TAG openssl-3.2.1
     )
     set(OPENSSL_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(openssl)
@@ -187,7 +184,7 @@ endif()
 message(STATUS "Using curl: ${CURL_INCLUDE_DIRS} : ${CURL_LIBRARIES}")
 
 # Find nlohmann_json
-find_package(nlohmann_json 3.9.1 QUIET)
+find_package(nlohmann_json 3.11.2 QUIET)
 if(NOT nlohmann_json_FOUND)
     message(STATUS "nlohmann_json not found, downloading using FetchContent...")
     FetchContent_Declare(
