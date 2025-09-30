@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <cpr/cpr.h>
 
 // Callback function for writing response data
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
@@ -436,6 +437,59 @@ namespace Services {
             }
         }
         
+        return response;
+    }
+
+    WebResponse WebService::post_json(const std::string& url, const std::string& json_body, const HeaderMap& headers) {
+        WebResponse response;
+        response.success = false;
+
+        try {
+            // Prepare headers for CPR
+            cpr::Header cpr_headers;
+            for (const auto& [key, value] : headers) {
+                cpr_headers[key] = value;
+            }
+
+            // Set Content-Type if not provided
+            if (headers.find("Content-Type") == headers.end()) {
+                cpr_headers["Content-Type"] = "application/json";
+            }
+
+            // Make POST request
+            cpr::Response cpr_response = cpr::Post(
+                cpr::Url{url},
+                cpr_headers,
+                cpr::Body{json_body},
+                cpr::Timeout{30}
+            );
+
+            // Fill response
+            response.status_code = static_cast<int>(cpr_response.status_code);
+            response.content = cpr_response.text;
+            response.success = (cpr_response.status_code >= 200 && cpr_response.status_code < 300);
+
+            if (!response.success) {
+                response.error_message = "HTTP " + std::to_string(cpr_response.status_code);
+            }
+
+            // Parse headers
+            for (const auto& [key, value] : cpr_response.header) {
+                response.headers[key] = value;
+            }
+
+            // Set content type
+            auto content_type_it = response.headers.find("content-type");
+            if (content_type_it != response.headers.end()) {
+                response.content_type = content_type_it->second;
+            }
+
+        } catch (const std::exception& e) {
+            response.error_message = "Exception: " + std::string(e.what());
+        } catch (...) {
+            response.error_message = "Unknown exception";
+        }
+
         return response;
     }
 }

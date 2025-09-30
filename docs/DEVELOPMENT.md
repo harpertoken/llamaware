@@ -71,10 +71,18 @@ make preflight     # Production
 # Get API keys from providers
 # Together AI: https://api.together.xyz/settings/api-keys
 # Cerebras: https://cloud.cerebras.ai/platform
+# Fireworks: https://fireworks.ai/account/api-keys
+# Groq: https://console.groq.com/keys
+# DeepSeek: https://platform.deepseek.com/api_keys
+# OpenAI: https://platform.openai.com/api-keys
 
 # Set environment variables
 export TOGETHER_API_KEY="your-together-api-key-here"
 export CEREBRAS_API_KEY="your-cerebras-api-key-here"
+export FIREWORKS_API_KEY="your-fireworks-api-key-here"
+export GROQ_API_KEY="your-groq-api-key-here"
+export DEEPSEEK_API_KEY="your-deepseek-api-key-here"
+export OPENAI_API_KEY="your-openai-api-key-here"
 
 # Make persistent (add to ~/.bashrc or ~/.zshrc)
 echo 'export TOGETHER_API_KEY="your-key"' >> ~/.bashrc
