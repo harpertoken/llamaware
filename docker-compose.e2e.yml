@@ -1,38 +1,70 @@
 version: '3.8'
 
+x-mock-service-template: &mock-service-template
+  image: nginx:alpine
+  entrypoint: ["/bin/sh", "/start_nginx.sh"]
+  healthcheck:
+    test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 10s
+
 services:
   # Mock AI providers
   mock-together:
-    image: nginx:alpine
+    <<: *mock-service-template
     container_name: mock-together
     ports:
       - "8081:80"
     volumes:
       - ./tests/mocks/together_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
-    entrypoint: ["/bin/sh", "/start_nginx.sh"]
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
 
   mock-cerebras:
-    image: nginx:alpine
+    <<: *mock-service-template
     container_name: mock-cerebras
     ports:
       - "8082:80"
     volumes:
       - ./tests/mocks/cerebras_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
-    entrypoint: ["/bin/sh", "/start_nginx.sh"]
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+
+  mock-fireworks:
+    <<: *mock-service-template
+    container_name: mock-fireworks
+    ports:
+      - "8083:80"
+    volumes:
+      - ./tests/mocks/fireworks_responses:/usr/share/nginx/html:ro
+      - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+
+  mock-groq:
+    <<: *mock-service-template
+    container_name: mock-groq
+    ports:
+      - "8084:80"
+    volumes:
+      - ./tests/mocks/groq_responses:/usr/share/nginx/html:ro
+      - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+
+  mock-deepseek:
+    <<: *mock-service-template
+    container_name: mock-deepseek
+    ports:
+      - "8085:80"
+    volumes:
+      - ./tests/mocks/deepseek_responses:/usr/share/nginx/html:ro
+      - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+
+  mock-openai:
+    <<: *mock-service-template
+    container_name: mock-openai
+    ports:
+      - "8086:80"
+    volumes:
+      - ./tests/mocks/openai_responses:/usr/share/nginx/html:ro
+      - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
 
   # Ollama mock (HTTP server)
   mock-ollama:
@@ -63,11 +95,23 @@ services:
         condition: service_healthy
       mock-cerebras:
         condition: service_healthy
+      mock-fireworks:
+        condition: service_healthy
+      mock-groq:
+        condition: service_healthy
+      mock-deepseek:
+        condition: service_healthy
+      mock-openai:
+        condition: service_healthy
       mock-ollama:
         condition: service_healthy
     environment:
       - TOGETHER_API_KEY=test-key
       - CEREBRAS_API_KEY=test-key
+      - FIREWORKS_API_KEY=test-key
+      - GROQ_API_KEY=test-key
+      - DEEPSEEK_API_KEY=test-key
+      - OPENAI_API_KEY=test-key
       - SERPAPI_KEY=test-key
       - OLLAMA_HOST=http://mock-ollama:11434
       - TEST_MODE=1
