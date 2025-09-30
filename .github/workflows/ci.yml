@@ -19,23 +19,6 @@ permissions:
   security-events: write
 
 jobs:
-  setup-manifest:
-    runs-on: ubuntu-latest
-    outputs:
-      push_branches: ${{ steps.read.outputs.push_branches }}
-      pr_branches: ${{ steps.read.outputs.pr_branches }}
-      release_types: ${{ steps.read.outputs.release_types }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Read manifest
-        id: read
-        run: |
-          echo "push_branches=$(yq e '.triggers.push_branches | @json' .llamaware-agent.yml)" >> $GITHUB_OUTPUT
-          echo "pr_branches=$(yq e '.triggers.pull_request_branches | @json' .llamaware-agent.yml)" >> $GITHUB_OUTPUT
-          echo "release_types=$(yq e '.triggers.release_types | @json' .llamaware-agent.yml)" >> $GITHUB_OUTPUT
-
   build-and-test:
     name: Build & Test
     runs-on: ${{ matrix.os }}
