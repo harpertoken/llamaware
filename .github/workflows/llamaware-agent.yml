@@ -1,4 +1,4 @@
-name: Llamaware Agent
+name: llamaware-agent
 
 on:
   pull_request:
