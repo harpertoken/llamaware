@@ -1,11 +1,12 @@
 #pragma once
 #include <string>
 #include <nlohmann/json.hpp>
+#include "core/agent.h"
 
 namespace Services {
     class AIService {
     private:
-        int mode_;
+        Core::Agent::Mode mode_;
         std::string api_key_;
 
         bool is_online_mode() const;
@@ -15,7 +16,7 @@ namespace Services {
         std::string parse_cerebras_stream(const std::string& response);
         
     public:
-        AIService(int mode, const std::string& api_key = "");
+        AIService(Core::Agent::Mode mode, const std::string& api_key = "");
         
         std::string chat(const std::string& user_input, const std::string& context);
         bool is_available();

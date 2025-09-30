@@ -8,6 +8,8 @@
 #include <vector>
 #include <cpr/cpr.h>
 
+const long kDefaultTimeoutSeconds = 30;
+
 // Callback function for writing response data
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     size_t real_size = size * nmemb;
@@ -389,7 +391,7 @@ namespace Services {
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_headers);
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, kDefaultTimeoutSeconds);
         
         // Perform the request
         CURLcode res = curl_easy_perform(curl);
@@ -461,7 +463,7 @@ namespace Services {
                 cpr::Url{url},
                 cpr_headers,
                 cpr::Body{json_body},
-                cpr::Timeout{30}
+                cpr::Timeout{kDefaultTimeoutSeconds}
             );
 
             // Fill response

@@ -1,6 +1,7 @@
 #include "services/ai_service.h"
 #include "utils/config.h"
 #include "services/web_service.h"
+#include "core/agent.h"
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include <curl/curl.h>
@@ -11,11 +12,13 @@
 
 namespace Services {
 
-    AIService::AIService(int mode, const std::string& api_key)
+    AIService::AIService(Core::Agent::Mode mode, const std::string& api_key)
         : mode_(mode), api_key_(api_key) {}
 
     bool AIService::is_online_mode() const {
-        return mode_ == 1 || mode_ == 3 || mode_ == 6 || mode_ == 7 || mode_ == 8 || mode_ == 9;
+        return mode_ == Core::Agent::MODE_TOGETHER || mode_ == Core::Agent::MODE_CEREBRAS ||
+               mode_ == Core::Agent::MODE_FIREWORKS || mode_ == Core::Agent::MODE_GROQ ||
+               mode_ == Core::Agent::MODE_DEEPSEEK || mode_ == Core::Agent::MODE_OPENAI;
     }
 
     bool AIService::is_available() {
@@ -31,28 +34,28 @@ namespace Services {
         if (std::getenv("TEST_MODE")) {
             // Use mock URLs for testing
             switch (mode_) {
-                case 1: return "http://mock-together/v1/chat/completions";
-                case 3: return "http://mock-cerebras/v1/chat/completions";
-                case 6: return "http://mock-fireworks/inference/v1/chat/completions";
-                case 7: return "http://mock-groq/openai/v1/chat/completions";
-                case 8: return "http://mock-deepseek/v1/chat/completions";
-                case 9: return "http://mock-openai/v1/chat/completions";
-                case 2:
-                case 4:
-                case 5:
+                case Core::Agent::MODE_TOGETHER: return "http://mock-together/v1/chat/completions";
+                case Core::Agent::MODE_CEREBRAS: return "http://mock-cerebras/v1/chat/completions";
+                case Core::Agent::MODE_FIREWORKS: return "http://mock-fireworks/inference/v1/chat/completions";
+                case Core::Agent::MODE_GROQ: return "http://mock-groq/openai/v1/chat/completions";
+                case Core::Agent::MODE_DEEPSEEK: return "http://mock-deepseek/v1/chat/completions";
+                case Core::Agent::MODE_OPENAI: return "http://mock-openai/v1/chat/completions";
+                case Core::Agent::MODE_LLAMA_3B:
+                case Core::Agent::MODE_LLAMA_LATEST:
+                case Core::Agent::MODE_LLAMA_31:
                 default: return "http://mock-ollama:11434/api/chat";
             }
         } else {
             switch (mode_) {
-                case 1: return "https://api.together.xyz/v1/chat/completions";
-                case 3: return "https://api.cerebras.ai/v1/chat/completions";
-                case 6: return "https://api.fireworks.ai/inference/v1/chat/completions";
-                case 7: return "https://api.groq.com/openai/v1/chat/completions";
-                case 8: return "https://api.deepseek.com/v1/chat/completions";
-                case 9: return "https://api.openai.com/v1/chat/completions";
-                case 2:
-                case 4:
-                case 5:
+                case Core::Agent::MODE_TOGETHER: return "https://api.together.xyz/v1/chat/completions";
+                case Core::Agent::MODE_CEREBRAS: return "https://api.cerebras.ai/v1/chat/completions";
+                case Core::Agent::MODE_FIREWORKS: return "https://api.fireworks.ai/inference/v1/chat/completions";
+                case Core::Agent::MODE_GROQ: return "https://api.groq.com/openai/v1/chat/completions";
+                case Core::Agent::MODE_DEEPSEEK: return "https://api.deepseek.com/v1/chat/completions";
+                case Core::Agent::MODE_OPENAI: return "https://api.openai.com/v1/chat/completions";
+                case Core::Agent::MODE_LLAMA_3B:
+                case Core::Agent::MODE_LLAMA_LATEST:
+                case Core::Agent::MODE_LLAMA_31:
                 default: return "http://localhost:11434/api/chat";
             }
         }
@@ -115,9 +118,9 @@ namespace Services {
             "Conversation history:\n" + context;
 
         switch (mode_) {
-            case 1: // Together AI
+            case Core::Agent::MODE_TOGETHER: // Together AI
                 return create_standard_payload("meta-llama/Llama-3.3-70B-Instruct-Turbo-Free", user_input, system_prompt);
-            case 3: // Cerebras
+            case Core::Agent::MODE_CEREBRAS: // Cerebras
                 return {
                     {"model", "llama-4-maverick-17b-128e-instruct"},
                     {"messages", {
@@ -129,15 +132,15 @@ namespace Services {
                     {"temperature", 0.7},
                     {"top_p", 0.9}
                 };
-            case 6: // Fireworks
+            case Core::Agent::MODE_FIREWORKS: // Fireworks
                 return create_standard_payload("accounts/fireworks/models/llama-v3-70b-instruct", user_input, system_prompt);
-            case 7: // Groq
+            case Core::Agent::MODE_GROQ: // Groq
                 return create_standard_payload("llama-3.1-70b-versatile", user_input, system_prompt);
-            case 8: // DeepSeek
+            case Core::Agent::MODE_DEEPSEEK: // DeepSeek
                 return create_standard_payload("deepseek-chat", user_input, system_prompt);
-            case 9: // OpenAI
+            case Core::Agent::MODE_OPENAI: // OpenAI
                 return create_standard_payload("gpt-4", user_input, system_prompt);
-            case 2: // Llama 3B (local)
+            case Core::Agent::MODE_LLAMA_3B: // Llama 3B (local)
                 return {
                     {"model", "llama3.2:3b"},
                     {"stream", false},
@@ -147,7 +150,7 @@ namespace Services {
                     }}
                 };
 
-            case 4: // Llama latest (local)
+            case Core::Agent::MODE_LLAMA_LATEST: // Llama latest (local)
                 return {
                     {"model", "llama3.2:latest"},
                     {"stream", false},
@@ -157,7 +160,7 @@ namespace Services {
                     }}
                 };
 
-            case 5: // Llama 3.1 (local)
+            case Core::Agent::MODE_LLAMA_31: // Llama 3.1 (local)
                 return {
                     {"model", "llama3.1:latest"},
                     {"stream", false},
@@ -238,19 +241,19 @@ namespace Services {
             
             // Set API key in appropriate header based on service
             switch (mode_) {
-                case 1: // Together AI
-                case 6: // Fireworks
-                case 7: // Groq
-                case 8: // DeepSeek
-                case 9: // OpenAI
+                case Core::Agent::MODE_TOGETHER: // Together AI
+                case Core::Agent::MODE_FIREWORKS: // Fireworks
+                case Core::Agent::MODE_GROQ: // Groq
+                case Core::Agent::MODE_DEEPSEEK: // DeepSeek
+                case Core::Agent::MODE_OPENAI: // OpenAI
                     headers["Authorization"] = "Bearer " + api_key_;
                     break;
-                case 3: // Cerebras
+                case Core::Agent::MODE_CEREBRAS: // Cerebras
                     headers["X-API-Key"] = api_key_;
                     break;
-                case 2: // Local Ollama
-                case 4:
-                case 5:
+                case Core::Agent::MODE_LLAMA_3B: // Local Ollama
+                case Core::Agent::MODE_LLAMA_LATEST:
+                case Core::Agent::MODE_LLAMA_31:
                     // No API key needed for local
                     break;
             }
@@ -260,7 +263,9 @@ namespace Services {
             std::string json_body = payload.dump();
 
             WebResponse response;
-            if (mode_ == 1 || mode_ == 3 || mode_ == 6 || mode_ == 7 || mode_ == 8 || mode_ == 9) {
+            if (mode_ == Core::Agent::MODE_TOGETHER || mode_ == Core::Agent::MODE_CEREBRAS ||
+                mode_ == Core::Agent::MODE_FIREWORKS || mode_ == Core::Agent::MODE_GROQ ||
+                mode_ == Core::Agent::MODE_DEEPSEEK || mode_ == Core::Agent::MODE_OPENAI) {
                 // Online providers: use POST
                 response = web_service.post_json(url, json_body, headers);
             } else {
@@ -275,7 +280,7 @@ namespace Services {
             }
             
             // Handle streaming response for Cerebras
-            if (mode_ == 3) {
+            if (mode_ == Core::Agent::MODE_CEREBRAS) {
 return parse_cerebras_stream(response.content);
             }
             
@@ -284,11 +289,11 @@ return parse_cerebras_stream(response.content);
             
             // Handle different response formats
             switch (mode_) {
-                case 1: // Together AI
-                case 6: // Fireworks
-                case 7: // Groq
-                case 8: // DeepSeek
-                case 9: // OpenAI
+                case Core::Agent::MODE_TOGETHER: // Together AI
+                case Core::Agent::MODE_FIREWORKS: // Fireworks
+                case Core::Agent::MODE_GROQ: // Groq
+                case Core::Agent::MODE_DEEPSEEK: // DeepSeek
+                case Core::Agent::MODE_OPENAI: // OpenAI
                     if (json_response.contains("choices") && !json_response["choices"].empty()) {
                         auto& choice = json_response["choices"][0];
                         if (choice.contains("message") && choice["message"].contains("content")) {
@@ -298,9 +303,9 @@ return parse_cerebras_stream(response.content);
                         }
                     }
                     break;
-                case 2: // Local Ollama
-                case 4:
-                case 5:
+                case Core::Agent::MODE_LLAMA_3B: // Local Ollama
+                case Core::Agent::MODE_LLAMA_LATEST:
+                case Core::Agent::MODE_LLAMA_31:
                     if (json_response.contains("message") && json_response["message"].contains("content")) {
                         return json_response["message"]["content"].get<std::string>();
                     } else if (json_response.contains("response")) {
