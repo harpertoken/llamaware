@@ -375,6 +375,7 @@ set(SERVICE_SOURCES
     src/services/web_service.cpp
     src/services/ai_service.cpp
     src/services/git_service.cpp
+    src/services/github_service.cpp
     src/services/codebase_service.cpp
     src/services/multi_file_service.cpp
     src/services/context_service.cpp
