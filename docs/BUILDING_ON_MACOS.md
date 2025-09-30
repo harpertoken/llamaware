@@ -26,7 +26,7 @@ This document outlines the specific requirements and steps for building Llamawar
    ```bash
    brew install cmake pkg-config openssl@3 cpr
    ```
-   Note: nlohmann-json is automatically downloaded and built if not found on the system.
+   Note: Dependencies like nlohmann-json, zlib, and OpenSSL are automatically downloaded and built if not found on the system.
 
 ## Building the Project
 
