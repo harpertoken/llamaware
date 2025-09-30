@@ -54,20 +54,27 @@ namespace Core {
         return s.substr(a, b - a);
     }
 
+
+
     void Agent::run() {
         initialize_mode();
 
+        // Data-driven model name mapping
+        std::map<Mode, std::string> model_names = {
+            {MODE_TOGETHER, "Together AI"},
+            {MODE_CEREBRAS, "Cerebras"},
+            {MODE_FIREWORKS, "Fireworks"},
+            {MODE_GROQ, "Groq"},
+            {MODE_DEEPSEEK, "DeepSeek"},
+            {MODE_OPENAI, "OpenAI"},
+            {MODE_LLAMA_3B, "llama3.2:3b"},
+            {MODE_LLAMA_LATEST, "llama3.2:latest"},
+            {MODE_LLAMA_31, "llama3.1:latest"}
+        };
+
         // Show enhanced ready interface with system info and quick help
-        std::string mode_name = (mode_ == MODE_TOGETHER || mode_ == MODE_CEREBRAS) ? "Online" : "Offline";
-        std::string model_name;
-        switch (mode_) {
-            case MODE_TOGETHER: model_name = "Together AI"; break;
-            case MODE_CEREBRAS: model_name = "Cerebras"; break;
-            case MODE_LLAMA_3B: model_name = "llama3.2:3b"; break;
-            case MODE_LLAMA_LATEST: model_name = "llama3.2:latest"; break;
-            case MODE_LLAMA_31: model_name = "llama3.1:latest"; break;
-            default: model_name = "Unknown"; break;
-        }
+        std::string mode_name = is_online_mode() ? "Online" : "Offline";
+        std::string model_name = model_names.count(mode_) ? model_names[mode_] : "Unknown";
         Utils::UI::print_ready_interface(mode_name, model_name);
 
         while (true) {
@@ -104,43 +111,93 @@ namespace Core {
             return;
         }
 
+        // Data-driven provider configuration
+        struct ProviderInfo {
+            int choice;
+            Mode mode;
+            std::string env_var;
+            std::string display_name;
+        };
+
+        std::vector<ProviderInfo> providers = {
+            {1, MODE_TOGETHER, "TOGETHER_API_KEY", "Together AI"},
+            {2, MODE_CEREBRAS, "CEREBRAS_API_KEY", "Cerebras"},
+            {3, MODE_FIREWORKS, "FIREWORKS_API_KEY", "Fireworks"},
+            {4, MODE_GROQ, "GROQ_API_KEY", "Groq"},
+            {5, MODE_DEEPSEEK, "DEEPSEEK_API_KEY", "DeepSeek"},
+            {6, MODE_OPENAI, "OPENAI_API_KEY", "OpenAI"}
+        };
+
         // Simplified mode selection with consistent numbering
         int choice = get_user_choice("Mode [1=Online / 2=Offline] (default 2): ", {1, 2}, 2);
 
         if (choice == 1) {
             // Online mode: pick provider
-            int provider = get_user_choice("Provider [1=Together AI / 2=Cerebras] (default 1): ", {1, 2}, 1);
+            std::string prompt = "Provider [";
+            for (size_t i = 0; i < providers.size(); ++i) {
+                if (i > 0) prompt += " / ";
+                prompt += std::to_string(providers[i].choice) + "=" + providers[i].display_name;
+            }
+            prompt += "] (default 1): ";
 
-            if (provider == 1) {
-                mode_ = MODE_TOGETHER;
-                api_key_ = Utils::Config::get_env_var("TOGETHER_API_KEY");
-                if (api_key_.empty()) {
-                    throw std::runtime_error("TOGETHER_API_KEY not set");
+            std::vector<int> valid_choices;
+            for (const auto& p : providers) valid_choices.push_back(p.choice);
+
+            int provider_choice = get_user_choice(prompt, valid_choices, 1);
+
+            // Find and configure the selected provider
+            for (const auto& provider : providers) {
+                if (provider.choice == provider_choice) {
+                    mode_ = provider.mode;
+                    api_key_ = Utils::Config::get_env_var(provider.env_var);
+                    if (api_key_.empty()) {
+                        throw std::runtime_error(provider.env_var + " not set");
+                    }
+                    Utils::UI::print_success(provider.display_name);
+                    break;
                 }
-                Utils::UI::print_success("Together AI");
-            } else {
-                mode_ = MODE_CEREBRAS;
-                api_key_ = Utils::Config::get_env_var("CEREBRAS_API_KEY");
-                if (api_key_.empty()) {
-                    throw std::runtime_error("CEREBRAS_API_KEY not set");
-                }
-                Utils::UI::print_success("Cerebras");
             }
         } else {
-            // Offline mode: pick model
-            int model = get_user_choice("Model [1=llama3.2:3b / 2=llama3.2:latest / 3=llama3.1:latest] (default 1): ", {1, 2, 3}, 1);
+            // Data-driven offline model configuration
+            struct ModelInfo {
+                int choice;
+                Mode mode;
+                std::string display_name;
+            };
 
-            if (model == 1) {
-                mode_ = MODE_LLAMA_3B;
-                Utils::UI::print_success("llama3.2:3b");
-            } else if (model == 2) {
-                mode_ = MODE_LLAMA_LATEST;
-                Utils::UI::print_success("llama3.2:latest");
-            } else {
-                mode_ = MODE_LLAMA_31;
-                Utils::UI::print_success("llama3.1:latest");
+            std::vector<ModelInfo> models = {
+                {1, MODE_LLAMA_3B, "llama3.2:3b"},
+                {2, MODE_LLAMA_LATEST, "llama3.2:latest"},
+                {3, MODE_LLAMA_31, "llama3.1:latest"}
+            };
+
+            // Offline mode: pick model
+            std::string prompt = "Model [";
+            for (size_t i = 0; i < models.size(); ++i) {
+                if (i > 0) prompt += " / ";
+                prompt += std::to_string(models[i].choice) + "=" + models[i].display_name;
+            }
+            prompt += "] (default 1): ";
+
+            std::vector<int> valid_choices;
+            for (const auto& m : models) valid_choices.push_back(m.choice);
+
+            int model_choice = get_user_choice(prompt, valid_choices, 1);
+
+            // Find and configure the selected model
+            for (const auto& model : models) {
+                if (model.choice == model_choice) {
+                    mode_ = model.mode;
+                    Utils::UI::print_success(model.display_name);
+                    break;
+                }
             }
         }
+    }
+
+    bool Agent::is_online_mode() const {
+        return mode_ == MODE_TOGETHER || mode_ == MODE_CEREBRAS || mode_ == MODE_FIREWORKS ||
+               mode_ == MODE_GROQ || mode_ == MODE_DEEPSEEK || mode_ == MODE_OPENAI;
     }
 
     int Agent::get_user_choice(const std::string& prompt, const std::vector<int>& valid_choices, int default_choice) {

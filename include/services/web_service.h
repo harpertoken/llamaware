@@ -43,6 +43,7 @@ namespace Services {
         static std::string fetch_text(const std::string& url);
         static std::string fetch_json(const std::string& url);
         static WebResponse fetch_with_headers(const std::string& url, const HeaderMap& headers);
+        static WebResponse post_json(const std::string& url, const std::string& json_body, const HeaderMap& headers);
         static bool is_valid_url(const std::string& url);
     };
 }

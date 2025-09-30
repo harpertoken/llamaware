@@ -247,18 +247,21 @@ if(NOT CPR_FOUND)
     set(CPR_BUILD_TESTS OFF CACHE BOOL "")
     set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "")
     set(CPR_BUILD_TESTS_VERBOSE OFF CACHE BOOL "")
-    
+
+    # Build CPR as static library for better linking compatibility
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
+
     # Add compiler flags to suppress deprecation warnings
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
     endif()
-    
+
     # Make sure we're using a compatible version of CPR
     set(CPR_CURL_NOSIGNAL ON CACHE BOOL "")
-    
+
     # Make the directory to suppress warnings about missing directory
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/_deps/cpr-build")
-    
+
     FetchContent_MakeAvailable(cpr)
     
     # Add the include directory if it exists

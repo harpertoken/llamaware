@@ -8,7 +8,7 @@
 - Validation System: input safety checks
 
 ## Models
-- Online: Together AI (Llama-3.3-70B), Cerebras (Llama-4-Maverick)
+- Online: Together AI (Llama-3.3-70B), Cerebras (Llama-4-Maverick), Fireworks, Groq, DeepSeek, OpenAI
 - Offline: Local Ollama (llama3.2:3b, llama3.2:latest, llama3.1:latest)
 
 ## Environment
