@@ -10,9 +10,7 @@
 
 namespace Services {
 
-GitHubService::GitHubService() {
-    // Constructor
-}
+
 
 std::string GitHubService::get_github_token() {
     const char* token = std::getenv("GITHUB_TOKEN");
@@ -27,7 +25,7 @@ std::string GitHubService::get_api_base_url() {
 }
 
 WebResponse GitHubService::make_github_request(const std::string& endpoint,
-                                             const std::string& /*method*/,
+                                             const std::string& method,
                                              const std::string& body) {
     std::string url = get_api_base_url() + endpoint;
     HeaderMap headers;
@@ -39,11 +37,15 @@ WebResponse GitHubService::make_github_request(const std::string& endpoint,
     headers["Accept"] = "application/vnd.github.v3+json";
     headers["User-Agent"] = "llamaware-agent/1.0";
 
-    if (!body.empty()) {
+    if (!body.empty() || method == "POST" || method == "PATCH" || method == "PUT") {
         headers["Content-Type"] = "application/json";
     }
 
-    return WebService::fetch_with_headers(url, headers);
+    if (method == "POST") {
+        return WebService::post_json(url, body, headers);
+    } else {
+        return WebService::fetch_with_headers(url, headers);
+    }
 }
 
 std::string GitHubService::get_repo_info(const std::string& owner, const std::string& repo) {
@@ -74,35 +76,37 @@ std::vector<GitHubIssue> GitHubService::get_issues(const std::string& owner,
     std::vector<GitHubIssue> issues;
     std::string endpoint = "/repos/" + owner + "/" + repo + "/issues?state=" + state;
 
-    WebResponse response = make_github_request(endpoint);
+    WebResponse response = make_github_request(endpoint, "GET", "");
 
-    if (response.success) {
-        try {
-            nlohmann::json json = nlohmann::json::parse(response.content);
-            for (const auto& item : json) {
-                GitHubIssue issue;
-                issue.number = item["number"];
-                issue.title = item["title"];
-                issue.body = item.value("body", "");
-                issue.state = item["state"];
+    if (!response.success) {
+        throw std::runtime_error("Failed to fetch issues: " + response.error_message);
+    }
 
-                for (const auto& label : item["labels"]) {
-                    issue.labels.push_back(label["name"]);
-                }
+    try {
+        nlohmann::json json = nlohmann::json::parse(response.content);
+        for (const auto& item : json) {
+            GitHubIssue issue;
+            issue.number = item["number"];
+            issue.title = item["title"];
+            issue.body = item.value("body", "");
+            issue.state = item["state"];
+
+            for (const auto& label : item["labels"]) {
+                issue.labels.push_back(label["name"]);
+            }
 
                 if (!item["assignee"].is_null()) {
-                    issue.assignee = item["assignee"]["login"];
+                    issue.assignees.push_back(item["assignee"]["login"]);
                 }
 
-                if (!item["milestone"].is_null()) {
-                    issue.milestone = item["milestone"]["number"];
-                }
-
-                issues.push_back(issue);
+            if (!item["milestone"].is_null()) {
+                issue.milestone = item["milestone"]["number"];
             }
-        } catch (const std::exception& e) {
-            std::cerr << "Error parsing issues: " << e.what() << std::endl;
+
+            issues.push_back(issue);
         }
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Error parsing issues: " + std::string(e.what()));
     }
 
     return issues;
@@ -113,29 +117,63 @@ GitHubIssue GitHubService::create_issue(const std::string& owner,
                                       const std::string& title,
                                       const std::string& body,
                                       const std::vector<std::string>& labels) {
-    (void)owner; (void)repo;
-    GitHubIssue issue;
-    issue.title = title;
-    issue.body = body;
-    issue.labels = labels;
-    issue.state = "open";
-    return issue;
+    std::string endpoint = "/repos/" + owner + "/" + repo + "/issues";
+    nlohmann::json payload = {
+        {"title", title},
+        {"body", body},
+        {"labels", labels}
+    };
+    std::string json_body = payload.dump();
+
+    WebResponse response = make_github_request(endpoint, "POST", json_body);
+
+    if (!response.success) {
+        throw std::runtime_error("Failed to create issue: " + response.error_message);
+    }
+
+    try {
+        nlohmann::json json = nlohmann::json::parse(response.content);
+        GitHubIssue issue;
+        issue.number = json["number"];
+        issue.title = json["title"];
+        issue.body = json.value("body", "");
+        issue.state = json["state"];
+        for (const auto& label : json["labels"]) {
+            issue.labels.push_back(label["name"]);
+        }
+        return issue;
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Error parsing created issue: " + std::string(e.what()));
+    }
 }
 
 bool GitHubService::update_issue(const std::string& owner,
                                const std::string& repo,
                                int issue_number,
                                const std::map<std::string, std::string>& updates) {
-    (void)owner; (void)repo; (void)issue_number; (void)updates;
-    return false;
+    std::string endpoint = "/repos/" + owner + "/" + repo + "/issues/" + std::to_string(issue_number);
+    nlohmann::json payload;
+    for (const auto& update : updates) {
+        payload[update.first] = update.second;
+    }
+    std::string json_body = payload.dump();
+
+    WebResponse response = make_github_request(endpoint, "PATCH", json_body);
+
+    return response.success;
 }
 
 bool GitHubService::add_comment(const std::string& owner,
                               const std::string& repo,
                               int issue_number,
                               const std::string& comment) {
-    (void)owner; (void)repo; (void)issue_number; (void)comment;
-    return false;
+    std::string endpoint = "/repos/" + owner + "/" + repo + "/issues/" + std::to_string(issue_number) + "/comments";
+    nlohmann::json payload = {{"body", comment}};
+    std::string json_body = payload.dump();
+
+    WebResponse response = make_github_request(endpoint, "POST", json_body);
+
+    return response.success;
 }
 
 std::vector<GitHubPR> GitHubService::get_pull_requests(const std::string& owner,
@@ -144,25 +182,27 @@ std::vector<GitHubPR> GitHubService::get_pull_requests(const std::string& owner,
     std::vector<GitHubPR> prs;
     std::string endpoint = "/repos/" + owner + "/" + repo + "/pulls?state=" + state;
 
-    WebResponse response = make_github_request(endpoint);
+    WebResponse response = make_github_request(endpoint, "GET", "");
 
-    if (response.success) {
-        try {
-            nlohmann::json json = nlohmann::json::parse(response.content);
-            for (const auto& item : json) {
-                GitHubPR pr;
-                pr.number = item["number"];
-                pr.title = item["title"];
-                pr.body = item.value("body", "");
-                pr.state = item["state"];
-                pr.head_branch = item["head"]["ref"];
-                pr.base_branch = item["base"]["ref"];
-                pr.mergeable = item.value("mergeable", false);
-                prs.push_back(pr);
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Error parsing PRs: " << e.what() << std::endl;
+    if (!response.success) {
+        throw std::runtime_error("Failed to fetch PRs: " + response.error_message);
+    }
+
+    try {
+        nlohmann::json json = nlohmann::json::parse(response.content);
+        for (const auto& item : json) {
+            GitHubPR pr;
+            pr.number = item["number"];
+            pr.title = item["title"];
+            pr.body = item.value("body", "");
+            pr.state = item["state"];
+            pr.head_branch = item["head"]["ref"];
+            pr.base_branch = item["base"]["ref"];
+            pr.mergeable = item.value("mergeable", false);
+            prs.push_back(pr);
         }
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Error parsing PRs: " + std::string(e.what()));
     }
 
     return prs;
@@ -174,21 +214,23 @@ GitHubPR GitHubService::get_pull_request(const std::string& owner,
     GitHubPR pr;
     std::string endpoint = "/repos/" + owner + "/" + repo + "/pulls/" + std::to_string(pr_number);
 
-    WebResponse response = make_github_request(endpoint);
+    WebResponse response = make_github_request(endpoint, "GET", "");
 
-    if (response.success) {
-        try {
-            nlohmann::json json = nlohmann::json::parse(response.content);
-            pr.number = json["number"];
-            pr.title = json["title"];
-            pr.body = json.value("body", "");
-            pr.state = json["state"];
-            pr.head_branch = json["head"]["ref"];
-            pr.base_branch = json["base"]["ref"];
-            pr.mergeable = json.value("mergeable", false);
-        } catch (const std::exception& e) {
-            std::cerr << "Error parsing PR: " << e.what() << std::endl;
-        }
+    if (!response.success) {
+        throw std::runtime_error("Failed to fetch PR: " + response.error_message);
+    }
+
+    try {
+        nlohmann::json json = nlohmann::json::parse(response.content);
+        pr.number = json["number"];
+        pr.title = json["title"];
+        pr.body = json.value("body", "");
+        pr.state = json["state"];
+        pr.head_branch = json["head"]["ref"];
+        pr.base_branch = json["base"]["ref"];
+        pr.mergeable = json.value("mergeable", false);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Error parsing PR: " + std::string(e.what()));
     }
 
     return pr;
@@ -198,8 +240,13 @@ bool GitHubService::create_pr_comment(const std::string& owner,
                                     const std::string& repo,
                                     int pr_number,
                                     const std::string& comment) {
-    (void)owner; (void)repo; (void)pr_number; (void)comment;
-    return false;
+    std::string endpoint = "/repos/" + owner + "/" + repo + "/issues/" + std::to_string(pr_number) + "/comments";
+    nlohmann::json payload = {{"body", comment}};
+    std::string json_body = payload.dump();
+
+    WebResponse response = make_github_request(endpoint, "POST", json_body);
+
+    return response.success;
 }
 
 std::vector<std::string> GitHubService::get_milestones(const std::string& owner,
@@ -207,17 +254,19 @@ std::vector<std::string> GitHubService::get_milestones(const std::string& owner,
     std::vector<std::string> milestones;
     std::string endpoint = "/repos/" + owner + "/" + repo + "/milestones";
 
-    WebResponse response = make_github_request(endpoint);
+    WebResponse response = make_github_request(endpoint, "GET", "");
 
-    if (response.success) {
-        try {
-            nlohmann::json json = nlohmann::json::parse(response.content);
-            for (const auto& item : json) {
-                milestones.push_back(item["title"]);
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Error parsing milestones: " << e.what() << std::endl;
+    if (!response.success) {
+        throw std::runtime_error("Failed to fetch milestones: " + response.error_message);
+    }
+
+    try {
+        nlohmann::json json = nlohmann::json::parse(response.content);
+        for (const auto& item : json) {
+            milestones.push_back(item["title"]);
         }
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Error parsing milestones: " + std::string(e.what()));
     }
 
     return milestones;
@@ -227,8 +276,22 @@ int GitHubService::create_milestone(const std::string& owner,
                                   const std::string& repo,
                                   const std::string& title,
                                   const std::string& description) {
-    (void)owner; (void)repo; (void)title; (void)description;
-    return -1;
+    std::string endpoint = "/repos/" + owner + "/" + repo + "/milestones";
+    nlohmann::json payload = {{"title", title}, {"description", description}};
+    std::string json_body = payload.dump();
+
+    WebResponse response = make_github_request(endpoint, "POST", json_body);
+
+    if (!response.success) {
+        return -1;
+    }
+
+    try {
+        nlohmann::json json = nlohmann::json::parse(response.content);
+        return json["number"];
+    } catch (const std::exception& e) {
+        return -1;
+    }
 }
 
 std::vector<std::string> GitHubService::get_labels(const std::string& owner,
@@ -236,17 +299,19 @@ std::vector<std::string> GitHubService::get_labels(const std::string& owner,
     std::vector<std::string> labels;
     std::string endpoint = "/repos/" + owner + "/" + repo + "/labels";
 
-    WebResponse response = make_github_request(endpoint);
+    WebResponse response = make_github_request(endpoint, "GET", "");
 
-    if (response.success) {
-        try {
-            nlohmann::json json = nlohmann::json::parse(response.content);
-            for (const auto& item : json) {
-                labels.push_back(item["name"]);
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Error parsing labels: " << e.what() << std::endl;
+    if (!response.success) {
+        throw std::runtime_error("Failed to fetch labels: " + response.error_message);
+    }
+
+    try {
+        nlohmann::json json = nlohmann::json::parse(response.content);
+        for (const auto& item : json) {
+            labels.push_back(item["name"]);
         }
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Error parsing labels: " + std::string(e.what()));
     }
 
     return labels;
@@ -257,16 +322,31 @@ bool GitHubService::create_label(const std::string& owner,
                                const std::string& name,
                                const std::string& color,
                                const std::string& description) {
-    (void)owner; (void)repo; (void)name; (void)color; (void)description;
-    return false;
+    std::string endpoint = "/repos/" + owner + "/" + repo + "/labels";
+    nlohmann::json payload = {{"name", name}, {"color", color}, {"description", description}};
+    std::string json_body = payload.dump();
+
+    WebResponse response = make_github_request(endpoint, "POST", json_body);
+
+    return response.success;
 }
 
 bool GitHubService::create_webhook(const std::string& owner,
                                  const std::string& repo,
                                  const std::string& url,
                                  const std::vector<std::string>& events) {
-    (void)owner; (void)repo; (void)url; (void)events;
-    return false;
+    std::string endpoint = "/repos/" + owner + "/" + repo + "/hooks";
+    nlohmann::json payload = {
+        {"name", "web"},
+        {"active", true},
+        {"events", events},
+        {"config", {{"url", url}, {"content_type", "json"}}}
+    };
+    std::string json_body = payload.dump();
+
+    WebResponse response = make_github_request(endpoint, "POST", json_body);
+
+    return response.success;
 }
 
 std::string GitHubService::run_health_check(const std::string& owner,

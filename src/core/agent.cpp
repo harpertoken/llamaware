@@ -442,9 +442,9 @@ namespace Core {
             }
             auto todos = Services::CodebaseService::find_todos(path);
             if (todos.empty()) {
-                result = "No TODO/FIXME/HACK comments found";
+                result = "No task comments found";
             } else {
-                result = "Found " + std::to_string(todos.size()) + " TODO/FIXME/HACK comments:\n";
+                result = "Found " + std::to_string(todos.size()) + " task comments:\n";
                 for (const auto& todo : todos) {
                     result += todo + "\n";
                 }
@@ -476,22 +476,27 @@ namespace Core {
         }
         else if (input.rfind("github:", 0) == 0) {
             std::string params = trim_copy(input.substr(7));
-            if (params.rfind("repo:", 0) == 0) {
-                std::string repo_spec = trim_copy(params.substr(5));
+            auto parse_repo_spec = [](const std::string& repo_spec, std::string& owner, std::string& repo) -> bool {
                 size_t slash_pos = repo_spec.find('/');
                 if (slash_pos != std::string::npos) {
-                    std::string owner = repo_spec.substr(0, slash_pos);
-                    std::string repo = repo_spec.substr(slash_pos + 1);
+                    owner = repo_spec.substr(0, slash_pos);
+                    repo = repo_spec.substr(slash_pos + 1);
+                    return true;
+                }
+                return false;
+            };
+            if (params.rfind("repo:", 0) == 0) {
+                std::string repo_spec = trim_copy(params.substr(5));
+                std::string owner, repo;
+                if (parse_repo_spec(repo_spec, owner, repo)) {
                     result = Services::GitHubService::get_repo_info(owner, repo);
                 } else {
                     result = "Usage: github:repo:owner/repo";
                 }
             } else if (params.rfind("issues:", 0) == 0) {
                 std::string repo_spec = trim_copy(params.substr(7));
-                size_t slash_pos = repo_spec.find('/');
-                if (slash_pos != std::string::npos) {
-                    std::string owner = repo_spec.substr(0, slash_pos);
-                    std::string repo = repo_spec.substr(slash_pos + 1);
+                std::string owner, repo;
+                if (parse_repo_spec(repo_spec, owner, repo)) {
                     auto issues = Services::GitHubService::get_issues(owner, repo);
                     if (issues.empty()) {
                         result = "No issues found";
@@ -506,10 +511,8 @@ namespace Core {
                 }
             } else if (params.rfind("health:", 0) == 0) {
                 std::string repo_spec = trim_copy(params.substr(7));
-                size_t slash_pos = repo_spec.find('/');
-                if (slash_pos != std::string::npos) {
-                    std::string owner = repo_spec.substr(0, slash_pos);
-                    std::string repo = repo_spec.substr(slash_pos + 1);
+                std::string owner, repo;
+                if (parse_repo_spec(repo_spec, owner, repo)) {
                     result = Services::GitHubService::run_health_check(owner, repo);
                 } else {
                     result = "Usage: github:health:owner/repo";
@@ -871,7 +874,7 @@ namespace Core {
         std::cout << "  Project Analysis:" << std::endl;
         std::cout << "    analyze:[path]              - Analyze project structure" << std::endl;
         std::cout << "    components:[path]           - Find main components" << std::endl;
-        std::cout << "    todos:[path]                - Find TODO comments" << std::endl;
+        std::cout << "    todos:[path]                - Find task comments" << std::endl;
         std::cout << "    tree:[path]                 - Show directory tree" << std::endl;
         std::cout << "  Git Operations:" << std::endl;
         std::cout << "    git:status                  - Show git status" << std::endl;

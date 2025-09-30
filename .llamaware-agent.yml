@@ -3,10 +3,15 @@ description: automated health checks and issue management
 
 features:
   - health_checks
-  - todo_management  
+  - todo_management
   - milestone_assignment
 
 permissions:
   contents: read
   pull-requests: write
   issues: write
+
+triggers:
+  push_branches: [main, develop, master]
+  pull_request_branches: [main]
+  release_types: [published]
