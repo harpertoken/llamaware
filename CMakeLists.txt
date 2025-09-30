@@ -289,15 +289,18 @@ if(NOT TARGET gtest)
         GIT_SHALLOW TRUE
     )
     
-    # For Windows: Prevent overriding the parent project's compiler/linker settings
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    
-    # Make sure we're not overriding compiler flags
-    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-    set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
-    set(BUILD_GTEST ON CACHE BOOL "" FORCE)
-    
-    FetchContent_MakeAvailable(googletest)
+     # For Windows: Prevent overriding the parent project's compiler/linker settings
+     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+     # Build static libraries to avoid runtime dependencies
+     set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+     # Make sure we're not overriding compiler flags
+     set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+     set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
+     set(BUILD_GTEST ON CACHE BOOL "" FORCE)
+
+     FetchContent_MakeAvailable(googletest)
     
     # Create an interface library for gtest to make it easier to link
     if(NOT TARGET gtest_all_tests)
