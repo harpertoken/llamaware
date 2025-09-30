@@ -14,9 +14,13 @@ namespace Services {
     AIService::AIService(int mode, const std::string& api_key)
         : mode_(mode), api_key_(api_key) {}
 
+    bool AIService::is_online_mode() const {
+        return mode_ == 1 || mode_ == 3 || mode_ == 6 || mode_ == 7 || mode_ == 8 || mode_ == 9;
+    }
+
     bool AIService::is_available() {
-        // For online providers (Together, Cerebras) API key is required.
-        if (mode_ == 1 || mode_ == 3) {
+        // For online providers API key is required.
+        if (is_online_mode()) {
             return !api_key_.empty();
         }
         // Offline modes don't need an API key (they talk to local server)
@@ -24,13 +28,47 @@ namespace Services {
     }
 
     std::string AIService::get_api_url() {
-        switch (mode_) {
-            case 1: return "https://api.together.xyz/v1/chat/completions";
-            case 3: return "https://api.cerebras.ai/v1/chat/completions";
-            case 2:
-            case 4:
-            default: return "http://localhost:11434/api/chat";
+        if (std::getenv("TEST_MODE")) {
+            // Use mock URLs for testing
+            switch (mode_) {
+                case 1: return "http://mock-together/v1/chat/completions";
+                case 3: return "http://mock-cerebras/v1/chat/completions";
+                case 6: return "http://mock-fireworks/inference/v1/chat/completions";
+                case 7: return "http://mock-groq/openai/v1/chat/completions";
+                case 8: return "http://mock-deepseek/v1/chat/completions";
+                case 9: return "http://mock-openai/v1/chat/completions";
+                case 2:
+                case 4:
+                case 5:
+                default: return "http://mock-ollama:11434/api/chat";
+            }
+        } else {
+            switch (mode_) {
+                case 1: return "https://api.together.xyz/v1/chat/completions";
+                case 3: return "https://api.cerebras.ai/v1/chat/completions";
+                case 6: return "https://api.fireworks.ai/inference/v1/chat/completions";
+                case 7: return "https://api.groq.com/openai/v1/chat/completions";
+                case 8: return "https://api.deepseek.com/v1/chat/completions";
+                case 9: return "https://api.openai.com/v1/chat/completions";
+                case 2:
+                case 4:
+                case 5:
+                default: return "http://localhost:11434/api/chat";
+            }
         }
+    }
+
+    nlohmann::json AIService::create_standard_payload(const std::string& model, const std::string& user_input, const std::string& context) {
+        std::string system_prompt = "You are a helpful AI assistant. " + context;
+        return {
+            {"model", model},
+            {"messages", {
+                {{"role", "system"}, {"content", system_prompt}},
+                {{"role", "user"}, {"content", user_input}}
+            }},
+            {"max_tokens", 1000},
+            {"temperature", 0.7}
+        };
     }
 
     nlohmann::json AIService::create_payload(const std::string& user_input, const std::string& context) {
@@ -78,15 +116,7 @@ namespace Services {
 
         switch (mode_) {
             case 1: // Together AI
-                return {
-                    {"model", "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"},
-                    {"messages", {
-                        {{"role", "system"}, {"content", system_prompt}},
-                        {{"role", "user"}, {"content", user_input}}
-                    }},
-                    {"max_tokens", 1000},
-                    {"temperature", 0.7}
-                };
+                return create_standard_payload("meta-llama/Llama-3.3-70B-Instruct-Turbo-Free", user_input, system_prompt);
             case 3: // Cerebras
                 return {
                     {"model", "llama-4-maverick-17b-128e-instruct"},
@@ -99,6 +129,14 @@ namespace Services {
                     {"temperature", 0.7},
                     {"top_p", 0.9}
                 };
+            case 6: // Fireworks
+                return create_standard_payload("accounts/fireworks/models/llama-v3-70b-instruct", user_input, system_prompt);
+            case 7: // Groq
+                return create_standard_payload("llama-3.1-70b-versatile", user_input, system_prompt);
+            case 8: // DeepSeek
+                return create_standard_payload("deepseek-chat", user_input, system_prompt);
+            case 9: // OpenAI
+                return create_standard_payload("gpt-4", user_input, system_prompt);
             case 2: // Llama 3B (local)
                 return {
                     {"model", "llama3.2:3b"},
@@ -199,27 +237,37 @@ namespace Services {
             };
             
             // Set API key in appropriate header based on service
-            if (mode_ == 1) { // Together AI
-                headers["Authorization"] = "Bearer " + api_key_;
-            } else if (mode_ == 3) { // Cerebras
-                headers["X-API-Key"] = api_key_;
-            } else if (mode_ == 2 || mode_ == 4) { // Local Ollama
-                headers["Content-Type"] = "application/json";
+            switch (mode_) {
+                case 1: // Together AI
+                case 6: // Fireworks
+                case 7: // Groq
+                case 8: // DeepSeek
+                case 9: // OpenAI
+                    headers["Authorization"] = "Bearer " + api_key_;
+                    break;
+                case 3: // Cerebras
+                    headers["X-API-Key"] = api_key_;
+                    break;
+                case 2: // Local Ollama
+                case 4:
+                case 5:
+                    // No API key needed for local
+                    break;
             }
             
             // Use WebService to make the HTTP request
             WebService web_service;
-            // For simplicity, we'll just use the URL as-is and let the WebService handle the payload
-            // In a real implementation, you might want to add query parameters or modify the URL based on the mode
-            std::string full_url = url;
-            if (mode_ == 1) { // TogetherAI
-                full_url += "/completions";
-                headers["Content-Type"] = "application/json";
-                // For POST requests, we'll need to modify WebService to handle the payload
-                // For now, we'll just include it in the URL as a workaround
-                full_url += "?data=" + payload.dump();
+            std::string json_body = payload.dump();
+
+            WebResponse response;
+            if (mode_ == 1 || mode_ == 3 || mode_ == 6 || mode_ == 7 || mode_ == 8 || mode_ == 9) {
+                // Online providers: use POST
+                response = web_service.post_json(url, json_body, headers);
+            } else {
+                // Local providers: use GET with query param (for Ollama)
+                std::string full_url = url + "?data=" + json_body;
+                response = web_service.fetch_with_headers(full_url, headers);
             }
-            auto response = web_service.fetch_with_headers(full_url, headers);
             
             if (response.status_code != 200) {
                 return "Error: AI service returned status code " + std::to_string(response.status_code) + 
@@ -235,21 +283,30 @@ return parse_cerebras_stream(response.content);
             auto json_response = nlohmann::json::parse(response.content);
             
             // Handle different response formats
-            if (mode_ == 1) { // Together AI
-                if (json_response.contains("choices") && !json_response["choices"].empty()) {
-                    auto& choice = json_response["choices"][0];
-                    if (choice.contains("message") && choice["message"].contains("content")) {
-                        return choice["message"]["content"].get<std::string>();
-                    } else if (choice.contains("text")) {
-                        return choice["text"].get<std::string>();
+            switch (mode_) {
+                case 1: // Together AI
+                case 6: // Fireworks
+                case 7: // Groq
+                case 8: // DeepSeek
+                case 9: // OpenAI
+                    if (json_response.contains("choices") && !json_response["choices"].empty()) {
+                        auto& choice = json_response["choices"][0];
+                        if (choice.contains("message") && choice["message"].contains("content")) {
+                            return choice["message"]["content"].get<std::string>();
+                        } else if (choice.contains("text")) {
+                            return choice["text"].get<std::string>();
+                        }
                     }
-                }
-            } else if (mode_ == 2 || mode_ == 4) { // Local Ollama
-                if (json_response.contains("message") && json_response["message"].contains("content")) {
-                    return json_response["message"]["content"].get<std::string>();
-                } else if (json_response.contains("response")) {
-                    return json_response["response"].get<std::string>();
-                }
+                    break;
+                case 2: // Local Ollama
+                case 4:
+                case 5:
+                    if (json_response.contains("message") && json_response["message"].contains("content")) {
+                        return json_response["message"]["content"].get<std::string>();
+                    } else if (json_response.contains("response")) {
+                        return json_response["response"].get<std::string>();
+                    }
+                    break;
             }
             
             // If we get here, the response format wasn't as expected

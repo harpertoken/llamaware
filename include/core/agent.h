@@ -24,7 +24,11 @@ namespace Core {
             MODE_LLAMA_3B = 2,
             MODE_CEREBRAS = 3,
             MODE_LLAMA_LATEST = 4,
-            MODE_LLAMA_31 = 5
+            MODE_LLAMA_31 = 5,
+            MODE_FIREWORKS = 6,
+            MODE_GROQ = 7,
+            MODE_DEEPSEEK = 8,
+            MODE_OPENAI = 9
         };
         
     private:
@@ -76,7 +80,10 @@ namespace Core {
         void handle_auth_command(const std::string& command);
         void handle_sandbox_command(const std::string& command);
         void handle_error_command(const std::string& command);
-        
+
+    private:
+        bool is_online_mode() const;
+
     public:
         Agent();
         ~Agent(); // Need explicit destructor for unique_ptr with forward declarations

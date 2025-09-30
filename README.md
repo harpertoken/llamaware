@@ -58,14 +58,32 @@ Llamaware is a professional AI agent for development, built to be stable, extens
    ```
 3. Clone and build as shown in the Ubuntu instructions.
 
+## Supported AI Providers
+
+Llamaware supports multiple AI providers for online inference:
+
+- **Together AI** - Meta Llama models
+- **Cerebras** - Fast inference with Llama models
+- **Fireworks** - High-performance AI models
+- **Groq** - Optimized for speed
+- **DeepSeek** - Advanced reasoning models
+- **OpenAI** - GPT models
+
 ## Configuration
 
-Create a `.env` file in the project root with your configuration:
+Create a `.env` file in the project root with your API keys:
 
 ```env
-# Example configuration
+# AI Provider API Keys
+TOGETHER_API_KEY=your_together_api_key_here
+CEREBRAS_API_KEY=your_cerebras_api_key_here
+FIREWORKS_API_KEY=your_fireworks_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Other configuration
 LOG_LEVEL=info
-API_KEY=your_api_key_here
 ```
 
 ## Development
