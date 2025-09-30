@@ -13,7 +13,7 @@ struct GitHubIssue {
     std::string body;
     std::string state;
     std::vector<std::string> labels;
-    std::string assignee;
+    std::vector<std::string> assignees;
     int milestone;
 };
 
@@ -36,7 +36,7 @@ private:
                                          const std::string& body = "");
 
 public:
-    GitHubService();
+    GitHubService() = delete;
 
     static std::string get_repo_info(const std::string& owner, const std::string& repo);
     static std::vector<GitHubIssue> get_issues(const std::string& owner,
