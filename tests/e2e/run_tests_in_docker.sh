@@ -55,7 +55,7 @@ cmake ..
 make -j1
 
 # Set binary path for E2E tests
-export BINARY_PATH="/usr/local/bin/llamaware-agent"
+export BINARY_PATH="/tmp/app/build/bin/llamaware-agent"
 
 # Run unit tests
 echo "=== Running unit tests ==="
