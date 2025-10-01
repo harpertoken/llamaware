@@ -62,6 +62,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     'eval_duration': 900000000
                 }
                 self.wfile.write(json.dumps(response).encode('utf-8'))
+            elif self.path == '/api/chat':
+                self._set_headers()
+                response = {
+                    'model': data.get('model', 'llama3.2:3b'),
+                    'created_at': '2023-09-23T00:00:00Z',
+                    'message': {
+                        'role': 'assistant',
+                        'content': 'This is a mock response from Ollama.'
+                    },
+                    'done': True,
+                    'total_duration': 1000000000,
+                    'load_duration': 100000000,
+                    'prompt_eval_count': 10,
+                    'eval_count': 10,
+                    'eval_duration': 900000000
+                }
+                self.wfile.write(json.dumps(response).encode('utf-8'))
             else:
                 self.send_response(404)
                 self.end_headers()
