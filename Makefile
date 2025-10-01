@@ -75,6 +75,11 @@ preflight-ci:
 	@echo "Running CI-style preflight checks..."
 	@CI=true ./package/scripts/preflight.sh
 
+# Run CI locally (simulate GitHub Actions)
+ci:
+	@echo "Running local CI simulation..."
+	@make clean && make build && make test && make preflight-ci
+
 # Setup development environment
 setup:
 	@echo "Setting up development environment..."
