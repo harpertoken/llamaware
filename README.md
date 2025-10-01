@@ -166,6 +166,28 @@ permissions:
 * Triggers on PRs, issues, and comments
 * Posts formatted progress reports on PRs
 
+## CI/CD
+
+The project uses GitHub Actions for continuous integration and deployment.
+
+**Workflow Triggers**
+- Push to `main` and `develop` branches
+- Pull requests to any branch
+- Published releases
+
+**Repository Variables**
+- `PUSH_BRANCHES`: JSON array of branches for push triggers (e.g., `["main","develop"]`)
+- `PR_BRANCHES`: JSON array of branches for PR triggers (e.g., `["*"]`)
+- `RELEASE_TYPES`: JSON array of release types (e.g., `["published"]`)
+
+**Note**: Due to GitHub Actions limitations, trigger branches are hardcoded in the workflow. Repository variables are used for job configuration. For dynamic triggers, monitor GitHub updates.
+
+**Features**
+- Cross-platform builds (Ubuntu, macOS, Windows)
+- Preflight checks
+- Artifact uploads
+- Code coverage reporting
+
 ## Testing
 
 **Unit Tests**
