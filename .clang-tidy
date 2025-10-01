@@ -10,5 +10,5 @@ Checks: >
   performance-unnecessary-copy-initialization
 
 WarningsAsErrors: '*'
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '^(?!.*_deps).*'
 FormatStyle: file
