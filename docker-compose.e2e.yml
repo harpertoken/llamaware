@@ -1,20 +1,16 @@
-version: '3.8'
-
-x-mock-service-template: &mock-service-template
-  image: nginx:alpine
-  entrypoint: ["/bin/sh", "/start_nginx.sh"]
-  healthcheck:
-    test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
-    interval: 10s
-    timeout: 5s
-    retries: 3
-    start_period: 10s
-
 services:
-  # Mock AI providers
   mock-together:
-    <<: *mock-service-template
+    image: nginx:alpine
+    entrypoint: ["/bin/sh", "/start_nginx.sh"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     container_name: mock-together
+    environment:
+      - MOCK_TYPE=together
     ports:
       - "8081:80"
     volumes:
@@ -22,8 +18,17 @@ services:
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
 
   mock-cerebras:
-    <<: *mock-service-template
+    image: nginx:alpine
+    entrypoint: ["/bin/sh", "/start_nginx.sh"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     container_name: mock-cerebras
+    environment:
+      - MOCK_TYPE=cerebras
     ports:
       - "8082:80"
     volumes:
@@ -31,8 +36,17 @@ services:
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
 
   mock-fireworks:
-    <<: *mock-service-template
+    image: nginx:alpine
+    entrypoint: ["/bin/sh", "/start_nginx.sh"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     container_name: mock-fireworks
+    environment:
+      - MOCK_TYPE=fireworks
     ports:
       - "8083:80"
     volumes:
@@ -40,8 +54,17 @@ services:
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
 
   mock-groq:
-    <<: *mock-service-template
+    image: nginx:alpine
+    entrypoint: ["/bin/sh", "/start_nginx.sh"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     container_name: mock-groq
+    environment:
+      - MOCK_TYPE=groq
     ports:
       - "8084:80"
     volumes:
@@ -49,8 +72,17 @@ services:
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
 
   mock-deepseek:
-    <<: *mock-service-template
+    image: nginx:alpine
+    entrypoint: ["/bin/sh", "/start_nginx.sh"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     container_name: mock-deepseek
+    environment:
+      - MOCK_TYPE=deepseek
     ports:
       - "8085:80"
     volumes:
@@ -58,15 +90,23 @@ services:
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
 
   mock-openai:
-    <<: *mock-service-template
+    image: nginx:alpine
+    entrypoint: ["/bin/sh", "/start_nginx.sh"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     container_name: mock-openai
+    environment:
+      - MOCK_TYPE=openai
     ports:
       - "8086:80"
     volumes:
       - ./tests/mocks/openai_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
 
-  # Ollama mock (HTTP server)
   mock-ollama:
     image: python:3.9
     container_name: mock-ollama
@@ -83,28 +123,20 @@ services:
       retries: 3
       start_period: 10s
 
-  # Test runner
   e2e-tests:
     build:
       context: .
       dockerfile: package/docker/Dockerfile
-      target: builder  # Build only the builder stage for tests
+      target: builder
     container_name: llamaware-e2e-tests
     depends_on:
-      mock-together:
-        condition: service_healthy
-      mock-cerebras:
-        condition: service_healthy
-      mock-fireworks:
-        condition: service_healthy
-      mock-groq:
-        condition: service_healthy
-      mock-deepseek:
-        condition: service_healthy
-      mock-openai:
-        condition: service_healthy
-      mock-ollama:
-        condition: service_healthy
+      - mock-together
+      - mock-cerebras
+      - mock-fireworks
+      - mock-groq
+      - mock-deepseek
+      - mock-openai
+      - mock-ollama
     environment:
       - TOGETHER_API_KEY=test-key
       - CEREBRAS_API_KEY=test-key
@@ -115,38 +147,31 @@ services:
       - SERPAPI_KEY=test-key
       - OLLAMA_HOST=http://mock-ollama:11434
       - TEST_MODE=1
-      - BUILDKIT_INLINE_CACHE=1  # Enable build cache
+      - BUILDKIT_INLINE_CACHE=1
     volumes:
       - .:/app
-      - /app/build  # Persist build directory between builds
-      - /root/.cache  # Cache for build artifacts
+      - /app/build
+      - /root/.cache
     working_dir: /app
     user: root
-    # Use a wrapper script to handle exit codes properly
     command: ["bash", "-c", "ulimit -c unlimited && /app/tests/e2e/run_tests_in_docker.sh || touch /app/tests/e2e/.e2e_failed"]
     security_opt:
-      - seccomp:unconfined  # For better debugging
+      - seccomp:unconfined
     cap_add:
-      - SYS_PTRACE  # For debugging
+      - SYS_PTRACE
     stop_grace_period: 10s
     stop_signal: SIGTERM
-    # Healthcheck that always passes to prevent container from being killed
     healthcheck:
       test: ["CMD", "true"]
       interval: 60s
       timeout: 5s
       retries: 1
-    # Prevent the container from restarting on failure
     restart: "no"
     deploy:
       resources:
         limits:
-          cpus: '2'  # Limit CPU usage to 2 cores
-          memory: 4G  # Increased memory limit
+          cpus: '2'
+          memory: 4G
           pids: 1024
     tmpfs:
-      - /tmp:exec,mode=1777  # Use tmpfs for temporary files
-
-volumes:
-  llamaware_data:
-    driver: local
+      - /tmp:exec,mode=1777
