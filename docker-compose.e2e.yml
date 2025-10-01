@@ -1,3 +1,7 @@
+networks:
+  e2e-network:
+    driver: bridge
+
 services:
   mock-together:
     image: nginx:alpine
@@ -14,8 +18,9 @@ services:
     ports:
       - "8081:80"
     volumes:
-      - ./tests/mocks/together_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+    networks:
+      - e2e-network
 
   mock-cerebras:
     image: nginx:alpine
@@ -32,8 +37,9 @@ services:
     ports:
       - "8082:80"
     volumes:
-      - ./tests/mocks/cerebras_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+    networks:
+      - e2e-network
 
   mock-fireworks:
     image: nginx:alpine
@@ -50,8 +56,9 @@ services:
     ports:
       - "8083:80"
     volumes:
-      - ./tests/mocks/fireworks_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+    networks:
+      - e2e-network
 
   mock-groq:
     image: nginx:alpine
@@ -68,8 +75,9 @@ services:
     ports:
       - "8084:80"
     volumes:
-      - ./tests/mocks/groq_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+    networks:
+      - e2e-network
 
   mock-deepseek:
     image: nginx:alpine
@@ -86,8 +94,9 @@ services:
     ports:
       - "8085:80"
     volumes:
-      - ./tests/mocks/deepseek_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+    networks:
+      - e2e-network
 
   mock-openai:
     image: nginx:alpine
@@ -104,8 +113,9 @@ services:
     ports:
       - "8086:80"
     volumes:
-      - ./tests/mocks/openai_responses:/usr/share/nginx/html:ro
       - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
+    networks:
+      - e2e-network
 
   mock-ollama:
     image: python:3.9
@@ -122,6 +132,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - e2e-network
 
   e2e-tests:
     build:
@@ -167,6 +179,8 @@ services:
       timeout: 5s
       retries: 1
     restart: "no"
+    networks:
+      - e2e-network
     deploy:
       resources:
         limits:

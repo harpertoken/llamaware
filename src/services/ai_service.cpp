@@ -34,16 +34,16 @@ namespace Services {
         if (std::getenv("TEST_MODE")) {
             // Use mock URLs for testing
             switch (mode_) {
-                case Core::Agent::MODE_TOGETHER: return "http://localhost:8081/v1/chat/completions";
-                case Core::Agent::MODE_CEREBRAS: return "http://localhost:8082/v1/chat/completions";
-                case Core::Agent::MODE_FIREWORKS: return "http://localhost:8083/inference/v1/chat/completions";
-                case Core::Agent::MODE_GROQ: return "http://localhost:8084/openai/v1/chat/completions";
-                case Core::Agent::MODE_DEEPSEEK: return "http://localhost:8085/v1/chat/completions";
-                case Core::Agent::MODE_OPENAI: return "http://localhost:8086/v1/chat/completions";
+                case Core::Agent::MODE_TOGETHER: return "http://mock-together/v1/chat/completions";
+                case Core::Agent::MODE_CEREBRAS: return "http://mock-cerebras/v1/chat/completions";
+                case Core::Agent::MODE_FIREWORKS: return "http://mock-fireworks/inference/v1/chat/completions";
+                case Core::Agent::MODE_GROQ: return "http://mock-groq/openai/v1/chat/completions";
+                case Core::Agent::MODE_DEEPSEEK: return "http://mock-deepseek/v1/chat/completions";
+                case Core::Agent::MODE_OPENAI: return "http://mock-openai/v1/chat/completions";
                 case Core::Agent::MODE_LLAMA_3B:
                 case Core::Agent::MODE_LLAMA_LATEST:
                 case Core::Agent::MODE_LLAMA_31:
-                default: return "http://localhost:11434/api/chat";
+                default: return "http://mock-ollama:11434/api/chat";
             }
         } else {
             switch (mode_) {
@@ -268,13 +268,14 @@ namespace Services {
             WebResponse response;
             if (mode_ == Core::Agent::MODE_TOGETHER || mode_ == Core::Agent::MODE_CEREBRAS ||
                 mode_ == Core::Agent::MODE_FIREWORKS || mode_ == Core::Agent::MODE_GROQ ||
-                mode_ == Core::Agent::MODE_DEEPSEEK || mode_ == Core::Agent::MODE_OPENAI) {
-                // Online providers: use POST
+                mode_ == Core::Agent::MODE_DEEPSEEK || mode_ == Core::Agent::MODE_OPENAI ||
+                mode_ == Core::Agent::MODE_LLAMA_3B || mode_ == Core::Agent::MODE_LLAMA_LATEST ||
+                mode_ == Core::Agent::MODE_LLAMA_31) {
+                // All providers use POST
                 response = web_service.post_json(url, json_body, headers);
             } else {
-                // Local providers: use GET with query param (for Ollama)
-                std::string full_url = url + "?data=" + json_body;
-                response = web_service.fetch_with_headers(full_url, headers);
+                // Fallback (should not happen)
+                response = web_service.post_json(url, json_body, headers);
             }
             
             if (response.status_code != 200) {

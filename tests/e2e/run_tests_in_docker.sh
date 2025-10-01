@@ -46,6 +46,17 @@ echo "=== Verifying test dependencies ==="
 command -v expect >/dev/null 2>&1 || { echo >&2 "expect is required but not installed. Aborting."; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo >&2 "python3 is required but not installed. Aborting."; exit 1; }
 
+# Wait for mock services to be ready
+echo "=== Waiting for mock services to be ready ==="
+for service in mock-together mock-cerebras mock-fireworks mock-groq mock-deepseek mock-openai mock-ollama; do
+    echo "Waiting for $service..."
+    timeout 60 bash -c "until wget -qO- http://$service/health 2>/dev/null | grep -q 'healthy'; do sleep 2; done" || {
+        echo "Service $service failed to become ready"
+        exit 1
+    }
+    echo "$service is ready"
+done
+
 # Build the project
 echo "=== Building the project ==="
 cd /tmp/app
