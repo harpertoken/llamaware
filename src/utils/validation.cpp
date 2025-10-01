@@ -100,14 +100,15 @@ namespace Utils {
 
     ValidationResult Validator::validate_regex_pattern(const std::string& pattern) {
         ValidationResult result = {true, "", {}};
-        
+
         try {
             std::regex test_regex(pattern);
+            (void)test_regex; // Suppress unused variable warning - we only care about construction validity
         } catch (const std::regex_error& e) {
             result.is_valid = false;
             result.error_message = "Invalid regular expression: " + std::string(e.what());
         }
-        
+
         return result;
     }
 
