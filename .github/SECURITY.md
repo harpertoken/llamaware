@@ -2,34 +2,23 @@
 
 ## Supported Versions
 
-We actively support the following versions with security updates:
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| 1.x.x   | Yes       |
+| < 1.0   | No        |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in this project, please report it to us as follows:
+Do not create public issues. Email harpertoken@icloud.com with:
+- Steps to reproduce
+- Potential impact
+- Suggested fixes
 
-1. **Do not** create a public issue on GitHub.
-2. Email the details to harpertoken@icloud.com.
-3. Provide a detailed description of the vulnerability, including:
-   - Steps to reproduce
-   - Potential impact
-   - Any suggested fixes
-
-We will acknowledge receipt within 48 hours and provide a more detailed response within 7 days indicating our next steps.
-
-We kindly ask that you give us reasonable time to fix the issue before disclosing it publicly.
+We acknowledge within 48 hours and respond within 7 days.
 
 ## Security Updates
 
-Security updates will be released as soon as possible after a fix is developed and tested. We will communicate updates through:
-
+Released ASAP after fixes. Communicated via:
 - GitHub Security Advisories
 - Release notes
-- Email notifications to affected users (if applicable)
-
-Thank you for helping keep our project secure!
+- Email notifications
