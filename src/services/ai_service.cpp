@@ -34,16 +34,16 @@ namespace Services {
         if (std::getenv("TEST_MODE")) {
             // Use mock URLs for testing
             switch (mode_) {
-                case Core::Agent::MODE_TOGETHER: return "http://mock-together/v1/chat/completions";
-                case Core::Agent::MODE_CEREBRAS: return "http://mock-cerebras/v1/chat/completions";
-                case Core::Agent::MODE_FIREWORKS: return "http://mock-fireworks/inference/v1/chat/completions";
-                case Core::Agent::MODE_GROQ: return "http://mock-groq/openai/v1/chat/completions";
-                case Core::Agent::MODE_DEEPSEEK: return "http://mock-deepseek/v1/chat/completions";
-                case Core::Agent::MODE_OPENAI: return "http://mock-openai/v1/chat/completions";
+                case Core::Agent::MODE_TOGETHER: return "http://localhost:8081/v1/chat/completions";
+                case Core::Agent::MODE_CEREBRAS: return "http://localhost:8082/v1/chat/completions";
+                case Core::Agent::MODE_FIREWORKS: return "http://localhost:8083/inference/v1/chat/completions";
+                case Core::Agent::MODE_GROQ: return "http://localhost:8084/openai/v1/chat/completions";
+                case Core::Agent::MODE_DEEPSEEK: return "http://localhost:8085/v1/chat/completions";
+                case Core::Agent::MODE_OPENAI: return "http://localhost:8086/v1/chat/completions";
                 case Core::Agent::MODE_LLAMA_3B:
                 case Core::Agent::MODE_LLAMA_LATEST:
                 case Core::Agent::MODE_LLAMA_31:
-                default: return "http://mock-ollama:11434/api/chat";
+                default: return "http://localhost:11434/api/chat";
             }
         } else {
             switch (mode_) {

@@ -105,13 +105,6 @@ namespace Core {
     }
 
     void Agent::initialize_mode() {
-        // Check for test mode - skip interactive prompts
-        if (std::getenv("TEST_MODE")) {
-            mode_ = MODE_LLAMA_3B;
-            Utils::UI::print_success("llama3.2:3b (test mode)");
-            return;
-        }
-
         // Data-driven provider configuration
         struct ProviderInfo {
             int choice;
