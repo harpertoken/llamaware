@@ -7,6 +7,7 @@ on:
     branches: ${{ fromJSON(vars.PR_BRANCHES) }}
   release:
     types: ${{ fromJSON(vars.RELEASE_TYPES) }}
+  workflow_dispatch:
 
 env:
   # Read values from repo-level variables
