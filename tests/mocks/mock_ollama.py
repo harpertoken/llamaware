@@ -16,7 +16,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/' or self.path == '/health':
             self._set_headers('text/plain')
-            self.wfile.write(b'OK')
+            self.wfile.write(b'healthy\n')
         elif self.path == '/api/tags':
             self._set_headers()
             response = {
