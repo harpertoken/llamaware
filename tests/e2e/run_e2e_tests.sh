@@ -2,6 +2,7 @@
 
 set timeout 30
 set test_passed 1
+set BINARY_PATH $env(BINARY_PATH)
 
 # Function to run a test
 proc run_test {test_name mode_selection expected_response} {
