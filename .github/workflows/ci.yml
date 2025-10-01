@@ -2,17 +2,18 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ${{ fromJSON(env.PUSH_BRANCHES) }}
+    branches: ${{ fromJSON(vars.PUSH_BRANCHES) }}
   pull_request:
-    branches: ${{ fromJSON(env.PR_BRANCHES) }}
+    branches: ${{ fromJSON(vars.PR_BRANCHES) }}
   release:
-    types: ${{ fromJSON(env.RELEASE_TYPES) }}
+    types: ${{ fromJSON(vars.RELEASE_TYPES) }}
+  workflow_dispatch:
 
 env:
   # Read values from repo-level variables
-  PUSH_BRANCHES: ${{ env.PUSH_BRANCHES }}
-  PR_BRANCHES: ${{ env.PR_BRANCHES }}
-  RELEASE_TYPES: ${{ env.RELEASE_TYPES }}
+  PUSH_BRANCHES: ${{ vars.PUSH_BRANCHES }}
+  PR_BRANCHES: ${{ vars.PR_BRANCHES }}
+  RELEASE_TYPES: ${{ vars.RELEASE_TYPES }}
 
 permissions:
   actions: read
