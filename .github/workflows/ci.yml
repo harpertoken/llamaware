@@ -9,9 +9,10 @@ on:
     types: ${{ fromJSON(env.RELEASE_TYPES) }}
 
 env:
-  PUSH_BRANCHES: '["main","develop","master"]'
-  PR_BRANCHES: '["main"]'
-  RELEASE_TYPES: '["published"]'
+  # Read values from repo-level variables
+  PUSH_BRANCHES: ${{ env.PUSH_BRANCHES }}
+  PR_BRANCHES: ${{ env.PR_BRANCHES }}
+  RELEASE_TYPES: ${{ env.RELEASE_TYPES }}
 
 permissions:
   actions: read
