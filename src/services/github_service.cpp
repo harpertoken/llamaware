@@ -289,7 +289,7 @@ int GitHubService::create_milestone(const std::string& owner,
     try {
         nlohmann::json json = nlohmann::json::parse(response.content);
         return json["number"];
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         return -1;
     }
 }
