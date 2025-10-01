@@ -23,6 +23,9 @@ elif [ "$MOCK_TYPE" = "deepseek" ]; then
 elif [ "$MOCK_TYPE" = "openai" ]; then
     RESPONSE='{"choices": [{"message": {"content": "Mock OpenAI response"}}]}'
     ENDPOINT="/v1/chat/completions"
+elif [ "$MOCK_TYPE" = "ollama" ]; then
+    RESPONSE='{"model": "llama3.2:3b", "created_at": "2023-09-23T00:00:00Z", "message": {"role": "assistant", "content": "This is a mock response from Ollama."}, "done": true}'
+    ENDPOINT="/api/chat"
 else
     RESPONSE='{"error": "Unknown mock"}'
     ENDPOINT="/v1/chat/completions"

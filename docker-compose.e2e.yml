@@ -118,20 +118,21 @@ services:
       - e2e-network
 
   mock-ollama:
-    image: python:3.9
-    container_name: mock-ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ./tests/mocks/mock_ollama.py:/app/mock_ollama.py:ro
-    working_dir: /app
-    command: ["python", "-u", "/app/mock_ollama.py"]
+    image: nginx:alpine
+    entrypoint: ["/bin/sh", "/start_nginx.sh"]
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "--spider", "http://localhost:11434/health"]
+      test: ["CMD", "wget", "-qO-", "--spider", "http://127.0.0.1/health"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
+    container_name: mock-ollama
+    environment:
+      - MOCK_TYPE=ollama
+    ports:
+      - "11434:80"
+    volumes:
+      - ./tests/mocks/start_nginx.sh:/start_nginx.sh:ro
     networks:
       - e2e-network
 
