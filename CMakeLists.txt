@@ -511,11 +511,13 @@ install(TARGETS llamaware-agent
     RUNTIME DESTINATION bin
 )
 
-# Install configuration files
-install(FILES .env.example
-    DESTINATION etc/llamaware
-    RENAME config.env
-)
+# Install configuration files (only if .env.example exists)
+if(EXISTS "${CMAKE_SOURCE_DIR}/.env.example")
+    install(FILES .env.example
+        DESTINATION etc/llamaware
+        RENAME config.env
+    )
+endif()
 
 # CPack configuration for package generation
 set(CPACK_PACKAGE_NAME "llamaware-agent")
