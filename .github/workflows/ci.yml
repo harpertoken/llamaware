@@ -2,11 +2,11 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ${{ fromJSON(vars.PUSH_BRANCHES) }}
+    branches: ["main","develop"]
   pull_request:
-    branches: ${{ fromJSON(vars.PR_BRANCHES) }}
+    branches: ["*"]
   release:
-    types: ${{ fromJSON(vars.RELEASE_TYPES) }}
+    types: ["published"]
   workflow_dispatch:
 
 env:
