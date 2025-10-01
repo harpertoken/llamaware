@@ -2,10 +2,13 @@
 Checks: >
   -*,
   bugprone-use-after-move,
+  bugprone-unused-local-non-trivial-variable,
   clang-analyzer-core.NullDereference,
+  clang-analyzer-core.uninitialized.Assign,
   modernize-use-nullptr,
+  modernize-use-override,
   performance-unnecessary-copy-initialization
 
-WarningsAsErrors: ''
+WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle: file
