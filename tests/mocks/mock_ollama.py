@@ -89,7 +89,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(b'Invalid JSON')
 
 def run(server_class=http.server.HTTPServer, handler_class=Handler, port=11434):
-    server_address = ('', port)
+    server_address = ('0.0.0.0', port)
     httpd = server_class(server_address, handler_class)
     print(f'Starting mock Ollama server on port {port}...')
     httpd.serve_forever()
