@@ -12,7 +12,8 @@
 
 ## PR Requirements
 - Code style followed
-- Tests pass
+- Tests pass (run `make test` and `make test-e2e-docker`)
+- CI/CD passes on all platforms
 - Docs updated
 - Security checked
 
