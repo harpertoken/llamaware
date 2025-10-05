@@ -54,15 +54,11 @@ bool DatabaseService::executeQuery(const std::string& query, const std::vector<s
         }
         txn.exec(query, p);
 #else
-        switch (params.size()) {
-            case 0: txn.exec(query); break;
-            case 1: txn.exec(query, params[0]); break;
-            case 2: txn.exec(query, params[0], params[1]); break;
-            case 3: txn.exec(query, params[0], params[1], params[2]); break;
-            case 4: txn.exec(query, params[0], params[1], params[2], params[3]); break;
-            case 5: txn.exec(query, params[0], params[1], params[2], params[3], params[4]); break;
-            default: throw std::runtime_error("Too many parameters");
+        auto stream = txn.parameterized(query);
+        for (const auto& param : params) {
+            stream = stream(param);
         }
+        stream.exec();
 #endif
         txn.commit();
         return true;
@@ -89,18 +85,13 @@ std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& 
         txn.commit();
         return std::make_unique<pqxx::result>(std::move(result));
 #else
-        pqxx::result res;
-        switch (params.size()) {
-            case 0: res = txn.exec(query); break;
-            case 1: res = txn.exec(query, params[0]); break;
-            case 2: res = txn.exec(query, params[0], params[1]); break;
-            case 3: res = txn.exec(query, params[0], params[1], params[2]); break;
-            case 4: res = txn.exec(query, params[0], params[1], params[2], params[3]); break;
-            case 5: res = txn.exec(query, params[0], params[1], params[2], params[3], params[4]); break;
-            default: throw std::runtime_error("Too many parameters");
+        auto stream = txn.parameterized(query);
+        for (const auto& param : params) {
+            stream = stream(param);
         }
+        auto result = stream.exec();
         txn.commit();
-        return std::make_unique<pqxx::result>(std::move(res));
+        return std::make_unique<pqxx::result>(std::move(result));
 #endif
     } catch (const std::exception& e) {
         std::cerr << "Select query error: " << e.what() << std::endl;
