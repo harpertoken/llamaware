@@ -54,6 +54,7 @@ bool DatabaseService::isConnected() const {
 }
 
 bool DatabaseService::executeQuery(const std::string& query, const std::vector<std::string>& params) {
+#ifdef HAVE_PQXX
     if (!isConnected()) {
         std::cerr << "Not connected to database" << std::endl;
         return false;
@@ -84,9 +85,16 @@ bool DatabaseService::executeQuery(const std::string& query, const std::vector<s
         std::cerr << "Query execution error: " << e.what() << std::endl;
         return false;
     }
+#else
+    (void)query;
+    (void)params;
+    std::cerr << "Database support is disabled as libpqxx is not available." << std::endl;
+    return false;
+#endif
 }
 
 std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& query, const std::vector<std::string>& params) {
+#ifdef HAVE_PQXX
     if (!isConnected()) {
         std::cerr << "Not connected to database" << std::endl;
         return nullptr;
@@ -119,6 +127,12 @@ std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& 
         std::cerr << "Select query error: " << e.what() << std::endl;
         return nullptr;
     }
+#else
+    (void)query;
+    (void)params;
+    std::cerr << "Database support is disabled as libpqxx is not available." << std::endl;
+    return nullptr;
+#endif
 }
 
 } // namespace llamaware
