@@ -202,6 +202,13 @@ if(NOT nlohmann_json_FOUND)
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
+# Find libpqxx
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(PQXX REQUIRED libpqxx)
+if(NOT PQXX_FOUND)
+    message(FATAL_ERROR "libpqxx not found. Please install libpqxx-dev.")
+endif()
+
 # Find CPR - try to find the package first
 set(CPR_MIN_VERSION "1.10.0")
 set(CPR_FOUND FALSE)
@@ -385,6 +392,7 @@ set(SERVICE_SOURCES
     src/services/auth_service.cpp
     src/services/error_service.cpp
     src/services/sandbox_service.cpp
+    src/services/database_service.cpp
 )
 
 set(UTILS_SOURCES
@@ -407,12 +415,13 @@ set(ALL_SOURCES
 
 # Create library with all sources
 add_library(llamaware_lib ${ALL_SOURCES})
-target_include_directories(llamaware_lib PUBLIC 
+target_include_directories(llamaware_lib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     ${CURL_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
+    ${PQXX_INCLUDE_DIRS}
 )
 
 # Set compile definitions for symbol visibility
@@ -443,13 +452,14 @@ endif()
 # Link dependencies as PRIVATE to avoid exposing them
 target_link_libraries(llamaware_lib PRIVATE
     ${CURL_LIBRARIES}
-    cpr::cpr 
+    cpr::cpr
     nlohmann_json::nlohmann_json
     OpenSSL::SSL
     OpenSSL::Crypto
     ${ZLIB_TARGET}
     ${CMAKE_DL_LIBS}
     Threads::Threads
+    ${PQXX_LIBRARIES}
 )
 
 # Set additional linker flags for macOS
