@@ -80,7 +80,7 @@ RUN apt-get update && \
     libcurl4 \
     libssl3 \
     zlib1g \
-    libpqxx-7.7 \
+    libpqxx-6.4 \
     python3 \
     python3-pip && \
     rm -rf /var/lib/apt/lists/*
