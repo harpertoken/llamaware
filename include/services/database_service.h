@@ -4,7 +4,26 @@
 #include <string>
 #include <memory>
 #include <vector>
+#ifdef HAVE_PQXX
 #include <pqxx/pqxx>
+#endif
+
+#ifndef HAVE_PQXX
+namespace pqxx {
+class result {
+public:
+    result() {}
+    size_t size() const { return 0; }
+    // Minimal interface for compatibility
+};
+class connection {
+public:
+    connection(const std::string&) {}
+    bool is_open() const { return false; }
+    std::string dbname() const { return ""; }
+};
+} // namespace pqxx
+#endif
 
 namespace llamaware {
 
@@ -24,7 +43,9 @@ public:
     std::unique_ptr<pqxx::result> executeSelect(const std::string& query, const std::vector<std::string>& params = {});
 
 private:
+#ifdef HAVE_PQXX
     std::unique_ptr<pqxx::connection> connection_;
+#endif
 };
 
 } // namespace llamaware
