@@ -32,10 +32,7 @@ bool DatabaseService::connect(const std::string& host, int port, const std::stri
 }
 
 void DatabaseService::disconnect() {
-    if (connection_ && connection_->is_open()) {
-        connection_->close();
-        connection_.reset();
-    }
+    connection_.reset();
 }
 
 bool DatabaseService::isConnected() const {
