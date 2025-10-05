@@ -47,7 +47,7 @@ bool DatabaseService::executeQuery(const std::string& query, const std::vector<s
 
     try {
         pqxx::work txn(*connection_);
-#if PQXX_VERSION >= 70000
+#if defined(__APPLE__) || PQXX_VERSION >= 70000
         pqxx::params p;
         for (const auto& param : params) {
             p.append(param);
@@ -80,7 +80,7 @@ std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& 
 
     try {
         pqxx::work txn(*connection_);
-#if PQXX_VERSION >= 70000
+#if defined(__APPLE__) || PQXX_VERSION >= 70000
         pqxx::params p;
         for (const auto& param : params) {
             p.append(param);
