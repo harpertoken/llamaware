@@ -29,6 +29,7 @@
 * cpr 1.10.0+
 * nlohmann-json 3.10.0+
 * OpenSSL 1.1.1+
+* libpqxx 7.0+ (optional, for PostgreSQL database support)
 
 ## Project Structure
 
@@ -55,6 +56,8 @@ cd llamaware
 ```bash
 sudo apt update
 sudo apt install -y build-essential cmake git libcurl4-openssl-dev
+# Optional: for PostgreSQL database support
+sudo apt install -y libpqxx-dev
 make install-deps-ubuntu
 ```
 
@@ -62,12 +65,16 @@ make install-deps-ubuntu
 
 ```bash
 brew install cmake
+# Optional: for PostgreSQL database support
+brew install libpqxx
 ```
 
 **Windows**
 
 ```powershell
 # Install Chocolatey, CMake, and vcpkg (see CI workflow)
+# Optional: for PostgreSQL database support
+vcpkg install libpqxx
 ```
 
 ### Build
@@ -135,6 +142,28 @@ docker volume ls
 * **DeepSeek** – Advanced reasoning models
 * **OpenAI** – GPT models
 * **Offline** – Ollama (llama3.2:3b, latest)
+
+## Database Support
+
+Llamaware includes optional PostgreSQL database integration for persistent memory storage.
+
+**Features**
+* Conversation history persistence
+* Fact and preference storage
+* Session state management
+* Automatic schema initialization
+
+**Configuration**
+Set environment variables for database connection:
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=llamaware
+DB_USER=llamaware
+DB_PASSWORD=your_password
+```
+
+**Note**: Database support is automatically enabled if libpqxx is available at build time. Without it, memory is stored in local files.
 
 ## GitHub Bot
 
