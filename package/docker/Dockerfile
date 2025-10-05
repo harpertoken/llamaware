@@ -22,6 +22,7 @@ RUN apt-get update && \
     libssl-dev \
     libcurl4-openssl-dev \
     zlib1g-dev \
+    libpqxx-dev \
     python3 \
     python3-pip \
     expect && \
@@ -79,6 +80,7 @@ RUN apt-get update && \
     libcurl4 \
     libssl3 \
     zlib1g \
+    libpqxx-6.4 \
     python3 \
     python3-pip && \
     rm -rf /var/lib/apt/lists/*
