@@ -54,3 +54,4 @@ __pycache__/
 # Environment files (will be mounted as volume)
 .env
 .env.*
+!.env.example
