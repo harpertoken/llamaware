@@ -204,7 +204,7 @@ endif()
 
 # Find libpqxx
 find_library(PQXX_LIBRARY pqxx REQUIRED)
-find_path(PQXX_INCLUDE_DIR pqxx/pqxx.h REQUIRED)
+find_path(PQXX_INCLUDE_DIR pqxx/pqxx REQUIRED)
 if(NOT PQXX_LIBRARY OR NOT PQXX_INCLUDE_DIR)
     message(FATAL_ERROR "libpqxx not found. Please install libpqxx.")
 endif()
