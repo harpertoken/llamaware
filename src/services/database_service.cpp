@@ -21,13 +21,10 @@ bool DatabaseService::connect(const std::string& host, int port, const std::stri
 
         connection_ = std::make_unique<pqxx::connection>(connection_string);
 
-        if (connection_->is_open()) {
-            std::cout << "Connected to database: " << connection_->dbname() << std::endl;
-            return true;
-        } else {
-            std::cerr << "Failed to connect to database" << std::endl;
-            return false;
-        }
+        // The pqxx::connection constructor throws on failure, so if we get here,
+        // the connection is open.
+        std::cout << "Connected to database: " << connection_->dbname() << std::endl;
+        return true;
     } catch (const std::exception& e) {
         std::cerr << "Database connection error: " << e.what() << std::endl;
         return false;
