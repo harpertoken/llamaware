@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 #include <pqxx/pqxx>
 
 namespace llamaware {
@@ -19,8 +20,8 @@ public:
     bool isConnected() const;
 
     // Example methods - extend as needed
-    bool executeQuery(const std::string& query);
-    std::unique_ptr<pqxx::result> executeSelect(const std::string& query);
+    bool executeQuery(const std::string& query, const std::vector<std::string>& params = {});
+    std::unique_ptr<pqxx::result> executeSelect(const std::string& query, const std::vector<std::string>& params = {});
 
 private:
     std::unique_ptr<pqxx::connection> connection_;
