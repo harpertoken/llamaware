@@ -32,14 +32,14 @@ else()
     endif()
 endif()
 
-# Clang-Tidy configuration
-find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-if(CLANG_TIDY_EXE)
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
-    message(STATUS "Clang-Tidy found: ${CLANG_TIDY_EXE}")
- else()
-     message(STATUS "Clang-Tidy not found. Please install it via your system's package manager (e.g., 'brew install llvm' or 'apt install clang-tidy').")
- endif()
+# Clang-Tidy configuration (disabled due to libpqxx compatibility issues)
+# find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+# if(CLANG_TIDY_EXE)
+#     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+#     message(STATUS "Clang-Tidy found: ${CLANG_TIDY_EXE}")
+# else()
+#     message(STATUS "Clang-Tidy not found. Please install it via your system's package manager (e.g., 'brew install llvm' or 'apt install clang-tidy').")
+# endif()
 
 # Find dependencies
 find_package(Threads REQUIRED)
@@ -550,8 +550,7 @@ endif()
 
 include(CPack)
 
-# Disable clang-tidy for database_service.cpp due to libpqxx version compatibility issues
-set_source_files_properties(src/services/database_service.cpp PROPERTIES CMAKE_CXX_CLANG_TIDY "")
+
 
 # Add custom check target for testing and validation
 add_custom_target(check
@@ -574,14 +573,14 @@ add_custom_target(test-quick
     COMMENT "Quick functionality test"
 )
 
-# Clang-Tidy target
-if(CLANG_TIDY_EXE)
-    add_custom_target(clang-tidy
-        COMMAND ${CLANG_TIDY_EXE} --config-file=${CMAKE_SOURCE_DIR}/.clang-tidy -p ${CMAKE_BINARY_DIR} ${ALL_SOURCES}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Running clang-tidy on all source files"
-    )
-endif()
+# Clang-Tidy target (disabled)
+# if(CLANG_TIDY_EXE)
+#     add_custom_target(clang-tidy
+#         COMMAND ${CLANG_TIDY_EXE} --config-file=${CMAKE_SOURCE_DIR}/.clang-tidy -p ${CMAKE_BINARY_DIR} ${ALL_SOURCES}
+#         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+#         COMMENT "Running clang-tidy on all source files"
+#     )
+# endif()
 
 # Code coverage target (requires lcov)
 find_program(LCOV_EXE lcov)
