@@ -203,10 +203,9 @@ if(NOT nlohmann_json_FOUND)
 endif()
 
 # Find libpqxx
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(PQXX REQUIRED libpqxx)
-if(NOT PQXX_FOUND)
-    message(FATAL_ERROR "libpqxx not found. Please install libpqxx-dev.")
+find_package(libpqxx REQUIRED)
+if(NOT libpqxx_FOUND)
+    message(FATAL_ERROR "libpqxx not found. Please install libpqxx.")
 endif()
 
 # Find CPR - try to find the package first
@@ -421,7 +420,6 @@ target_include_directories(llamaware_lib PUBLIC
     ${CURL_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
-    ${PQXX_INCLUDE_DIRS}
 )
 
 # Set compile definitions for symbol visibility
@@ -459,7 +457,7 @@ target_link_libraries(llamaware_lib PRIVATE
     ${ZLIB_TARGET}
     ${CMAKE_DL_LIBS}
     Threads::Threads
-    ${PQXX_LIBRARIES}
+    libpqxx::pqxx
 )
 
 # Set additional linker flags for macOS
