@@ -47,6 +47,13 @@ bool DatabaseService::executeQuery(const std::string& query, const std::vector<s
 
     try {
         pqxx::work txn(*connection_);
+#if PQXX_VERSION >= 70000
+        pqxx::params p;
+        for (const auto& param : params) {
+            p.append(param);
+        }
+        txn.exec(query, p);
+#else
         switch (params.size()) {
             case 0: txn.exec(query); break;
             case 1: txn.exec(query, params[0]); break;
@@ -56,6 +63,7 @@ bool DatabaseService::executeQuery(const std::string& query, const std::vector<s
             case 5: txn.exec(query, params[0], params[1], params[2], params[3], params[4]); break;
             default: throw std::runtime_error("Too many parameters");
         }
+#endif
         txn.commit();
         return true;
     } catch (const std::exception& e) {
@@ -72,6 +80,15 @@ std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& 
 
     try {
         pqxx::work txn(*connection_);
+#if PQXX_VERSION >= 70000
+        pqxx::params p;
+        for (const auto& param : params) {
+            p.append(param);
+        }
+        auto result = txn.exec(query, p);
+        txn.commit();
+        return std::make_unique<pqxx::result>(std::move(result));
+#else
         pqxx::result res;
         switch (params.size()) {
             case 0: res = txn.exec(query); break;
@@ -84,6 +101,7 @@ std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& 
         }
         txn.commit();
         return std::make_unique<pqxx::result>(std::move(res));
+#endif
     } catch (const std::exception& e) {
         std::cerr << "Select query error: " << e.what() << std::endl;
         return nullptr;

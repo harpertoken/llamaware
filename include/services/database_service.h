@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <pqxx/pqxx>
+#include <pqxx/version.hxx>
 
 namespace llamaware {
 
