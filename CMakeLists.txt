@@ -396,10 +396,8 @@ set(SERVICE_SOURCES
     src/services/auth_service.cpp
     src/services/error_service.cpp
     src/services/sandbox_service.cpp
+    src/services/database_service.cpp
 )
-if(HAVE_PQXX)
-    list(APPEND SERVICE_SOURCES src/services/database_service.cpp)
-endif()
 
 set(UTILS_SOURCES
     src/utils/ui.cpp
