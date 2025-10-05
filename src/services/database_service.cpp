@@ -54,11 +54,15 @@ bool DatabaseService::executeQuery(const std::string& query, const std::vector<s
         }
         txn.exec(query, p);
 #else
-        auto stream = txn.parameterized(query);
-        for (const auto& param : params) {
-            stream = stream(param);
+        std::string q = query;
+        for (size_t i = 0; i < params.size(); ++i) {
+            std::string placeholder = "$" + std::to_string(i + 1);
+            size_t pos = q.find(placeholder);
+            if (pos != std::string::npos) {
+                q.replace(pos, placeholder.size(), txn.quote(params[i]));
+            }
         }
-        stream.exec();
+        txn.exec(q);
 #endif
         txn.commit();
         return true;
@@ -85,11 +89,15 @@ std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& 
         txn.commit();
         return std::make_unique<pqxx::result>(std::move(result));
 #else
-        auto stream = txn.parameterized(query);
-        for (const auto& param : params) {
-            stream = stream(param);
+        std::string q = query;
+        for (size_t i = 0; i < params.size(); ++i) {
+            std::string placeholder = "$" + std::to_string(i + 1);
+            size_t pos = q.find(placeholder);
+            if (pos != std::string::npos) {
+                q.replace(pos, placeholder.size(), txn.quote(params[i]));
+            }
         }
-        auto result = stream.exec();
+        auto result = txn.exec(q);
         txn.commit();
         return std::make_unique<pqxx::result>(std::move(result));
 #endif
