@@ -202,11 +202,15 @@ if(NOT nlohmann_json_FOUND)
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
-# Find libpqxx
-find_library(PQXX_LIBRARY pqxx REQUIRED)
-find_path(PQXX_INCLUDE_DIR pqxx/pqxx REQUIRED)
-if(NOT PQXX_LIBRARY OR NOT PQXX_INCLUDE_DIR)
-    message(FATAL_ERROR "libpqxx not found. Please install libpqxx.")
+# Find libpqxx (optional)
+find_library(PQXX_LIBRARY pqxx)
+find_path(PQXX_INCLUDE_DIR pqxx/pqxx)
+if(PQXX_LIBRARY AND PQXX_INCLUDE_DIR)
+    set(HAVE_PQXX TRUE)
+    message(STATUS "Found libpqxx: ${PQXX_LIBRARY}")
+else()
+    set(HAVE_PQXX FALSE)
+    message(WARNING "libpqxx not found. Database support will be disabled. Install libpqxx-dev to enable PostgreSQL support.")
 endif()
 
 # Find CPR - try to find the package first
@@ -392,8 +396,10 @@ set(SERVICE_SOURCES
     src/services/auth_service.cpp
     src/services/error_service.cpp
     src/services/sandbox_service.cpp
-    src/services/database_service.cpp
 )
+if(HAVE_PQXX)
+    list(APPEND SERVICE_SOURCES src/services/database_service.cpp)
+endif()
 
 set(UTILS_SOURCES
     src/utils/ui.cpp
@@ -421,11 +427,11 @@ target_include_directories(llamaware_lib PUBLIC
     ${CURL_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
-    ${PQXX_INCLUDE_DIR}
+    $<$<BOOL:${HAVE_PQXX}>:${PQXX_INCLUDE_DIR}>
 )
 
 # Set compile definitions for symbol visibility
-target_compile_definitions(llamaware_lib PRIVATE LLAMAWARE_LIBRARY)
+target_compile_definitions(llamaware_lib PRIVATE LLAMAWARE_LIBRARY $<$<BOOL:${HAVE_PQXX}>:HAVE_PQXX>)
 set_target_properties(llamaware_lib PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN ON
@@ -459,7 +465,7 @@ target_link_libraries(llamaware_lib PRIVATE
     ${ZLIB_TARGET}
     ${CMAKE_DL_LIBS}
     Threads::Threads
-    ${PQXX_LIBRARY}
+    $<$<BOOL:${HAVE_PQXX}>:${PQXX_LIBRARY}>
 )
 
 # Set additional linker flags for macOS

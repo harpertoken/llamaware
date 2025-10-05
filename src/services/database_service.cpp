@@ -4,14 +4,19 @@
 
 namespace llamaware {
 
-DatabaseService::DatabaseService() : connection_(nullptr) {}
+DatabaseService::DatabaseService()
+#ifdef HAVE_PQXX
+    : connection_(nullptr)
+#endif
+{}
 
 DatabaseService::~DatabaseService() {
     disconnect();
 }
 
 bool DatabaseService::connect(const std::string& host, int port, const std::string& dbname,
-                              const std::string& user, const std::string& password) {
+                               const std::string& user, const std::string& password) {
+#ifdef HAVE_PQXX
     try {
         std::string connection_string = "host=" + host +
                                        " port=" + std::to_string(port) +
@@ -29,14 +34,23 @@ bool DatabaseService::connect(const std::string& host, int port, const std::stri
         std::cerr << "Database connection error: " << e.what() << std::endl;
         return false;
     }
+#else
+    return false;
+#endif
 }
 
 void DatabaseService::disconnect() {
+#ifdef HAVE_PQXX
     connection_.reset();
+#endif
 }
 
 bool DatabaseService::isConnected() const {
+#ifdef HAVE_PQXX
     return connection_ && connection_->is_open();
+#else
+    return false;
+#endif
 }
 
 bool DatabaseService::executeQuery(const std::string& query, const std::vector<std::string>& params) {
