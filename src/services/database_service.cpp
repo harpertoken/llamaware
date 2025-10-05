@@ -1,5 +1,6 @@
 #include "services/database_service.h"
 #include <iostream>
+#include <vector>
 
 namespace llamaware {
 
@@ -44,7 +45,7 @@ bool DatabaseService::isConnected() const {
     return connection_ && connection_->is_open();
 }
 
-bool DatabaseService::executeQuery(const std::string& query) {
+bool DatabaseService::executeQuery(const std::string& query, const std::vector<std::string>& params) {
     if (!isConnected()) {
         std::cerr << "Not connected to database" << std::endl;
         return false;
@@ -52,7 +53,11 @@ bool DatabaseService::executeQuery(const std::string& query) {
 
     try {
         pqxx::work txn(*connection_);
-        txn.exec(query);
+        pqxx::params p;
+        for (const auto& param : params) {
+            p.append(param);
+        }
+        txn.exec_params(query, p);
         txn.commit();
         return true;
     } catch (const std::exception& e) {
@@ -61,7 +66,7 @@ bool DatabaseService::executeQuery(const std::string& query) {
     }
 }
 
-std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& query) {
+std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& query, const std::vector<std::string>& params) {
     if (!isConnected()) {
         std::cerr << "Not connected to database" << std::endl;
         return nullptr;
@@ -69,7 +74,11 @@ std::unique_ptr<pqxx::result> DatabaseService::executeSelect(const std::string& 
 
     try {
         pqxx::work txn(*connection_);
-        auto result = std::make_unique<pqxx::result>(txn.exec(query));
+        pqxx::params p;
+        for (const auto& param : params) {
+            p.append(param);
+        }
+        auto result = std::make_unique<pqxx::result>(txn.exec_params(query, p));
         txn.commit();
         return result;
     } catch (const std::exception& e) {
