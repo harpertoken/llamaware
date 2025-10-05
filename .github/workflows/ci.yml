@@ -39,13 +39,13 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
-          sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
+          sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev libpqxx-dev
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           brew uninstall cmake || true
-          brew install cmake nlohmann-json cpr
+          brew install cmake nlohmann-json cpr libpqxx
 
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-latest'
@@ -58,11 +58,16 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
           C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
           C:\vcpkg\vcpkg.exe integrate install
-          C:\vcpkg\vcpkg.exe install cpr nlohmann-json --triplet x64-windows
+           C:\vcpkg\vcpkg.exe install cpr nlohmann-json libpqxx --triplet x64-windows
 
       - name: Configure CMake (Linux/macOS)
         if: matrix.os != 'windows-latest'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        run: |
+          CMAKE_EXTRA_FLAGS=""
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            CMAKE_EXTRA_FLAGS="-DCMAKE_PREFIX_PATH=/opt/homebrew"
+          fi
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} $CMAKE_EXTRA_FLAGS
 
       - name: Configure CMake (Windows)
         if: matrix.os == 'windows-latest'

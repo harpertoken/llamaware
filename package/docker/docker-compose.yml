@@ -6,9 +6,16 @@ services:
       context: ../..
       dockerfile: package/docker/Dockerfile
     container_name: llamaware-agent
+    depends_on:
+      - postgres
     environment:
       - TOGETHER_API_KEY=${TOGETHER_API_KEY}
       - SERPAPI_KEY=${SERPAPI_KEY}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=llamaware
+      - DB_USER=llamaware
+      - DB_PASSWORD=password
     volumes:
       - llamaware_data:/home/llamaware/data
       - ../../.env:/home/llamaware/.env:ro
@@ -26,8 +33,24 @@ services:
       - ollama_data:/root/.ollama
     restart: unless-stopped
 
+  # PostgreSQL database
+  postgres:
+    image: postgres:15
+    container_name: llamaware-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
 volumes:
   llamaware_data:
     driver: local
   ollama_data:
+    driver: local
+  postgres_data:
     driver: local
