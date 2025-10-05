@@ -27,3 +27,22 @@ CREATE TABLE IF NOT EXISTS conversations (
 -- Index for performance
 CREATE INDEX IF NOT EXISTS idx_agent_data_key ON agent_data(key);
 CREATE INDEX IF NOT EXISTS idx_conversations_session ON conversations(session_id);
+
+-- Trigger to automatically update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_agent_data_updated_at
+BEFORE UPDATE ON agent_data
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE TRIGGER update_conversations_updated_at
+BEFORE UPDATE ON conversations
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
