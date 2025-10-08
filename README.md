@@ -251,6 +251,46 @@ cmake --build build --config Debug
 * Use `help` inside the agent to explore commands
 * Follow CI/CD guides for contributing
 
+## Conventional Commits
+
+This project enforces conventional commit standards for consistent and meaningful commit messages.
+
+### Setup
+
+To enable commit message enforcement, copy the hook to your local `.git/hooks/` directory:
+
+```bash
+cp scripts/commit-msg .git/hooks/commit-msg
+chmod +x .git/hooks/commit-msg
+```
+
+### Usage
+
+Commit messages must follow these rules:
+
+- Start with a type: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
+- Be entirely lowercase
+- First line must be ≤60 characters
+
+Example valid commit messages:
+
+```
+feat: add user authentication
+fix: resolve memory leak in agent service
+docs: update installation instructions
+```
+
+### History Cleanup
+
+To rewrite existing commit messages in the repository history:
+
+```bash
+git filter-branch --msg-filter 'bash scripts/rewrite_msg.sh' -- --all
+git push --force-with-lease origin main
+```
+
+**Warning**: This rewrites history and requires force-pushing. Coordinate with team members.
+
 ## Troubleshooting
 
 ```bash
