@@ -1,8 +1,11 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -19,10 +22,25 @@ jobs:
           - os: windows-latest
             build_type: Debug
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+       - name: Checkout code
+         uses: actions/checkout@v4
+         with:
+           fetch-depth: 0
 
-      - name: Install dependencies (Ubuntu)
+       - name: Create and push new tag
+         if: github.ref_type != 'tag'
+         run: |
+           git config user.name "github-actions[bot]"
+           git config user.email "github-actions[bot]@users.noreply.github.com"
+           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+           LAST_TAG=${LAST_TAG#v}
+           IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_TAG"
+           NEW_PATCH=$((PATCH + 1))
+           NEW_TAG="v$MAJOR.$MINOR.$NEW_PATCH"
+           git tag $NEW_TAG
+           git push origin $NEW_TAG
+
+       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
@@ -69,10 +87,15 @@ jobs:
         shell: cmd
         run: cmake --build build --config ${{ matrix.build_type }}
 
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            build/bin/llamaware-agent*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       - name: Upload release assets
+         uses: softprops/action-gh-release@v1
+         with:
+           tag_name: ${{ github.ref_name }}
+           name: Release ${{ github.ref_name }}
+           generate_release_notes: true
+           draft: false
+           prerelease: false
+           files: |
+             build/bin/llamaware-agent*
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

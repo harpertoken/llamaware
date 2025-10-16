@@ -1,5 +1,28 @@
 cmake_minimum_required(VERSION 3.14)
-project(LlamawareAgent VERSION 0.1 LANGUAGES CXX)
+
+# Get version from git tag if available
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_TAG
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  if(GIT_TAG)
+    string(REGEX REPLACE "^v" "" PROJECT_VERSION ${GIT_TAG})
+  else()
+    set(PROJECT_VERSION "0.1")
+  endif()
+else()
+  set(PROJECT_VERSION "0.1")
+endif()
+
+project(LlamawareAgent VERSION ${PROJECT_VERSION} LANGUAGES CXX)
+
+# Configure version header
+configure_file(include/version.h.in include/version.h @ONLY)
 
 # Include FetchContent for downloading dependencies
 include(FetchContent)
@@ -421,6 +444,7 @@ set(ALL_SOURCES
 add_library(llamaware_lib ${ALL_SOURCES})
 target_include_directories(llamaware_lib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>
     ${CURL_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
@@ -476,6 +500,7 @@ endif()
 add_executable(llamaware-agent src/main.cpp)
 target_include_directories(llamaware-agent PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 target_link_libraries(llamaware-agent PRIVATE 
     llamaware_lib
@@ -483,8 +508,9 @@ target_link_libraries(llamaware-agent PRIVATE
 
 # Test executable
 add_executable(llamaware-tests tests/main_test.cpp src/utils/version.cpp)
-target_include_directories(llamaware-tests PRIVATE 
+target_include_directories(llamaware-tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 target_link_libraries(llamaware-tests PRIVATE 
     llamaware_lib 

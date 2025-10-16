@@ -1,0 +1,14 @@
+#pragma once
+
+#define LLAMAWARE_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define LLAMAWARE_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define LLAMAWARE_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define LLAMAWARE_VERSION_STRING "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
+#define LLAMAWARE_BUILD_DATE __DATE__
+#define LLAMAWARE_BUILD_TIME __TIME__
+
+namespace Version {
+    const char* get_version();
+    const char* get_build_info();
+    void print_version_info();
+}
