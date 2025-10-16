@@ -35,6 +35,11 @@ bool DatabaseService::connect(const std::string& host, int port, const std::stri
         return false;
     }
 #else
+    (void)host;
+    (void)port;
+    (void)dbname;
+    (void)user;
+    (void)password;
     return false;
 #endif
 }
