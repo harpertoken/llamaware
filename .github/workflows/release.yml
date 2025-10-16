@@ -88,6 +88,7 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }}
 
       - name: Upload release assets
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
