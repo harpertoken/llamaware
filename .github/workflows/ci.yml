@@ -128,14 +128,14 @@ jobs:
 
       - name: Upload build artifacts (Linux/macOS)
         if: matrix.os != 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: llamaware-agent-${{ matrix.os }}-${{ matrix.build_type }}
           path: build/bin/llamaware-agent*
 
       - name: Upload build artifacts (Windows)
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: llamaware-agent-${{ matrix.os }}-${{ matrix.build_type }}
           path: build/bin/Release/llamaware-agent.exe
