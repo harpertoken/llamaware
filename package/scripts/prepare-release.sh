@@ -89,7 +89,7 @@ print_success "Offline test passed"
 
 # Check docs
 print_step "Checking docs..."
-REQUIRED_DOCS=("README.md" "docs/setup.md" "docs/development.md" "docs/commands.md" "docs/architecture.md" "CHANGELOG.md" "CONTRIBUTING.md")
+REQUIRED_DOCS=("README.md" "CHANGELOG.md" "CONTRIBUTING.md")
 for doc in "${REQUIRED_DOCS[@]}"; do
     [ -f "$doc" ] || { print_error "Missing: $doc"; exit 1; }
 done

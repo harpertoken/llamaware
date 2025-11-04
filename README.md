@@ -38,11 +38,7 @@
 * **src/utils/** – configuration, UI, validation helpers
 * **tests/** – unit and E2E tests
 * **scripts/** – build & report utilities
-* **docker/** – Docker and containerization files
-
-## Documentation
-
-See [docs/](docs/) for detailed documentation.
+* **package/docker/** – Docker and containerization files
 
 ## Installation & Build
 
