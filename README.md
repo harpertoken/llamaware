@@ -9,7 +9,7 @@
 **Supported Platforms**
 
 * Linux (Ubuntu 20.04+)
-* macOS (11.0+)
+* macOS (15.0+)
 * Windows (MSVC 2019+)
 
 **Compiler**

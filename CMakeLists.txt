@@ -143,7 +143,8 @@ find_package(CURL REQUIRED)
 set(openssl_is_found FALSE)
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for macOS" FORCE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
+    # Set to current system version to avoid linker warnings with Homebrew libraries
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "26.0" CACHE STRING "Minimum macOS version" FORCE)
 
     # Use Homebrew's OpenSSL on macOS/arm64
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
@@ -374,8 +375,8 @@ endif()
 
 # On macOS, add additional settings
 if(APPLE)
-    # Set minimum deployment target
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
+    # Set minimum deployment target (already set above)
+    # Use system version to avoid linker warnings with Homebrew libraries
 
     # Set rpath
     set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
