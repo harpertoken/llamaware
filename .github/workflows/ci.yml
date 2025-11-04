@@ -1,28 +1,21 @@
-name: CI/CD Pipeline
+name: CI/CD
 
 on:
   push:
-    branches: ["main", "develop", "linting"]
+    branches: [main, develop]
   pull_request:
     branches: ["*"]
   release:
-    types: ["published"]
+    types: [published]
   workflow_dispatch:
 
-env:
-  # Read values from repo-level variables
-  PUSH_BRANCHES: ${{ vars.PUSH_BRANCHES }}
-  PR_BRANCHES: ${{ vars.PR_BRANCHES }}
-  RELEASE_TYPES: ${{ vars.RELEASE_TYPES }}
-
 permissions:
-  actions: read
   contents: read
   security-events: write
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  build:
+    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -31,179 +24,141 @@ jobs:
         exclude:
           - os: windows-latest
             build_type: Debug
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
 
-      - name: Cache CMake build
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache
         uses: actions/cache@v4
         with:
           path: |
             build
             ~/.cache/vcpkg
             C:\vcpkg\installed
-          key: ${{ runner.os }}-${{ matrix.build_type }}-${{ hashFiles('CMakeLists.txt') }}-${{ github.sha }}
+          key: ${{ runner.os }}-${{ matrix.build_type }}-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.build_type }}-${{ hashFiles('CMakeLists.txt') }}-
             ${{ runner.os }}-${{ matrix.build_type }}-
-            ${{ runner.os }}-
 
-      - name: Cache dependencies (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-
-
-      - name: Cache dependencies (macOS)
-        if: matrix.os == 'macos-latest'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/Homebrew
-            /opt/homebrew/var/homebrew/locks
-          key: ${{ runner.os }}-brew-${{ hashFiles('.github/workflows/ci.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-brew-
-
-      - name: Install dependencies (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Setup
         run: |
-          sudo apt update
-          sudo apt install -y nlohmann-json3-dev cmake build-essential \
-            libcurl4-openssl-dev libpqxx-dev expect clang-tidy
-
-      - name: Install dependencies (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew uninstall cmake || true
-          brew install cmake nlohmann-json cpr libpqxx expect llvm
-
-      - name: Install dependencies (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: powershell
-        run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = `
-            [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-          choco install -y cmake --no-progress
-          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-          C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-          C:\vcpkg\vcpkg.exe integrate install
-          C:\vcpkg\vcpkg.exe install cpr nlohmann-json libpqxx `
-            --triplet x64-windows
-
-      - name: Configure CMake (Linux/macOS)
-        if: matrix.os != 'windows-latest'
-        run: |
-          CMAKE_EXTRA_FLAGS=""
-          if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            CMAKE_EXTRA_FLAGS="-DCMAKE_PREFIX_PATH=/opt/homebrew"
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            sudo apt update
+            sudo apt install -y nlohmann-json3-dev cmake build-essential \
+              libcurl4-openssl-dev libpqxx-dev expect clang-tidy
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew update
+            brew install cmake nlohmann-json cpr libpqxx expect llvm
+          else
+            powershell -Command "
+              Set-ExecutionPolicy Bypass -Scope Process -Force;
+              iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex;
+              choco install -y cmake --no-progress;
+              git clone https://github.com/microsoft/vcpkg.git C:\vcpkg;
+              C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics;
+              C:\vcpkg\vcpkg.exe integrate install;
+              C:\vcpkg\vcpkg.exe install cpr nlohmann-json libpqxx --triplet x64-windows
+            "
           fi
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} $CMAKE_EXTRA_FLAGS
-
-      - name: Configure CMake (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: powershell
-        run: |
-          cmake -S . -B build `
-            -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake `
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} `
-            -DCMAKE_PREFIX_PATH="C:/vcpkg/installed/x64-windows"
 
       - name: Build
-        if: matrix.os != 'windows-latest'
-        run: cmake --build build --config ${{ matrix.build_type }}
-
-      - name: Build (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: cmd
-        run: cmake --build build --config ${{ matrix.build_type }}
-
-      - name: Run preflight checks (Linux/macOS)
-        if: matrix.os != 'windows-latest'
-        run: make preflight
-
-      - name: Run preflight checks (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: cmd
-        continue-on-error: true
-        run: cmake --build build --target preflight --config ${{ matrix.build_type }}
-
-      - name: Generate CI Report (Linux/macOS Release)
-        if: matrix.os == 'ubuntu-latest' && matrix.build_type == 'Release'
+        shell: bash
         run: |
-          cat <<EOF > report.md
-          ## Llamaware CI Report
-
-          **Status**
-          ██████████ 100% (Operational)
-
-          **Build**
-          ██████████ 100% (Clean)
-
-          **Tests**
-          ██████████ 100% (Passing)
-          EOF
-
-          TODO_COUNT=$(grep -r "TODO\|FIXME\|HACK" src/ include/ 2>/dev/null | wc -l || echo "0")
-          if [ "$TODO_COUNT" -gt 0 ]; then
-            echo "**Quality**" >> report.md
-            echo "███████░░░ 70% ($TODO_COUNT items)" >> report.md
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            cmake -S . -B build \
+              -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake \
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           else
-            echo "**Quality**" >> report.md
-            echo "██████████ 100% (Clean)" >> report.md
+            FLAGS=""
+            [[ "$RUNNER_OS" == "macOS" ]] && FLAGS="-DCMAKE_PREFIX_PATH=/opt/homebrew"
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} $FLAGS
+          fi
+          cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Preflight
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            cmake --build build --target preflight --config ${{ matrix.build_type }} || true
+          else
+            make preflight
           fi
 
-          echo "**Checks**" >> report.md
-          echo "██████████ 100% (Passed)" >> report.md
-          cat report.md
-
-      - name: Upload build artifacts (Linux/macOS)
-        if: matrix.os != 'windows-latest'
-        uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v5
         with:
-          name: llamaware-agent-${{ matrix.os }}-${{ matrix.build_type }}
-          path: build/bin/llamaware-agent*
-
-      - name: Upload build artifacts (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v5
-        with:
-          name: llamaware-agent-${{ matrix.os }}-${{ matrix.build_type }}
-          path: build/bin/Release/llamaware-agent.exe
+          name: llamaware-${{ matrix.os }}-${{ matrix.build_type }}
+          path: |
+            build/bin/llamaware-agent*
+            build/bin/Release/llamaware-agent.exe
 
   coverage:
-    name: Code Coverage
+    name: Coverage
     runs-on: ubuntu-latest
-    needs: build-and-test
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    needs: build
+    if: github.event_name != 'release'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Install dependencies
-        run: |
+      - uses: actions/checkout@v5
+      - run: |
           sudo apt update
-          sudo apt install -y nlohmann-json3-dev cmake build-essential \
-            libcurl4-openssl-dev libpqxx-dev lcov expect clang-tidy
-
-      - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-
-      - name: Build
-        run: cmake --build build --config Debug
-
-      - name: Run tests and generate coverage
-        run: cmake --build build --target coverage
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v5
+          sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev libpqxx-dev lcov
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build --target coverage
+      - uses: codecov/codecov-action@v5
         with:
           files: build/coverage/coverage.info
           flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+          name: codecov
+        fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          sudo apt update
+          sudo apt install -y clang-tidy clang-tools cmake build-essential \
+            libcurl4-openssl-dev nlohmann-json3-dev libpqxx-dev
+          cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          run-clang-tidy -p build src include
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - run: docker compose -f docker-compose.e2e.yml up --abort-on-container-exit --exit-code-from e2e-tests
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-logs
+          path: tests/e2e/e2e_test.log
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: harpertoken/llamaware
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./package/docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

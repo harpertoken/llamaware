@@ -1,8 +1,9 @@
 # Llamaware
 
-[![llamaware-agent](https://github.com/harpertoken/llamaware/actions/workflows/llamaware-agent.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/llamaware-agent.yml)
+**Llamaware** is a modular AI agent for development — designed for **stability**, **extensibility**, and **security**.
+It provides core systems for file management, sessions, extensions, AI providers, and GitHub automation.
 
-**Llamaware**  is a professional AI agent for development, built for **stability, extensibility, and security**. It provides core features for file operations, session handling, extensions, AI provider support, and automated GitHub repository management.
+---
 
 ## System Requirements
 
@@ -14,7 +15,7 @@
 
 **Compiler**
 
-* C++20 compatible (GCC 10+, Clang 12+, MSVC 2019 16.11+)
+* C++20 (GCC 10+, Clang 12+, MSVC 2019 16.11+)
 
 **Build System**
 
@@ -26,74 +27,67 @@
 
 **Dependencies**
 
-* cpr 1.10.0+
-* nlohmann-json 3.10.0+
-* OpenSSL 1.1.1+
-* libpqxx 7.0+ (optional, for PostgreSQL database support)
+* cpr ≥ 1.10.0
+* nlohmann-json ≥ 3.10.0
+* OpenSSL ≥ 1.1.1
+* libpqxx ≥ 7.0 (optional, for PostgreSQL)
+
+---
 
 ## Project Structure
 
-* **src/core/** – central agent logic, command routing
-* **src/services/** – AI, file, web, git, MCP, and more
-* **src/utils/** – configuration, UI, validation helpers
-* **tests/** – unit and E2E tests
-* **scripts/** – build & report utilities
-* **package/docker/** – Docker and containerization files
+```
+src/core/         → agent logic, command routing
+src/services/     → AI, file, web, git, MCP, etc.
+src/utils/        → config, UI, validation helpers
+tests/            → unit & E2E tests
+scripts/          → build & reporting tools
+package/docker/   → containerization setup
+```
 
-## Installation & Build
+---
 
-### Common Steps
+## Installation
 
 ```bash
 git clone https://github.com/harpertoken/llamaware.git
 cd llamaware
 ```
 
-### Install Dependencies
-
-**Ubuntu/Debian**
+### Ubuntu/Debian
 
 ```bash
-# Use the automated script
-./scripts/install-deps.sh
-
-# Or install manually:
+./scripts/install-deps.sh  # or run manually:
 sudo apt update
-sudo apt install -y build-essential cmake git libcurl4-openssl-dev
-# Optional: for PostgreSQL database support
-sudo apt install -y libpqxx-dev
-make install-deps-ubuntu
+sudo apt install -y build-essential cmake git libcurl4-openssl-dev libpqxx-dev
 ```
 
-**macOS**
+### macOS
 
 ```bash
-# Use the automated script
-./scripts/install-deps.sh
-
-# Or install manually:
-brew install cmake
-# Optional: for PostgreSQL database support
-brew install libpqxx
-make install-deps-mac
+./scripts/install-deps.sh  # or run manually:
+brew install cmake libpqxx
 ```
 
-**Windows**
+### Windows
 
 ```powershell
 # Install Chocolatey, CMake, and vcpkg (see CI workflow)
-# Optional: for PostgreSQL database support
 vcpkg install libpqxx
 ```
 
-### Build
+---
+
+## Build
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release --parallel
 ```
 
-## Running the Agent
+---
+
+## Run
 
 ```bash
 ./build/bin/llamaware-agent
@@ -101,63 +95,40 @@ cmake --build build --config Release --parallel
 
 **Basic Commands**
 
-```text
+```
 version
 search:query
 cmd:command
 read:/path/to/file
 write:/path/to/file content
 help
-exit | quit
-```
-
-**Example Session**
-
-```bash
-docker exec -it llamaware-agent /bin/bash
-llamaware-agent
-
-# Inside agent
-version
-cmd:ls -la
-search:current time
 exit
 ```
 
-**Persistent Data**
+---
 
-* Stored in Docker volumes
+## AI Providers
 
-```bash
-docker volume ls
-```
+* Together AI (Llama models)
+* Cerebras (Llama inference)
+* Fireworks (performance-optimized)
+* Groq (speed-focused)
+* DeepSeek (reasoning models)
+* OpenAI (GPT models)
+* Ollama (offline support)
 
-**Environment Variables**
+---
 
-* `.env` file in project root for API keys
-
-## Supported AI Providers
-
-* **Together AI** – Meta Llama models
-* **Cerebras** – Llama inference
-* **Fireworks** – High-performance models
-* **Groq** – Speed optimized
-* **DeepSeek** – Advanced reasoning models
-* **OpenAI** – GPT models
-* **Offline** – Ollama (llama3.2:3b, latest)
-
-## Database Support
-
-Llamaware includes optional PostgreSQL database integration for persistent memory storage.
+## Database Integration (Optional)
 
 **Features**
-* Conversation history persistence
-* Fact and preference storage
-* Session state management
+
+* Persistent memory and session state
+* Conversation history
 * Automatic schema initialization
 
-**Configuration**
-Set environment variables for database connection:
+**Config**
+
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
@@ -166,21 +137,19 @@ DB_USER=llamaware
 DB_PASSWORD=your_password
 ```
 
-**Note**: Database support is automatically enabled if libpqxx is available at build time. Without it, memory is stored in local files.
+Enabled automatically when `libpqxx` is detected at build time.
+
+---
 
 ## GitHub Bot
 
-Llamaware includes automated repository management features.
-
-**Core Features**
+**Features**
 
 * Health checks (build/tests/quality)
-* TODO detection and sub-issue creation
-* Milestone assignment based on PR type
+* TODO tracking and sub-issue creation
+* Automatic milestone tagging
 
-**Configuration**
-
-* `.llamaware-agent.yml` in repository root
+**Config (`.llamaware-agent.yml`)**
 
 ```yaml
 name: llamaware-agent
@@ -195,32 +164,32 @@ permissions:
   issues: write
 ```
 
-**Workflow**
-
-* Triggers on PRs, issues, and comments
-* Posts formatted progress reports on PRs
+---
 
 ## CI/CD
 
-The project uses GitHub Actions for continuous integration and deployment.
+**Workflows**
 
-**Workflow Triggers**
-- Push to `main` and `develop` branches
-- Pull requests to any branch
-- Published releases
+* Build and test (Linux, macOS, Windows)
+* Preflight checks
+* Artifact uploads
+* Code coverage
+
+**Triggers**
+
+* Push to `main` or `develop`
+* Pull requests
+* Release publication
 
 **Repository Variables**
-- `PUSH_BRANCHES`: JSON array of branches for push triggers (e.g., `["main","develop"]`)
-- `PR_BRANCHES`: JSON array of branches for PR triggers (e.g., `["*"]`)
-- `RELEASE_TYPES`: JSON array of release types (e.g., `["published"]`)
 
-**Note**: Due to GitHub Actions limitations, trigger branches are hardcoded in the workflow. Repository variables are used for job configuration. For dynamic triggers, monitor GitHub updates.
+```
+PUSH_BRANCHES   = ["main","develop"]
+PR_BRANCHES     = ["*"]
+RELEASE_TYPES   = ["published"]
+```
 
-**Features**
-- Cross-platform builds (Ubuntu, macOS, Windows)
-- Preflight checks
-- Artifact uploads
-- Code coverage reporting
+---
 
 ## Testing
 
@@ -232,13 +201,15 @@ cmake --build build
 cd build && ctest --output-on-failure
 ```
 
-**End-to-End (E2E) Tests**
+**E2E Tests**
 
 ```bash
-docker-compose -f docker-compose.e2e.yml up -d
-docker-compose -f docker-compose.e2e.yml logs -f e2e-tests
-docker-compose -f docker-compose.e2e.yml down
+docker compose -f docker-compose.e2e.yml up -d
+docker compose -f docker-compose.e2e.yml logs -f e2e-tests
+docker compose -f docker-compose.e2e.yml down
 ```
+
+---
 
 ## Development
 
@@ -252,101 +223,92 @@ cmake --build build --config Debug
 **Code Quality**
 
 ```bash
-./scripts/setup-pre-commit.sh  # Setup hooks and linting
-make clang-tidy                # Static analysis
-make lint-all                  # Run all checks
+./scripts/setup-pre-commit.sh
+make clang-tidy
+make lint-all
 ```
 
-Tools: [.clang-tidy](.clang-tidy) • pre-commit hooks • yamllint • conventional commits
+Run full checks:
 
-**Workflow**
+```bash
+make full-check
+pre-commit run --all-files
+```
 
-* Use `help` inside the agent to explore commands
-* Run `make full-check` for comprehensive validation (clean, build, test, preflights)
-* Follow CI/CD guides for contributing
-* Run `pre-commit run --all-files` to check all files
+---
 
 ## Conventional Commits
 
-This project enforces conventional commit standards for consistent and meaningful commit messages.
+**Commit Format**
 
-### Setup
-
-To enable commit message enforcement, copy the hook to your local `.git/hooks/` directory:
-
-```bash
-cp scripts/commit-msg .git/hooks/commit-msg
-chmod +x .git/hooks/commit-msg
+```
+<type>: <description>
 ```
 
-### Usage
+**Allowed Types**
+`feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
 
-Commit messages must follow these rules:
-
-- Start with a type: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
-- Be entirely lowercase
-- First line must be ≤60 characters
-
-Example valid commit messages:
+**Examples**
 
 ```
 feat: add user authentication
-fix: resolve memory leak in agent service
-docs: update installation instructions
+fix: resolve memory leak
+docs: update installation guide
 ```
 
-### History Cleanup
+**Setup Hook**
 
-To rewrite existing commit messages in the repository history:
+```bash
+cp scripts/commit-msg .git/hooks/
+chmod +x .git/hooks/commit-msg
+```
+
+**Rewriting History**
 
 ```bash
 git filter-branch --msg-filter 'bash scripts/rewrite_msg.sh' -- --all
 git push --force-with-lease origin main
 ```
 
-**Warning**: This rewrites history and requires force-pushing. Coordinate with team members.
+---
 
 ## Troubleshooting
 
 ```bash
-# Verify container is running
-docker ps
-
-# View logs
+docker ps                # check containers
 docker logs llamaware-agent
-
-# Restart agent
 docker-compose -f package/docker/docker-compose.yml restart llamaware-agent
 ```
 
+---
+
 ## Versioning
 
-This project follows [Semantic Versioning](https://semver.org/) (SemVer):
+Follows [Semantic Versioning](https://semver.org/):
 
-- **MAJOR**: Incompatible API changes
-- **MINOR**: Backward-compatible functionality additions
-- **PATCH**: Backward-compatible bug fixes
+| Type  | Description      |
+| ----- | ---------------- |
+| MAJOR | Breaking changes |
+| MINOR | New features     |
+| PATCH | Bug fixes        |
 
-**Version Sources (in priority order):**
-1. Git tags (e.g., `v0.0.8`)
-2. `VERSION` file in project root
-3. Default fallback version
+**Version Detection Order**
 
-**Current Version:** Check with `./build/bin/llamaware-agent version`
+1. Git tag (e.g., `v0.0.8`)
+2. `VERSION` file
+3. Default fallback
 
-**Release Process:**
+**Release Process**
+
 ```bash
-# Bump version (patch/minor/major)
 ./scripts/bump-version.sh patch
-
-# Commit and trigger release
 git add . && git commit -m "feat: release v0.0.9 [release]"
 git push origin main
 ```
 
-**Auto-Release Triggers:**
-- Commit message contains `[release]` - triggers auto-tagging
-- Add `[major]` or `[minor]` for version bump type (default: patch)
+Auto-releases trigger on `[release]`, with `[major]` or `[minor]` for version bump type.
+
+---
 
 ## License
 

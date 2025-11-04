@@ -1,0 +1,90 @@
+name: Security & Release
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  release:
+    types: ["published"]
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  packages: write
+  id-token: write
+
+jobs:
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
+      - run: |
+          sudo apt update
+          sudo apt install -y nlohmann-json3-dev cmake build-essential \
+            libcurl4-openssl-dev libpqxx-dev
+          cmake -S . -B build
+          cmake --build build
+      - uses: github/codeql-action/analyze@v3
+
+  sast:
+    name: SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: aquasecurity/trivy-action@0.19.0
+        with:
+          scan-type: fs
+          format: sarif
+          output: trivy-results.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+  release:
+    name: Release
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          sudo apt update
+          sudo apt install -y nlohmann-json3-dev cmake build-essential \
+            libcurl4-openssl-dev libpqxx-dev
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+          make preflight
+          mkdir -p release
+          cp build/bin/llamaware-agent README.md LICENSE CHANGELOG.md release/
+          tar -czf llamaware-${{ github.event.release.tag_name }}.tar.gz -C release .
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: llamaware-${{ github.event.release.tag_name }}.tar.gz
+
+  agent:
+    name: Agent
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          sudo apt update
+          sudo apt install -y nlohmann-json3-dev cmake build-essential \
+            libcurl4-openssl-dev libpqxx-dev
+          cmake -S . -B build
+          cmake --build build
+          timeout 30s ./build/bin/llamaware-agent << EOF
+          2
+          exit
+          EOF
+          echo "Build size: $(stat -c%s build/bin/llamaware-agent) bytes"
+          echo "Build date: $(date)"
+          echo "Commit: ${{ github.sha }}"
