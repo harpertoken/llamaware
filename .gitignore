@@ -87,6 +87,9 @@ pr*.md
 coverage/
 htmlcov/
 
+# Pre-commit
+.pre-commit-config.yaml.bak
+
 # Compiled Object files
 *.o
 *.obj

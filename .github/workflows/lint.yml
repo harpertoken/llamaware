@@ -2,21 +2,23 @@ name: Lint
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-   clang-tidy:
-     runs-on: ubuntu-latest
-     steps:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y clang-tidy clang-tools cmake build-essential libcurl4-openssl-dev nlohmann-json3-dev libpqxx-dev
+          sudo apt install -y clang-tidy clang-tools cmake \
+            build-essential libcurl4-openssl-dev nlohmann-json3-dev \
+            libpqxx-dev
 
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON

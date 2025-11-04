@@ -47,7 +47,9 @@ jobs:
           ██████████ 100% (Passing)
           EOF
 
-           TODO_COUNT=$(grep -r "TODO\|FIXME\|HACK" src/ include/ 2>/dev/null | grep -v "Find TODO\|TODO comments\|codebase\|FIXME\|HACK" | wc -l || echo "0")
+          TODO_COUNT=$(grep -r "TODO\|FIXME\|HACK" src/ include/ \
+            2>/dev/null | grep -v "Find TODO\|TODO comments\|codebase\|FIXME\|HACK" \
+            | wc -l || echo "0")
 
           if [ "$TODO_COUNT" -gt 0 ]; then
             echo "**Quality**" >> report.md
@@ -89,7 +91,7 @@ jobs:
         with:
           script: |
             const todos = [...context.payload.issue.body.matchAll(/TODO:\s*(.+)/gi)];
-            
+
             for (const [, title] of todos) {
               await github.rest.issues.create({
                 owner: context.repo.owner,
@@ -99,13 +101,14 @@ jobs:
                 labels: ['todo']
               });
             }
-            
+
             if (todos.length) {
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `Created ${todos.length} sub-issue${todos.length > 1 ? 's' : ''}`
+                body: `Created ${todos.length} sub-issue${
+                  todos.length > 1 ? 's' : ''}`
               });
             }
 
@@ -117,21 +120,22 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const content = `${context.payload.pull_request.title} ${context.payload.pull_request.body || ''}`.toLowerCase();
-            
+            const content = `${context.payload.pull_request.title} ${
+              context.payload.pull_request.body || ''}`.toLowerCase();
+
             const map = {
               'Next Release': ['feature'],
               'Bug Fixes': ['bug', 'fix'],
               'Technical Debt': ['refactor']
             };
-            
+
             for (const [name, keywords] of Object.entries(map)) {
               if (keywords.some(k => content.includes(k))) {
                 const { data } = await github.rest.issues.listMilestones({
                   owner: context.repo.owner,
                   repo: context.repo.repo
                 });
-                
+
                 const milestone = data.find(m => m.title === name);
                 if (milestone) {
                   await github.rest.issues.update({
@@ -140,7 +144,7 @@ jobs:
                     repo: context.repo.repo,
                     milestone: milestone.number
                   });
-                  
+
                   await github.rest.issues.createComment({
                     issue_number: context.issue.number,
                     owner: context.repo.owner,

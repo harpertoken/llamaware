@@ -13,7 +13,7 @@ class Llamaware < Formula
     system "cmake", "-S", ".", "-B", "build", *std_cmake_args
     system "cmake", "--build", "build"
     bin.install "build/bin/llamaware-agent"
-    
+
     # Install configuration template
     (etc/"llamaware").install ".env.example" => "config.env"
   end

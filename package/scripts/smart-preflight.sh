@@ -15,19 +15,19 @@ detect_context() {
         echo "ci"
         return
     fi
-    
+
     # Check if in pre-commit hook
     if [ "${PRE_COMMIT:-false}" = "true" ] || [ "${GIT_HOOK:-false}" = "true" ]; then
         echo "quick"
         return
     fi
-    
+
     # Check if user explicitly wants quick mode
     if [ "${QUICK:-false}" = "true" ]; then
         echo "quick"
         return
     fi
-    
+
     # Check if this is a development build (has uncommitted changes)
     if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
         if ! git diff-index --quiet HEAD -- 2>/dev/null; then
@@ -35,7 +35,7 @@ detect_context() {
             return
         fi
     fi
-    
+
     # Default to comprehensive for clean development environment
     echo "comprehensive"
 }

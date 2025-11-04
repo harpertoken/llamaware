@@ -1,7 +1,7 @@
 # Llamaware Agent Makefile
 # Professional AI Agent with Command Execution
 
-.PHONY: all build clean test test-e2e test-e2e-docker package install docker-build preflight preflight-quick preflight-full preflight-ci setup install-deps-mac install-deps-ubuntu help
+.PHONY: all build clean test test-e2e test-e2e-docker package install docker-build preflight preflight-quick preflight-full preflight-ci setup install-deps-mac install-deps-ubuntu lint-yaml lint-all help
 
 # Default target
 all: build
@@ -102,6 +102,16 @@ install-deps-ubuntu:
 	@sudo ldconfig
 	@rm -rf /tmp/cpr
 
+# Lint YAML files
+lint-yaml:
+	@echo "Running yamllint on YAML files..."
+	@yamllint -c .yamllint.yml .
+
+# Run pre-commit on all files
+lint-all:
+	@echo "Running pre-commit on all files..."
+	@pre-commit run --all-files
+
 # Show help
 help:
 	@echo "Llamaware Agent - Available Make Targets:"
@@ -113,6 +123,10 @@ help:
 	@echo "  test-e2e           Run E2E tests locally"
 	@echo "  test-e2e-docker    Run E2E tests in Docker"
 	@echo "  package            Create distribution package"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  lint-yaml          Run yamllint on YAML files"
+	@echo "  lint-all           Run all pre-commit hooks"
 	@echo ""
 	@echo "Installation:"
 	@echo "  install            Install locally to /usr/local/bin"

@@ -334,24 +334,24 @@ print_success "Basic security check completed"
 # Skip extended checks in quick mode if no errors
 if [ "$QUICK_MODE" = "true" ] && [ $ERROR_COUNT -eq 0 ]; then
     print_status "Quick mode: Skipping extended checks..."
-    
+
     # Still do GitHub integration check if in development
     if [ "$CI_MODE" = "false" ] && [ -d ".github" ]; then
         print_status "Validating GitHub integration..."
-        
+
         if [ ! -f ".github/CODEOWNERS" ]; then
             warn_check "CODEOWNERS file missing"
         fi
-        
+
         if [ ! -f ".github/pull_request_template.md" ]; then
             warn_check "PR template missing"
         fi
-        
+
         if [ ! -d ".github/workflows" ]; then
             warn_check "GitHub Actions workflows missing"
         fi
     fi
-    
+
     echo "===================================="
     print_success "QUICK PREFLIGHT PASSED!"
     echo "Errors: $ERROR_COUNT | Warnings: $WARNING_COUNT"
@@ -366,19 +366,19 @@ fi
 # 14. GitHub Integration Check (if .github exists)
 if [ -d ".github" ]; then
     print_status "Validating GitHub integration..."
-    
+
     if [ ! -f ".github/CODEOWNERS" ]; then
         warn_check "CODEOWNERS file missing"
     else
         print_success "CODEOWNERS found"
     fi
-    
+
     if [ ! -f ".github/pull_request_template.md" ]; then
         warn_check "PR template missing"
     else
         print_success "PR template found"
     fi
-    
+
     if [ ! -d ".github/workflows" ]; then
         warn_check "GitHub Actions workflows missing"
     else
@@ -395,7 +395,7 @@ if [ $ERROR_COUNT -eq 0 ]; then
     echo ""
     echo "Ready for:"
     echo "   • Development deployment"
-    echo "   • Production build" 
+    echo "   • Production build"
     echo "   • Package distribution"
     echo "   • Container deployment"
     echo "   • CI/CD pipeline"

@@ -46,7 +46,7 @@ http {
         listen 80;
         access_log /dev/stdout;
         error_log /dev/stderr;
-        
+
         location = /health {
             add_header Content-Type text/plain;
             return 200 "healthy\n";

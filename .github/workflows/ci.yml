@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["main","develop"]
+    branches: ["main", "develop"]
   pull_request:
     branches: ["*"]
   release:
@@ -52,13 +52,16 @@ jobs:
         shell: powershell
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+          [System.Net.ServicePointManager]::SecurityProtocol = `
+            [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString(`
+            'https://chocolatey.org/install.ps1'))
           choco install -y cmake --no-progress
           git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
           C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
           C:\vcpkg\vcpkg.exe integrate install
-           C:\vcpkg\vcpkg.exe install cpr nlohmann-json libpqxx --triplet x64-windows
+          C:\vcpkg\vcpkg.exe install cpr nlohmann-json libpqxx \
+            --triplet x64-windows
 
       - name: Configure CMake (Linux/macOS)
         if: matrix.os != 'windows-latest'

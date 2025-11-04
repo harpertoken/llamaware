@@ -167,7 +167,10 @@ services:
       - /root/.cache
     working_dir: /app
     user: root
-    command: ["bash", "-c", "ulimit -c unlimited && /app/tests/e2e/run_tests_in_docker.sh || touch /app/tests/e2e/.e2e_failed"]
+    command:
+      - "bash"
+      - "-c"
+      - "ulimit -c unlimited && /app/tests/e2e/run_tests_in_docker.sh || touch /app/tests/e2e/.e2e_failed"
     security_opt:
       - seccomp:unconfined
     cap_add:

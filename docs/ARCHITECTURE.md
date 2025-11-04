@@ -2,7 +2,7 @@
 
 ## Components
 - Agent Core: interaction loop and command routing
-- AI Service: multi-provider LLM integration  
+- AI Service: multi-provider LLM integration
 - File Service: operations with validation
 - Memory Manager: structured persistence
 - Validation System: input safety checks

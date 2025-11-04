@@ -246,10 +246,24 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --config Debug
 ```
 
+**Pre-commit Setup**
+
+Set up code quality checks and linting:
+
+```bash
+./scripts/setup-pre-commit.sh
+```
+
+This installs:
+- Pre-commit hooks for code formatting
+- YAML linting with yamllint
+- Conventional commit message validation
+
 **Workflow**
 
 * Use `help` inside the agent to explore commands
 * Follow CI/CD guides for contributing
+* Run `pre-commit run --all-files` to check all files
 
 ## Conventional Commits
 

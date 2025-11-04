@@ -117,7 +117,7 @@ ollama list
 - **Rate limits**: Free tiers have usage limits, upgrade if needed
 - **Network issues**: Check internet connection and firewall settings
 
-#### Offline Mode Issues  
+#### Offline Mode Issues
 - **Service not running**: Ensure `ollama serve` is running in background
 - **Connection refused**: Check if port 11434 is available
 - **Model not found**: Run `ollama pull <model-name>` to download

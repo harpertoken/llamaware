@@ -250,16 +250,16 @@ else()
     # If not found, try to find the library directly
     find_library(CPR_LIBRARY NAMES cpr)
     find_path(CPR_INCLUDE_DIR NAMES cpr/cpr.h)
-    
+
     if(CPR_LIBRARY AND CPR_INCLUDE_DIR)
         message(STATUS "Found CPR (library): ${CPR_LIBRARY}")
         add_library(cpr::cpr INTERFACE IMPORTED)
         target_include_directories(cpr::cpr INTERFACE ${CPR_INCLUDE_DIR})
-        target_link_libraries(cpr::cpr INTERFACE 
-            ${CPR_LIBRARY} 
-            CURL::libcurl 
-            OpenSSL::SSL 
-            OpenSSL::Crypto 
+        target_link_libraries(cpr::cpr INTERFACE
+            ${CPR_LIBRARY}
+            CURL::libcurl
+            OpenSSL::SSL
+            OpenSSL::Crypto
             ${ZLIB_TARGET}
         )
         set(CPR_FOUND TRUE)
@@ -270,13 +270,13 @@ if(NOT CPR_FOUND)
     # If still not found, try to fetch it using FetchContent
     message(STATUS "CPR not found, downloading using FetchContent...")
     include(FetchContent)
-    
+
     FetchContent_Declare(
         cpr
         GIT_REPOSITORY https://github.com/libcpr/cpr.git
         GIT_TAG 1.10.5  # Updated to a more recent version
     )
-    
+
     # Prevent building tests and examples
     set(CPR_BUILD_TESTS OFF CACHE BOOL "")
     set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "")
@@ -297,12 +297,12 @@ if(NOT CPR_FOUND)
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/_deps/cpr-build")
 
     FetchContent_MakeAvailable(cpr)
-    
+
     # Add the include directory if it exists
     if(EXISTS "${CMAKE_BINARY_DIR}/_deps/cpr-src/include")
         target_include_directories(cpr PUBLIC "${CMAKE_BINARY_DIR}/_deps/cpr-src/include")
     endif()
-    
+
     if(TARGET cpr::cpr)
         message(STATUS "CPR downloaded and built from source")
         set(CPR_FOUND TRUE)
@@ -325,7 +325,7 @@ if(NOT TARGET gtest)
         GIT_TAG v1.14.0
         GIT_SHALLOW TRUE
     )
-    
+
      # For Windows: Prevent overriding the parent project's compiler/linker settings
      set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
@@ -338,7 +338,7 @@ if(NOT TARGET gtest)
      set(BUILD_GTEST ON CACHE BOOL "" FORCE)
 
      FetchContent_MakeAvailable(googletest)
-    
+
     # Create an interface library for gtest to make it easier to link
     if(NOT TARGET gtest_all_tests)
         add_library(gtest_all_tests INTERFACE)
@@ -353,8 +353,8 @@ endif()
 # Only set up the cpr target if we're building it ourselves
 if(TARGET cpr)
     # Ensure proper linking on all platforms for our local cpr build
-    target_link_libraries(cpr PRIVATE 
-        OpenSSL::SSL 
+    target_link_libraries(cpr PRIVATE
+        OpenSSL::SSL
         OpenSSL::Crypto
         ${ZLIB_TARGET}  # Use the appropriate zlib target for this platform
     )
@@ -364,29 +364,29 @@ endif()
 if(APPLE)
     # Set minimum deployment target
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
-    
+
     # Set rpath
     set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     set(CMAKE_MACOSX_RPATH TRUE)
-    
+
     # Add compiler and linker flags to all targets
     add_compile_options(
         -march=armv8.4-a+fp16+rcpc+dotprod+crypto
         -Wno-deprecated-declarations
     )
-    
+
     add_link_options(
         -Wl,-no_weak_imports
     )
-    
+
     # Add these flags to the main target as well
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8.4-a+fp16+rcpc+dotprod+crypto -Wno-deprecated-declarations")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-no_weak_imports")
-    
+
     # Add OpenSSL include directories to all targets
     include_directories(${OPENSSL_INCLUDE_DIR})
-    
+
     # Add OpenSSL definitions to all targets
     add_compile_definitions(
         CURL_USE_OPENSSL=1
@@ -502,7 +502,7 @@ target_include_directories(llamaware-agent PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include
 )
-target_link_libraries(llamaware-agent PRIVATE 
+target_link_libraries(llamaware-agent PRIVATE
     llamaware_lib
 )
 
@@ -512,9 +512,9 @@ target_include_directories(llamaware-tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include
 )
-target_link_libraries(llamaware-tests PRIVATE 
-    llamaware_lib 
-    gtest_main 
+target_link_libraries(llamaware-tests PRIVATE
+    llamaware_lib
+    gtest_main
     gtest
 )
 add_test(NAME basic_tests COMMAND llamaware-tests)

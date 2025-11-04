@@ -8,11 +8,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', content_type)
         self.end_headers()
-        
+
     def do_HEAD(self):
         """Handle HEAD requests (used for health checks)"""
         self._set_headers('text/plain')
-        
+
     def do_GET(self):
         if self.path == '/' or self.path == '/health':
             self._set_headers('text/plain')
@@ -43,10 +43,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
-        
+
         try:
             data = json.loads(post_data.decode('utf-8'))
-            
+
             if self.path == '/api/generate':
                 self._set_headers()
                 response = {
@@ -82,7 +82,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             else:
                 self.send_response(404)
                 self.end_headers()
-                
+
         except json.JSONDecodeError:
             self.send_response(400)
             self.end_headers()
