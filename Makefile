@@ -117,6 +117,16 @@ lint-all:
 	@echo "Running pre-commit on all files..."
 	@pre-commit run --all-files
 
+# Run clang-tidy on source files
+clang-tidy: build
+	@echo "Running clang-tidy on source files..."
+	@if [ -f "build/compile_commands.json" ]; then \
+		CLANG_TIDY_EXTRA_ARGS="--extra-arg=-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 --extra-arg=-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include"; \
+		find src -name "*.cpp" -exec clang-tidy {} -p build $$CLANG_TIDY_EXTRA_ARGS \; ; \
+	else \
+		echo "Error: compile_commands.json not found. Run cmake with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"; \
+	fi
+
 # Show help
 help:
 	@echo "Llamaware Agent - Available Make Targets:"
@@ -132,6 +142,7 @@ help:
 	@echo "Code Quality:"
 	@echo "  lint-yaml          Run yamllint on YAML files"
 	@echo "  lint-all           Run all pre-commit hooks"
+	@echo "  clang-tidy         Run clang-tidy static analysis"
 	@echo ""
 	@echo "Installation:"
 	@echo "  install            Install locally to /usr/local/bin"

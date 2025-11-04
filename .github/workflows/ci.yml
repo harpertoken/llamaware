@@ -42,8 +42,9 @@ jobs:
             build
             ~/.cache/vcpkg
             C:\vcpkg\installed
-          key: ${{ runner.os }}-${{ matrix.build_type }}-${{ hashFiles('CMakeLists.txt', 'vcpkg.json') }}
+          key: ${{ runner.os }}-${{ matrix.build_type }}-${{ hashFiles('CMakeLists.txt') }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-${{ matrix.build_type }}-${{ hashFiles('CMakeLists.txt') }}-
             ${{ runner.os }}-${{ matrix.build_type }}-
             ${{ runner.os }}-
 
@@ -71,13 +72,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
-          sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev libpqxx-dev
+          sudo apt install -y nlohmann-json3-dev cmake build-essential \
+            libcurl4-openssl-dev libpqxx-dev expect clang-tidy
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           brew uninstall cmake || true
-          brew install cmake nlohmann-json cpr libpqxx
+          brew install cmake nlohmann-json cpr libpqxx expect llvm
 
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-latest'
@@ -186,7 +188,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev lcov
+          sudo apt install -y nlohmann-json3-dev cmake build-essential \
+            libcurl4-openssl-dev libpqxx-dev lcov expect clang-tidy
 
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
@@ -200,7 +203,7 @@ jobs:
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5
         with:
-          file: build/coverage/coverage.info
+          files: build/coverage/coverage.info
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false

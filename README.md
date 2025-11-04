@@ -249,18 +249,15 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --config Debug
 ```
 
-**Pre-commit Setup**
-
-Set up code quality checks and linting:
+**Code Quality**
 
 ```bash
-./scripts/setup-pre-commit.sh
+./scripts/setup-pre-commit.sh  # Setup hooks and linting
+make clang-tidy                # Static analysis
+make lint-all                  # Run all checks
 ```
 
-This installs:
-- Pre-commit hooks for code formatting
-- YAML linting with yamllint
-- Conventional commit message validation
+Tools: [.clang-tidy](.clang-tidy) • pre-commit hooks • yamllint • conventional commits
 
 **Workflow**
 

@@ -1,14 +1,25 @@
 ---
 Checks: >
   -*,
-  bugprone-use-after-move,
-  bugprone-unused-local-non-trivial-variable,
-  clang-analyzer-core.NullDereference,
-  clang-analyzer-core.uninitialized.Assign,
-  modernize-use-nullptr,
-  modernize-use-override,
-  performance-unnecessary-copy-initialization
+  bugprone-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-vararg
 
-WarningsAsErrors: '*'
-HeaderFilterRegex: '^(?!.*_deps).*'
+WarningsAsErrors: ''
+HeaderFilterRegex: '(src|include)/.*'
 FormatStyle: file
+CheckOptions:
+  - key: readability-identifier-naming.VariableCase
+    value: snake_case
+  - key: readability-identifier-naming.FunctionCase
+    value: snake_case
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
