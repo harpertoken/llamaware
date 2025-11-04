@@ -6,11 +6,11 @@
 namespace Services {
 
 struct FileMatch {
-  std::string file_path;
-  std::string relative_path;
-  std::string content;
-  size_t size;
-  std::string file_type;
+  std::string file_path{};
+  std::string relative_path{};
+  std::string content{};
+  size_t size{0};
+  std::string file_type{};
 };
 
 enum class GitStatusFilter {

@@ -9,8 +9,8 @@
 
 namespace Services {
 
-std::vector<ErrorInfo> ErrorService::error_log_;
-std::map<std::string, ValidationRule> ErrorService::validation_rules_;
+std::vector<ErrorInfo> ErrorService::error_log;
+std::map<std::string, ValidationRule> ErrorService::validation_rules;
 
 std::string ErrorService::get_error_log_path() { return "data/error_log.json"; }
 
@@ -32,7 +32,7 @@ std::string ErrorService::generate_error_id() {
 
 void ErrorService::initialize_validation_rules() {
   // File path validation
-  validation_rules_["file_path"] = {
+  validation_rules["file_path"] = {
       "file_path",
       [](const std::string &path) {
         return !path.empty() && path.find("..") == std::string::npos &&
@@ -43,7 +43,7 @@ void ErrorService::initialize_validation_rules() {
        "Keep path under 4096 characters"}};
 
   // URL validation
-  validation_rules_["url"] = {
+  validation_rules["url"] = {
       "url",
       [](const std::string &url) {
         std::regex url_regex(R"(^https?://[^\s/$.?#].[^\s]*$)");
@@ -54,7 +54,7 @@ void ErrorService::initialize_validation_rules() {
        "Check domain format"}};
 
   // Command validation
-  validation_rules_["command"] = {
+  validation_rules["command"] = {
       "command",
       [](const std::string &command) {
         // Basic command safety checks
@@ -72,7 +72,7 @@ void ErrorService::initialize_validation_rules() {
        "Use safe alternatives"}};
 
   // API key validation
-  validation_rules_["api_key"] = {
+  validation_rules["api_key"] = {
       "api_key",
       [](const std::string &key) {
         return !key.empty() && key.length() >= 10 && key.length() <= 512 &&
@@ -83,7 +83,7 @@ void ErrorService::initialize_validation_rules() {
        "Check with provider documentation"}};
 
   // JSON validation
-  validation_rules_["json"] = {
+  validation_rules["json"] = {
       "json",
       [](const std::string &json_str) {
         try {
@@ -117,11 +117,11 @@ ErrorService::log_error(ErrorLevel level, ErrorCategory category,
   error.timestamp = std::chrono::system_clock::now();
   error.suggestions = suggestions;
 
-  error_log_.push_back(error);
+  error_log.push_back(error);
 
   // Keep only recent errors (max 1000)
-  if (error_log_.size() > 1000) {
-    error_log_.erase(error_log_.begin(), error_log_.begin() + 100);
+  if (error_log.size() > 1000) {
+    error_log.erase(error_log.begin(), error_log.begin() + 100);
   }
 
   // Print error to console based on level
@@ -134,10 +134,10 @@ ErrorService::log_error(ErrorLevel level, ErrorCategory category,
 
 std::vector<ErrorInfo> ErrorService::get_recent_errors(size_t count) {
   std::vector<ErrorInfo> recent;
-  size_t start = error_log_.size() > count ? error_log_.size() - count : 0;
+  size_t start = error_log.size() > count ? error_log.size() - count : 0;
 
-  for (size_t i = start; i < error_log_.size(); ++i) {
-    recent.push_back(error_log_[i]);
+  for (size_t i = start; i < error_log.size(); ++i) {
+    recent.push_back(error_log[i]);
   }
 
   return recent;
@@ -145,7 +145,7 @@ std::vector<ErrorInfo> ErrorService::get_recent_errors(size_t count) {
 
 std::vector<ErrorInfo> ErrorService::get_errors_by_level(ErrorLevel level) {
   std::vector<ErrorInfo> filtered;
-  for (const auto &error : error_log_) {
+  for (const auto &error : error_log) {
     if (error.level == level) {
       filtered.push_back(error);
     }
@@ -156,7 +156,7 @@ std::vector<ErrorInfo> ErrorService::get_errors_by_level(ErrorLevel level) {
 std::vector<ErrorInfo>
 ErrorService::get_errors_by_category(ErrorCategory category) {
   std::vector<ErrorInfo> filtered;
-  for (const auto &error : error_log_) {
+  for (const auto &error : error_log) {
     if (error.category == category) {
       filtered.push_back(error);
     }
@@ -164,14 +164,14 @@ ErrorService::get_errors_by_category(ErrorCategory category) {
   return filtered;
 }
 
-void ErrorService::clear_error_log() { error_log_.clear(); }
+void ErrorService::clear_error_log() { error_log.clear(); }
 
 bool ErrorService::validate_input(const std::string &rule_name,
                                   const std::string &input,
                                   std::string &error_message,
                                   std::vector<std::string> &suggestions) {
-  auto it = validation_rules_.find(rule_name);
-  if (it == validation_rules_.end()) {
+  auto it = validation_rules.find(rule_name);
+  if (it == validation_rules.end()) {
     error_message = "Unknown validation rule: " + rule_name;
     return false;
   }
@@ -218,7 +218,7 @@ bool ErrorService::validate_json(const std::string &json_str,
 
 std::vector<std::string>
 ErrorService::suggest_recovery_actions(const std::string &error_id) {
-  for (const auto &error : error_log_) {
+  for (const auto &error : error_log) {
     if (error.id == error_id) {
       return error.suggestions;
     }
@@ -228,7 +228,7 @@ ErrorService::suggest_recovery_actions(const std::string &error_id) {
 
 bool ErrorService::attempt_auto_recovery(const std::string &error_id) {
   // Basic auto-recovery logic
-  for (const auto &error : error_log_) {
+  for (const auto &error : error_log) {
     if (error.id == error_id) {
       switch (error.category) {
       case ErrorCategory::FILE_SYSTEM:
@@ -280,13 +280,13 @@ std::string ErrorService::format_error_summary() {
   std::map<ErrorLevel, int> level_counts;
   std::map<ErrorCategory, int> category_counts;
 
-  for (const auto &error : error_log_) {
+  for (const auto &error : error_log) {
     level_counts[error.level]++;
     category_counts[error.category]++;
   }
 
   std::stringstream ss;
-  ss << "Error Summary (Total: " << error_log_.size() << " errors)\n";
+  ss << "Error Summary (Total: " << error_log.size() << " errors)\n";
 
   ss << "By Level:\n";
   for (const auto &[level, count] : level_counts) {
@@ -317,7 +317,7 @@ bool ErrorService::export_error_log(const std::string &export_path) {
   try {
     nlohmann::json log_json = nlohmann::json::array();
 
-    for (const auto &error : error_log_) {
+    for (const auto &error : error_log) {
       nlohmann::json error_json;
       error_json["id"] = error.id;
       error_json["level"] = error_level_to_string(error.level);

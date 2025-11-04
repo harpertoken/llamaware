@@ -8,38 +8,38 @@
 namespace Services {
 
 struct MCPResource {
-  std::string uri;
-  std::string name;
-  std::string description;
-  std::string mime_type;
-  nlohmann::json metadata;
+  std::string uri{};
+  std::string name{};
+  std::string description{};
+  std::string mime_type{};
+  nlohmann::json metadata{};
 };
 
 struct MCPTool {
-  std::string name;
-  std::string description;
-  nlohmann::json input_schema;
+  std::string name{};
+  std::string description{};
+  nlohmann::json input_schema{};
 };
 
 struct MCPPrompt {
-  std::string name;
-  std::string description;
-  std::vector<std::string> arguments;
+  std::string name{};
+  std::string description{};
+  std::vector<std::string> arguments{};
 };
 
 struct MCPServer {
-  std::string name;
-  std::string executable;
-  std::vector<std::string> args;
-  std::string working_directory;
-  std::map<std::string, std::string> env_vars;
+  std::string name{};
+  std::string executable{};
+  std::vector<std::string> args{};
+  std::string working_directory{};
+  std::map<std::string, std::string> env_vars{};
   bool is_running = false;
   int process_id = -1;
 };
 
 class MCPService {
 private:
-  static std::map<std::string, MCPServer> servers_;
+  static std::map<std::string, MCPServer> servers;
   static std::string get_mcp_config_path();
   static void ensure_mcp_directory();
   static nlohmann::json send_mcp_request(const std::string &server_name,

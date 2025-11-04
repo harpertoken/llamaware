@@ -9,6 +9,7 @@
 #include <vector>
 
 const long kDefaultTimeoutSeconds = 30;
+const size_t kMaxContentLength = 8000;
 
 // Callback function for writing response data
 static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
@@ -343,17 +344,19 @@ std::string WebService::fetch_text(const std::string &url) {
   // Check if content is HTML and extract text
   if (response.content_type.find("text/html") != std::string::npos) {
     std::string extracted = extract_text_content(response.content);
-    if (extracted.length() > 8000) {
-      extracted = extracted.substr(0, 8000) +
-                  "\n\n[Content truncated - showing first 8000 characters]";
+    if (extracted.length() > kMaxContentLength) {
+      extracted = extracted.substr(0, kMaxContentLength) +
+                  "\n\n[Content truncated - showing first " +
+                  std::to_string(kMaxContentLength) + " characters]";
     }
     return extracted;
   }
 
   // For plain text or other content types
-  if (response.content.length() > 8000) {
-    return response.content.substr(0, 8000) +
-           "\n\n[Content truncated - showing first 8000 characters]";
+  if (response.content.length() > kMaxContentLength) {
+    return response.content.substr(0, kMaxContentLength) +
+           "\n\n[Content truncated - showing first " +
+           std::to_string(kMaxContentLength) + " characters]";
   }
 
   return response.content;
@@ -367,9 +370,10 @@ std::string WebService::fetch_json(const std::string &url) {
       auto json = nlohmann::json::parse(response.content);
       // Pretty print JSON with truncation if needed
       std::string formatted = json.dump(2);
-      if (formatted.length() > 8000) {
-        formatted = formatted.substr(0, 8000) +
-                    "\n\n[JSON truncated - showing first 8000 characters]";
+      if (formatted.length() > kMaxContentLength) {
+        formatted = formatted.substr(0, kMaxContentLength) +
+                    "\n\n[JSON truncated - showing first " +
+                    std::to_string(kMaxContentLength) + " characters]";
       }
       return formatted;
     } else {

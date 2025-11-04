@@ -9,23 +9,23 @@
 namespace Services {
 
 // Static member definitions
-std::map<std::string, std::string> ContextService::context_cache_;
-std::string ContextService::cached_working_directory_;
+std::map<std::string, std::string> ContextService::context_cache;
+std::string ContextService::cached_working_directory;
 
 std::string ContextService::load_hierarchical_context(
     const std::string &working_directory) {
   // Check cache first
-  if (cached_working_directory_ == working_directory &&
-      context_cache_.find("hierarchical") != context_cache_.end()) {
-    return context_cache_["hierarchical"];
+  if (cached_working_directory == working_directory &&
+      context_cache.find("hierarchical") != context_cache.end()) {
+    return context_cache["hierarchical"];
   }
 
   std::vector<ContextFile> all_files = find_context_files(working_directory);
   std::string merged_context = merge_context_files(all_files);
 
   // Update cache
-  cached_working_directory_ = working_directory;
-  context_cache_["hierarchical"] = merged_context;
+  cached_working_directory = working_directory;
+  context_cache["hierarchical"] = merged_context;
 
   return merged_context;
 }
@@ -234,8 +234,8 @@ bool ContextService::is_project_root(const std::string &directory) {
 }
 
 void ContextService::refresh_context_cache() {
-  context_cache_.clear();
-  cached_working_directory_.clear();
+  context_cache.clear();
+  cached_working_directory.clear();
 }
 
 std::string ContextService::get_context_template() {

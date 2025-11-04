@@ -15,7 +15,7 @@
 
 namespace Services {
 
-std::map<std::string, MCPServer> MCPService::servers_;
+std::map<std::string, MCPServer> MCPService::servers;
 
 std::string MCPService::get_mcp_config_path() {
   return "data/mcp_servers.json";
@@ -42,8 +42,8 @@ nlohmann::json MCPService::send_mcp_request(const std::string &server_name,
   // In a full implementation, this would handle the actual IPC with the MCP
   // server
 
-  auto it = servers_.find(server_name);
-  if (it == servers_.end() || !it->second.is_running) {
+  auto it = servers.find(server_name);
+  if (it == servers.end() || !it->second.is_running) {
     nlohmann::json error_response;
     error_response["error"] = "Server not found or not running";
     return error_response;
@@ -77,8 +77,8 @@ nlohmann::json MCPService::send_mcp_request(const std::string &server_name,
 }
 
 bool MCPService::start_mcp_server(const std::string &server_name) {
-  auto it = servers_.find(server_name);
-  if (it == servers_.end()) {
+  auto it = servers.find(server_name);
+  if (it == servers.end()) {
     return false;
   }
 
@@ -113,8 +113,8 @@ bool MCPService::start_mcp_server(const std::string &server_name) {
 }
 
 bool MCPService::stop_mcp_server(const std::string &server_name) {
-  auto it = servers_.find(server_name);
-  if (it == servers_.end() || !it->second.is_running) {
+  auto it = servers.find(server_name);
+  if (it == servers.end() || !it->second.is_running) {
     return false;
   }
 
@@ -141,14 +141,14 @@ bool MCPService::stop_mcp_server(const std::string &server_name) {
 }
 
 bool MCPService::register_mcp_server(const MCPServer &server) {
-  servers_[server.name] = server;
+  servers[server.name] = server;
   save_server_config();
   return true;
 }
 
 bool MCPService::unregister_mcp_server(const std::string &server_name) {
-  auto it = servers_.find(server_name);
-  if (it == servers_.end()) {
+  auto it = servers.find(server_name);
+  if (it == servers.end()) {
     return false;
   }
 
@@ -156,30 +156,30 @@ bool MCPService::unregister_mcp_server(const std::string &server_name) {
     stop_mcp_server(server_name);
   }
 
-  servers_.erase(it);
+  servers.erase(it);
   save_server_config();
   return true;
 }
 
 std::vector<std::string> MCPService::list_mcp_servers() {
   std::vector<std::string> server_names;
-  for (const auto &pair : servers_) {
+  for (const auto &pair : servers) {
     server_names.push_back(pair.first);
   }
   return server_names;
 }
 
 MCPServer MCPService::get_mcp_server(const std::string &server_name) {
-  auto it = servers_.find(server_name);
-  if (it != servers_.end()) {
+  auto it = servers.find(server_name);
+  if (it != servers.end()) {
     return it->second;
   }
   return MCPServer{}; // Return empty server if not found
 }
 
 bool MCPService::is_server_running(const std::string &server_name) {
-  auto it = servers_.find(server_name);
-  return (it != servers_.end() && it->second.is_running);
+  auto it = servers.find(server_name);
+  return (it != servers.end() && it->second.is_running);
 }
 
 std::vector<MCPResource>
@@ -362,7 +362,7 @@ bool MCPService::load_server_config() {
     nlohmann::json config;
     file >> config;
 
-    servers_.clear();
+    servers.clear();
 
     if (config.contains("servers") && config["servers"].is_object()) {
       for (const auto &[name, server_json] : config["servers"].items()) {
@@ -383,7 +383,7 @@ bool MCPService::load_server_config() {
           }
         }
 
-        servers_[name] = server;
+        servers[name] = server;
       }
     }
 
@@ -403,7 +403,7 @@ bool MCPService::save_server_config() {
     nlohmann::json config;
     config["servers"] = nlohmann::json::object();
 
-    for (const auto &[name, server] : servers_) {
+    for (const auto &[name, server] : servers) {
       nlohmann::json server_json;
       server_json["executable"] = server.executable;
       server_json["working_directory"] = server.working_directory;
@@ -431,14 +431,14 @@ void MCPService::add_default_servers() {
   filesystem_server.executable = "npx";
   filesystem_server.args = {"@modelcontextprotocol/server-filesystem", "."};
   filesystem_server.working_directory = ".";
-  servers_["filesystem"] = filesystem_server;
+  servers["filesystem"] = filesystem_server;
 
   MCPServer git_server;
   git_server.name = "git";
   git_server.executable = "npx";
   git_server.args = {"@modelcontextprotocol/server-git", "."};
   git_server.working_directory = ".";
-  servers_["git"] = git_server;
+  servers["git"] = git_server;
 
   save_server_config();
 }
@@ -455,8 +455,8 @@ bool MCPService::ping_server(const std::string &server_name) {
 }
 
 std::string MCPService::get_server_status(const std::string &server_name) {
-  auto it = servers_.find(server_name);
-  if (it == servers_.end()) {
+  auto it = servers.find(server_name);
+  if (it == servers.end()) {
     return "Not registered";
   }
 
@@ -472,7 +472,7 @@ std::string MCPService::get_server_status(const std::string &server_name) {
 }
 
 void MCPService::cleanup_dead_servers() {
-  for (auto &[name, server] : servers_) {
+  for (auto &[name, server] : servers) {
     if (server.is_running && !ping_server(name)) {
       server.is_running = false;
       server.process_id = -1;

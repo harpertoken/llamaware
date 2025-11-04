@@ -1,6 +1,6 @@
 #include "utils/ui.h"
+#include <array>
 #include <chrono>
-#include <iomanip>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -197,9 +197,9 @@ void UI::print_enterprise_status() {
 
 // ===== Spinner =====
 void UI::spinner(const std::string &message, int duration_ms) {
-  const char *frames[] = {"/", "-", "\\", "|"};
-  const int num_frames = 4;
-  int frame = 0;
+  const std::array<std::string_view, 4> frames = {"/", "-", "\\", "|"};
+  const size_t num_frames = frames.size();
+  size_t frame = 0;
   auto start = std::chrono::steady_clock::now();
 
   std::cout << Color::CYAN << message << " " << Color::RESET;

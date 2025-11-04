@@ -22,7 +22,7 @@ MemoryManager::MemoryManager(const std::string &filename)
   global_memory_file_ = get_global_memory_path();
 
   // Initialize cache
-  entry_cache_.reserve(LRU_CACHE_SIZE);
+  entry_cache_.reserve(lru_cache_size);
 }
 
 void MemoryManager::ensure_memory_directory() const {
@@ -315,7 +315,7 @@ MemoryManager::search_memory(const std::string &query) const {
   std::unordered_set<size_t> result_indices;
 
   // Convert query to lowercase for case-insensitive search
-  std::string lower_query = query;
+  std::string lower_query(query);
   std::transform(lower_query.begin(), lower_query.end(), lower_query.begin(),
                  ::tolower);
 
@@ -599,7 +599,7 @@ void MemoryManager::update_lru_access(size_t entry_id) const {
 }
 
 void MemoryManager::evict_lru_entries() const {
-  while (entry_cache_.size() > LRU_CACHE_SIZE && !lru_order_.empty()) {
+  while (entry_cache_.size() > lru_cache_size && !lru_order_.empty()) {
     size_t lru_id = lru_order_.back();
     lru_order_.pop_back();
 
@@ -621,7 +621,7 @@ MemoryManager::parse_entry_from_line(std::string_view line,
   entry.type = "interaction";        // Default type
 
   // Use string_view for efficient parsing - avoid substr() copies
-  if (line.size() > 5 && line.substr(0, 5) == "Fact [") {
+  if (line.starts_with("Fact [")) {
     entry.type = "fact";
     size_t bracket_end = line.find("]: ");
     if (bracket_end != std::string_view::npos) {
@@ -633,7 +633,7 @@ MemoryManager::parse_entry_from_line(std::string_view line,
         entry.timestamp = std::string(line.substr(ts_start, ts_end - ts_start));
       }
     }
-  } else if (line.size() > 11 && line.substr(0, 11) == "Preference [") {
+  } else if (line.starts_with("Preference [")) {
     entry.type = "preference";
     size_t bracket_end = line.find("]: ");
     if (bracket_end != std::string_view::npos) {
@@ -686,11 +686,11 @@ std::vector<MemoryEntry> MemoryManager::load_recent_entries_only() const {
   file.seekg(0, std::ios::beg);
 
   // Calculate start position for recent entries
-  size_t start_line = total_lines > RECENT_ENTRIES_LIMIT
-                          ? total_lines - RECENT_ENTRIES_LIMIT
+  size_t start_line = total_lines > recent_entries_limit
+                          ? total_lines - recent_entries_limit
                           : 0;
 
-  entries.reserve(std::min(total_lines, RECENT_ENTRIES_LIMIT));
+  entries.reserve(std::min(total_lines, recent_entries_limit));
 
   // Second pass: load only recent entries
   line_number = 0;
@@ -710,7 +710,7 @@ std::vector<MemoryEntry> MemoryManager::load_recent_entries_only() const {
         entries.push_back(entry);
 
         // Add to cache if within limits
-        if (entry_cache_.size() < LRU_CACHE_SIZE) {
+        if (entry_cache_.size() < lru_cache_size) {
           entry_cache_[line_number] = entry;
           update_lru_access(line_number);
           current_memory_usage_ += calculate_entry_size(entry);
@@ -790,7 +790,7 @@ size_t MemoryManager::get_cache_hit_ratio() const {
 
 void MemoryManager::print_memory_stats() const {
   std::cout << "=== Memory Manager Statistics ===" << std::endl;
-  std::cout << "Cache entries: " << entry_cache_.size() << "/" << LRU_CACHE_SIZE
+  std::cout << "Cache entries: " << entry_cache_.size() << "/" << lru_cache_size
             << std::endl;
   std::cout << "Memory usage: " << (current_memory_usage_ / 1024) << " KB"
             << std::endl;

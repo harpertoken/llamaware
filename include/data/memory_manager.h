@@ -9,9 +9,9 @@
 
 namespace Data {
 struct MemoryEntry {
-  std::string content;
-  std::string timestamp;
-  std::string type; // "interaction", "fact", "preference", etc.
+  std::string content{};
+  std::string timestamp{};
+  std::string type{}; // "interaction", "fact", "preference", etc.
 };
 
 class MemoryManager {
@@ -20,11 +20,11 @@ private:
   std::string global_memory_file_;
 
   // Memory optimization constants
-  static constexpr size_t MAX_MEMORY_SIZE = 50 * 1024 * 1024; // 50MB
-  static constexpr size_t MAX_ENTRIES = 10000; // Maximum number of entries
-  static constexpr size_t RECENT_ENTRIES_LIMIT =
+  static constexpr size_t max_memory_size = 50 * 1024 * 1024; // 50MB
+  static constexpr size_t max_entries = 10000; // Maximum number of entries
+  static constexpr size_t recent_entries_limit =
       100;                                      // Lazy load recent entries only
-  static constexpr size_t LRU_CACHE_SIZE = 500; // LRU cache for parsed data
+  static constexpr size_t lru_cache_size = 500; // LRU cache for parsed data
 
   // LRU Cache for parsed entries
   mutable std::unordered_map<size_t, MemoryEntry> entry_cache_;

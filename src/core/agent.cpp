@@ -32,15 +32,18 @@
 #include <sstream>
 #include <vector>
 
+// Constants for response handling
+const size_t MAX_RESPONSE_LENGTH = 8000;
+
 // Using the Mode enum from agent.h instead of separate constants
 
 namespace Core {
 Agent::Agent()
-    : mode_(MODE_UNSET), api_key_(""), shell_mode_(false),
-      memory_(std::make_unique<Data::MemoryManager>()), ai_service_(nullptr),
-      command_count_(0), token_usage_(0) {}
+    : memory_(std::make_unique<Data::MemoryManager>()), ai_service_(nullptr) {}
 
-Agent::~Agent() = default;
+Agent::~Agent() {
+  // Destructor defined here because unique_ptr types are forward declared
+}
 
 // Helper: trim whitespace
 static inline std::string trim_copy(const std::string &s) {
@@ -57,12 +60,17 @@ void Agent::run() {
   initialize_mode();
 
   // Data-driven model name mapping
-  std::map<Mode, std::string> model_names = {
-      {MODE_TOGETHER, "Together AI"},    {MODE_CEREBRAS, "Cerebras"},
-      {MODE_FIREWORKS, "Fireworks"},     {MODE_GROQ, "Groq"},
-      {MODE_DEEPSEEK, "DeepSeek"},       {MODE_OPENAI, "OpenAI"},
-      {MODE_LLAMA_3B, "llama3.2:3b"},    {MODE_LLAMA_LATEST, "llama3.2:latest"},
-      {MODE_LLAMA_31, "llama3.1:latest"}};
+  // Data-driven model name mapping
+  std::map<Agent::Mode, std::string> model_names = {
+      {Agent::Mode::MODE_TOGETHER, "Together AI"},
+      {Agent::Mode::MODE_CEREBRAS, "Cerebras"},
+      {Agent::Mode::MODE_FIREWORKS, "Fireworks"},
+      {Agent::Mode::MODE_GROQ, "Groq"},
+      {Agent::Mode::MODE_DEEPSEEK, "DeepSeek"},
+      {Agent::Mode::MODE_OPENAI, "OpenAI"},
+      {Agent::Mode::MODE_LLAMA_3B, "llama3.2:3b"},
+      {Agent::Mode::MODE_LLAMA_LATEST, "llama3.2:latest"},
+      {Agent::Mode::MODE_LLAMA_31, "llama3.1:latest"}};
 
   // Show enhanced ready interface with system info and quick help
   std::string mode_name = is_online_mode() ? "Online" : "Offline";
@@ -108,12 +116,12 @@ void Agent::initialize_mode() {
   };
 
   std::vector<ProviderInfo> providers = {
-      {1, MODE_TOGETHER, "TOGETHER_API_KEY", "Together AI"},
-      {2, MODE_CEREBRAS, "CEREBRAS_API_KEY", "Cerebras"},
-      {3, MODE_FIREWORKS, "FIREWORKS_API_KEY", "Fireworks"},
-      {4, MODE_GROQ, "GROQ_API_KEY", "Groq"},
-      {5, MODE_DEEPSEEK, "DEEPSEEK_API_KEY", "DeepSeek"},
-      {6, MODE_OPENAI, "OPENAI_API_KEY", "OpenAI"}};
+      {1, Agent::Mode::MODE_TOGETHER, "TOGETHER_API_KEY", "Together AI"},
+      {2, Agent::Mode::MODE_CEREBRAS, "CEREBRAS_API_KEY", "Cerebras"},
+      {3, Agent::Mode::MODE_FIREWORKS, "FIREWORKS_API_KEY", "Fireworks"},
+      {4, Agent::Mode::MODE_GROQ, "GROQ_API_KEY", "Groq"},
+      {5, Agent::Mode::MODE_DEEPSEEK, "DEEPSEEK_API_KEY", "DeepSeek"},
+      {6, Agent::Mode::MODE_OPENAI, "OPENAI_API_KEY", "OpenAI"}};
 
   // Simplified mode selection with consistent numbering
   int choice =
@@ -156,9 +164,10 @@ void Agent::initialize_mode() {
       std::string display_name;
     };
 
-    std::vector<ModelInfo> models = {{1, MODE_LLAMA_3B, "llama3.2:3b"},
-                                     {2, MODE_LLAMA_LATEST, "llama3.2:latest"},
-                                     {3, MODE_LLAMA_31, "llama3.1:latest"}};
+    std::vector<ModelInfo> models = {
+        {1, Agent::Mode::MODE_LLAMA_3B, "llama3.2:3b"},
+        {2, Agent::Mode::MODE_LLAMA_LATEST, "llama3.2:latest"},
+        {3, Agent::Mode::MODE_LLAMA_31, "llama3.1:latest"}};
 
     // Offline mode: pick model
     std::string prompt = "Model [";
@@ -187,9 +196,12 @@ void Agent::initialize_mode() {
 }
 
 bool Agent::is_online_mode() const {
-  return mode_ == MODE_TOGETHER || mode_ == MODE_CEREBRAS ||
-         mode_ == MODE_FIREWORKS || mode_ == MODE_GROQ ||
-         mode_ == MODE_DEEPSEEK || mode_ == MODE_OPENAI;
+  return mode_ == Agent::Mode::MODE_TOGETHER ||
+         mode_ == Agent::Mode::MODE_CEREBRAS ||
+         mode_ == Agent::Mode::MODE_FIREWORKS ||
+         mode_ == Agent::Mode::MODE_GROQ ||
+         mode_ == Agent::Mode::MODE_DEEPSEEK ||
+         mode_ == Agent::Mode::MODE_OPENAI;
 }
 
 int Agent::get_user_choice(const std::string &prompt,
@@ -984,12 +996,12 @@ void Agent::compress_context() {
 }
 
 void Agent::show_session_stats() {
+  std::string mode_str =
+      (mode_ == Agent::Mode::MODE_TOGETHER   ? "Together AI"
+       : mode_ == Agent::Mode::MODE_CEREBRAS ? "Cerebras"
+                                             : "Local Ollama");
   std::cout << "Session Statistics:" << std::endl;
-  std::cout << "  Mode: "
-            << (mode_ == MODE_TOGETHER   ? "Together AI"
-                : mode_ == MODE_CEREBRAS ? "Cerebras"
-                                         : "Local Ollama")
-            << std::endl;
+  std::cout << "  Mode: " << mode_str << std::endl;
   std::cout << "  Shell Mode: " << (shell_mode_ ? "Active" : "Inactive")
             << std::endl;
   std::cout << "  Commands Processed: " << command_count_ << std::endl;
@@ -1128,9 +1140,10 @@ void Agent::handle_web_fetch_command(const std::string &command) {
       result = "Status: " + std::to_string(response.status_code) + "\n";
       result += "Content-Type: " + response.content_type + "\n\n";
       result += response.content;
-      if (result.length() > 8000) {
-        result = result.substr(0, 8000) +
-                 "\n\n[Content truncated - showing first 8000 characters]";
+      if (result.length() > MAX_RESPONSE_LENGTH) {
+        result = result.substr(0, MAX_RESPONSE_LENGTH) +
+                 "\n\n[Content truncated - showing first " +
+                 std::to_string(MAX_RESPONSE_LENGTH) + " characters]";
       }
     } else {
       result = "Error: " + response.error_message;

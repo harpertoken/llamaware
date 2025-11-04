@@ -4,16 +4,16 @@
 
 namespace Services {
 struct FileSearchResult {
-  std::string file_path;
-  int line_number;
-  std::string line_content;
-  std::string match_context;
+  std::string file_path{};
+  int line_number{0};
+  std::string line_content{};
+  std::string match_context{};
 };
 
 struct FileEditResult {
-  bool success;
-  std::string message;
-  int replacements_made;
+  bool success{};
+  std::string message{};
+  int replacements_made{0};
 };
 
 class FileService {
@@ -41,7 +41,7 @@ public:
                       bool case_sensitive = false);
 
   // Utility functions
-  static bool is_text_file(const std::string &filename);
+  [[nodiscard]] static bool is_text_file(const std::string &filename);
   static std::string get_relative_path(const std::string &filepath,
                                        const std::string &base_path);
   static bool is_within_directory(const std::string &filepath,

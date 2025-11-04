@@ -21,10 +21,10 @@
 
 // Initialize static members
 namespace Services {
-std::map<std::string, AuthProvider> AuthService::providers_;
-std::string AuthService::active_provider_ = "together";
-std::vector<unsigned char> AuthService::encryption_key_;
-std::string AuthService::key_file_path_ = "data/encryption_key.bin";
+std::map<std::string, AuthProvider> AuthService::providers;
+std::string AuthService::active_provider = "together";
+std::vector<unsigned char> AuthService::encryption_key;
+std::string AuthService::key_file_path = "data/encryption_key.bin";
 } // namespace Services
 
 std::string Services::AuthService::get_auth_config_path() {
@@ -68,16 +68,16 @@ Services::AuthService::hex_to_bytes(const std::string &hex) {
 bool Services::AuthService::derive_key(const std::string &password,
                                        const std::vector<unsigned char> &salt,
                                        std::vector<unsigned char> &key) {
-  key.resize(KEY_SIZE);
-  return PKCS5_PBKDF2_HMAC(password.c_str(),
-                           static_cast<int>(password.length()), salt.data(),
-                           static_cast<int>(salt.size()), ITERATIONS,
-                           EVP_sha256(), KEY_SIZE, key.data()) == 1;
+  key.resize(AuthService::key_size);
+  return PKCS5_PBKDF2_HMAC(
+             password.c_str(), static_cast<int>(password.length()), salt.data(),
+             static_cast<int>(salt.size()), ITERATIONS, EVP_sha256(),
+             AuthService::key_size, key.data()) == 1;
 }
 
 bool Services::AuthService::save_encryption_key() {
   ensure_auth_directory();
-  std::ofstream key_file(key_file_path_, std::ios::binary);
+  std::ofstream key_file(key_file_path, std::ios::binary);
   if (!key_file)
     return false;
 
@@ -111,9 +111,9 @@ bool Services::AuthService::save_encryption_key() {
   }
 
   // Encrypt the master key with the derived key
-  std::vector<unsigned char> iv = generate_random_bytes(IV_SIZE);
-  std::vector<unsigned char> tag(TAG_SIZE);
-  std::vector<unsigned char> ciphertext(encryption_key_.size() +
+  std::vector<unsigned char> iv = generate_random_bytes(AuthService::iv_size);
+  std::vector<unsigned char> tag(AuthService::tag_size);
+  std::vector<unsigned char> ciphertext(encryption_key.size() +
                                         EVP_MAX_BLOCK_LENGTH);
 
   int len;
@@ -129,8 +129,8 @@ bool Services::AuthService::save_encryption_key() {
     return false;
   }
 
-  if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, encryption_key_.data(),
-                        static_cast<int>(encryption_key_.size())) != 1) {
+  if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, encryption_key.data(),
+                        static_cast<int>(encryption_key.size())) != 1) {
     EVP_CIPHER_CTX_free(ctx);
     return false;
   }
@@ -142,8 +142,8 @@ bool Services::AuthService::save_encryption_key() {
   }
   ciphertext_len += len;
 
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag.data()) !=
-      1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, AuthService::tag_size,
+                          tag.data()) != 1) {
     EVP_CIPHER_CTX_free(ctx);
     return false;
   }
@@ -162,16 +162,16 @@ bool Services::AuthService::save_encryption_key() {
 
 bool Services::AuthService::load_or_generate_key() {
   // Try to load existing key
-  std::ifstream key_file(key_file_path_, std::ios::binary);
+  std::ifstream key_file(key_file_path, std::ios::binary);
   if (key_file) {
     // Read salt, IV, tag, and ciphertext
     std::vector<unsigned char> salt(SALT_SIZE);
-    std::vector<unsigned char> iv(IV_SIZE);
-    std::vector<unsigned char> tag(TAG_SIZE);
+    std::vector<unsigned char> iv(AuthService::iv_size);
+    std::vector<unsigned char> tag(tag_size);
 
     key_file.read(reinterpret_cast<char *>(salt.data()), SALT_SIZE);
-    key_file.read(reinterpret_cast<char *>(iv.data()), IV_SIZE);
-    key_file.read(reinterpret_cast<char *>(tag.data()), TAG_SIZE);
+    key_file.read(reinterpret_cast<char *>(iv.data()), iv_size);
+    key_file.read(reinterpret_cast<char *>(tag.data()), tag_size);
 
     // Read the rest as ciphertext
     std::vector<unsigned char> ciphertext(
@@ -225,7 +225,7 @@ bool Services::AuthService::load_or_generate_key() {
     plaintext_len = len;
 
     // Set expected tag value
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, tag.data()) !=
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag_size, tag.data()) !=
         1) {
       EVP_CIPHER_CTX_free(ctx);
       return false;
@@ -242,12 +242,12 @@ bool Services::AuthService::load_or_generate_key() {
 
     plaintext_len += len;
     plaintext.resize(plaintext_len);
-    encryption_key_ = plaintext;
+    encryption_key = plaintext;
     return true;
   }
 
   // No existing key, generate a new one
-  encryption_key_ = generate_random_bytes(KEY_SIZE);
+  encryption_key = generate_random_bytes(key_size);
   return save_encryption_key();
 }
 
@@ -263,13 +263,13 @@ bool Services::AuthService::initialize_encryption_key() {
 
 std::string
 Services::AuthService::encrypt_credential(const std::string &credential) {
-  if (encryption_key_.empty() && !initialize_encryption_key()) {
+  if (encryption_key.empty() && !initialize_encryption_key()) {
     throw std::runtime_error("Failed to initialize encryption key");
   }
 
   // Generate random IV
-  std::vector<unsigned char> iv = generate_random_bytes(IV_SIZE);
-  std::vector<unsigned char> tag(TAG_SIZE);
+  std::vector<unsigned char> iv = generate_random_bytes(AuthService::iv_size);
+  std::vector<unsigned char> tag(AuthService::tag_size);
   std::vector<unsigned char> ciphertext(credential.size() +
                                         EVP_MAX_BLOCK_LENGTH);
 
@@ -282,8 +282,8 @@ Services::AuthService::encrypt_credential(const std::string &credential) {
     throw std::runtime_error("Failed to create encryption context");
 
   // Initialize the encryption operation with AES-256-GCM
-  if (EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr,
-                         encryption_key_.data(), iv.data()) != 1) {
+  if (EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, encryption_key.data(),
+                         iv.data()) != 1) {
     EVP_CIPHER_CTX_free(ctx);
     throw std::runtime_error("Encryption initialization failed");
   }
@@ -306,8 +306,8 @@ Services::AuthService::encrypt_credential(const std::string &credential) {
   ciphertext_len += len;
 
   // Get the authentication tag
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag.data()) !=
-      1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, AuthService::tag_size,
+                          tag.data()) != 1) {
     EVP_CIPHER_CTX_free(ctx);
     throw std::runtime_error("Failed to get authentication tag");
   }
@@ -329,7 +329,7 @@ Services::AuthService::encrypt_credential(const std::string &credential) {
 
 std::string
 Services::AuthService::decrypt_credential(const std::string &encrypted_hex) {
-  if (encryption_key_.empty() && !initialize_encryption_key()) {
+  if (encryption_key.empty() && !initialize_encryption_key()) {
     throw std::runtime_error("Failed to initialize encryption key");
   }
 
@@ -337,14 +337,14 @@ Services::AuthService::decrypt_credential(const std::string &encrypted_hex) {
   std::vector<unsigned char> combined = hex_to_bytes(encrypted_hex);
 
   // Extract IV, tag, and ciphertext
-  if (combined.size() < IV_SIZE + TAG_SIZE) {
+  if (combined.size() < iv_size + tag_size) {
     throw std::runtime_error("Invalid encrypted data format");
   }
 
-  std::vector<unsigned char> iv(combined.begin(), combined.begin() + IV_SIZE);
-  std::vector<unsigned char> tag(combined.begin() + IV_SIZE,
-                                 combined.begin() + IV_SIZE + TAG_SIZE);
-  std::vector<unsigned char> ciphertext(combined.begin() + IV_SIZE + TAG_SIZE,
+  std::vector<unsigned char> iv(combined.begin(), combined.begin() + iv_size);
+  std::vector<unsigned char> tag(combined.begin() + iv_size,
+                                 combined.begin() + iv_size + tag_size);
+  std::vector<unsigned char> ciphertext(combined.begin() + iv_size + tag_size,
                                         combined.end());
 
   // Decrypt the ciphertext
@@ -359,8 +359,8 @@ Services::AuthService::decrypt_credential(const std::string &encrypted_hex) {
     throw std::runtime_error("Failed to create decryption context");
 
   // Initialize the decryption operation with AES-256-GCM
-  if (EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr,
-                         encryption_key_.data(), iv.data()) != 1) {
+  if (EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, encryption_key.data(),
+                         iv.data()) != 1) {
     EVP_CIPHER_CTX_free(ctx);
     throw std::runtime_error("Decryption initialization failed");
   }
@@ -374,7 +374,7 @@ Services::AuthService::decrypt_credential(const std::string &encrypted_hex) {
   plaintext_len = len;
 
   // Set the expected tag value
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, tag.data()) !=
+  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag_size, tag.data()) !=
       1) {
     EVP_CIPHER_CTX_free(ctx);
     throw std::runtime_error("Failed to set authentication tag");
@@ -404,7 +404,7 @@ void Services::AuthService::initialize_default_providers() {
   together.base_url = "https://api.together.xyz/v1";
   together.model = "meta-llama/Llama-3.2-3B-Instruct-Turbo";
   together.is_active = true;
-  providers_["together"] = together;
+  providers["together"] = together;
 
   // Ollama (local)
   AuthProvider ollama;
@@ -413,7 +413,7 @@ void Services::AuthService::initialize_default_providers() {
   ollama.base_url = "http://localhost:11434/v1";
   ollama.model = "llama3.2:3b";
   ollama.api_key = "ollama"; // Placeholder for local
-  providers_["ollama"] = ollama;
+  providers["ollama"] = ollama;
 
   // OpenAI
   AuthProvider openai;
@@ -421,7 +421,7 @@ void Services::AuthService::initialize_default_providers() {
   openai.display_name = "OpenAI";
   openai.base_url = "https://api.openai.com/v1";
   openai.model = "gpt-4";
-  providers_["openai"] = openai;
+  providers["openai"] = openai;
 
   // Anthropic
   AuthProvider anthropic;
@@ -429,7 +429,7 @@ void Services::AuthService::initialize_default_providers() {
   anthropic.display_name = "Anthropic Claude";
   anthropic.base_url = "https://api.anthropic.com/v1";
   anthropic.model = "claude-3-sonnet-20240229";
-  providers_["anthropic"] = anthropic;
+  providers["anthropic"] = anthropic;
 
   // Cerebras
   AuthProvider cerebras;
@@ -437,7 +437,7 @@ void Services::AuthService::initialize_default_providers() {
   cerebras.display_name = "Cerebras";
   cerebras.base_url = "https://api.cerebras.ai/v1";
   cerebras.model = "llama3.1-8b";
-  providers_["cerebras"] = cerebras;
+  providers["cerebras"] = cerebras;
 }
 
 void Services::AuthService::initialize() {
@@ -450,7 +450,7 @@ void Services::AuthService::initialize() {
   load_auth_config();
 
   // Try to load API keys from environment variables
-  for (auto &[name, provider] : providers_) {
+  for (auto &[name, provider] : providers) {
     std::string env_var = name + "_API_KEY";
     std::transform(env_var.begin(), env_var.end(), env_var.begin(), ::toupper);
 
@@ -471,13 +471,13 @@ void Services::AuthService::initialize() {
 }
 
 bool Services::AuthService::add_provider(const AuthProvider &provider) {
-  providers_[provider.name] = provider;
+  providers[provider.name] = provider;
   return save_auth_config();
 }
 
 bool Services::AuthService::remove_provider(const std::string &provider_name) {
-  auto it = providers_.find(provider_name);
-  if (it == providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it == providers.end()) {
     return false;
   }
 
@@ -488,11 +488,11 @@ bool Services::AuthService::remove_provider(const std::string &provider_name) {
     return false;
   }
 
-  providers_.erase(it);
+  providers.erase(it);
 
   // If we're removing the active provider, switch to together
-  if (active_provider_ == provider_name) {
-    active_provider_ = "together";
+  if (active_provider == provider_name) {
+    active_provider = "together";
   }
 
   return save_auth_config();
@@ -500,30 +500,30 @@ bool Services::AuthService::remove_provider(const std::string &provider_name) {
 
 bool Services::AuthService::set_active_provider(
     const std::string &provider_name) {
-  auto it = providers_.find(provider_name);
-  if (it == providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it == providers.end()) {
     return false;
   }
 
   // Deactivate all providers
-  for (auto &[name, provider] : providers_) {
+  for (auto &[name, provider] : providers) {
     provider.is_active = false;
   }
 
   // Activate the selected provider
   it->second.is_active = true;
-  active_provider_ = provider_name;
+  active_provider = provider_name;
 
   return save_auth_config();
 }
 
 std::string Services::AuthService::get_active_provider() {
-  return active_provider_;
+  return active_provider;
 }
 
 std::vector<std::string> Services::AuthService::list_providers() {
   std::vector<std::string> provider_names;
-  for (const auto &[name, provider] : providers_) {
+  for (const auto &[name, provider] : providers) {
     provider_names.push_back(name);
   }
   return provider_names;
@@ -531,8 +531,8 @@ std::vector<std::string> Services::AuthService::list_providers() {
 
 Services::AuthProvider
 Services::AuthService::get_provider_info(const std::string &provider_name) {
-  auto it = providers_.find(provider_name);
-  if (it != providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it != providers.end()) {
     return it->second;
   }
   return AuthProvider{}; // Return empty provider if not found
@@ -540,8 +540,8 @@ Services::AuthService::get_provider_info(const std::string &provider_name) {
 
 bool Services::AuthService::set_api_key(const std::string &provider_name,
                                         const std::string &api_key) {
-  auto it = providers_.find(provider_name);
-  if (it == providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it == providers.end()) {
     return false;
   }
 
@@ -554,10 +554,10 @@ bool Services::AuthService::set_api_key(const std::string &provider_name,
 std::string
 Services::AuthService::get_api_key(const std::string &provider_name) {
   std::string target_provider =
-      provider_name.empty() ? active_provider_ : provider_name;
+      provider_name.empty() ? active_provider : provider_name;
 
-  auto it = providers_.find(target_provider);
-  if (it != providers_.end()) {
+  auto it = providers.find(target_provider);
+  if (it != providers.end()) {
     return it->second.api_key;
   }
   return "";
@@ -565,8 +565,8 @@ Services::AuthService::get_api_key(const std::string &provider_name) {
 
 bool Services::AuthService::validate_credentials(
     const std::string &provider_name) {
-  auto it = providers_.find(provider_name);
-  if (it == providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it == providers.end()) {
     return false;
   }
 
@@ -585,8 +585,8 @@ bool Services::AuthService::validate_credentials(
 
 void Services::AuthService::clear_credentials(
     const std::string &provider_name) {
-  auto it = providers_.find(provider_name);
-  if (it != providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it != providers.end()) {
     it->second.api_key.clear();
     it->second.is_valid = false;
     save_auth_config();
@@ -598,10 +598,10 @@ bool Services::AuthService::save_auth_config() {
     ensure_auth_directory();
 
     nlohmann::json config;
-    config["active_provider"] = active_provider_;
+    config["active_provider"] = active_provider;
     config["providers"] = nlohmann::json::object();
 
-    for (const auto &[name, provider] : providers_) {
+    for (const auto &[name, provider] : providers) {
       nlohmann::json provider_json;
       provider_json["name"] = provider.name;
       provider_json["display_name"] = provider.display_name;
@@ -645,13 +645,13 @@ bool Services::AuthService::load_auth_config() {
     file >> config;
 
     if (config.contains("active_provider")) {
-      active_provider_ = config["active_provider"];
+      active_provider = config["active_provider"];
     }
 
     if (config.contains("providers")) {
       for (const auto &[name, provider_json] : config["providers"].items()) {
-        auto it = providers_.find(name);
-        if (it != providers_.end()) {
+        auto it = providers.find(name);
+        if (it != providers.end()) {
           // Update existing provider
           it->second.is_active = provider_json.value("is_active", false);
           it->second.is_valid = provider_json.value("is_valid", false);
@@ -681,7 +681,7 @@ bool Services::AuthService::load_auth_config() {
             provider.additional_config = provider_json["additional_config"];
           }
 
-          providers_[name] = provider;
+          providers[name] = provider;
         }
       }
     }
@@ -697,8 +697,8 @@ bool Services::AuthService::load_auth_config() {
 bool Services::AuthService::update_provider_config(
     const std::string &provider_name,
     const std::map<std::string, std::string> &config) {
-  auto it = providers_.find(provider_name);
-  if (it == providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it == providers.end()) {
     return false;
   }
 
@@ -711,8 +711,8 @@ bool Services::AuthService::update_provider_config(
 
 bool Services::AuthService::test_provider_connection(
     const std::string &provider_name) {
-  auto it = providers_.find(provider_name);
-  if (it == providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it == providers.end()) {
     return false;
   }
 
@@ -727,8 +727,8 @@ bool Services::AuthService::test_provider_connection(
 
 std::string
 Services::AuthService::get_provider_status(const std::string &provider_name) {
-  auto it = providers_.find(provider_name);
-  if (it == providers_.end()) {
+  auto it = providers.find(provider_name);
+  if (it == providers.end()) {
     return "Not Found";
   }
 
@@ -744,7 +744,7 @@ Services::AuthService::get_provider_status(const std::string &provider_name) {
 }
 
 void Services::AuthService::refresh_all_provider_status() {
-  for (auto &[name, provider] : providers_) {
+  for (auto &[name, provider] : providers) {
     provider.is_valid = validate_credentials(name);
   }
   save_auth_config();

@@ -5,12 +5,12 @@
 
 namespace Services {
 struct CheckpointInfo {
-  std::string id;
-  std::string name;
-  std::string timestamp;
-  std::string description;
-  std::vector<std::string> backed_up_files;
-  size_t total_size;
+  std::string id{};
+  std::string name{};
+  std::string timestamp{};
+  std::string description{};
+  std::vector<std::string> backed_up_files{};
+  size_t total_size{0};
 };
 
 struct RestoreOptions {

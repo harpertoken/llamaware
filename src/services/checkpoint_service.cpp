@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <random>
 #include <sstream>
+#include <string_view>
 
 namespace Services {
 
@@ -20,8 +21,8 @@ std::string CheckpointService::generate_checkpoint_id() {
   std::uniform_int_distribution<> dis(0, 15);
 
   std::string id;
-  const char *hex_chars = "0123456789abcdef";
-  for (int i = 0; i < 8; ++i) {
+  constexpr std::string_view hex_chars = "0123456789abcdef";
+  for (size_t i = 0; i < 8; ++i) {
     id += hex_chars[dis(gen)];
   }
   return id;

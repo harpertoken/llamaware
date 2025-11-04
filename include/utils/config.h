@@ -60,11 +60,9 @@
 
 #include <string>
 
-namespace Utils {
-namespace Config {
+namespace Utils::Config {
 LLAMAWARE_API void load_environment(const std::string &filename = ".env");
 LLAMAWARE_API std::string get_env_var(const std::string &key,
                                       const std::string &default_value = "");
 LLAMAWARE_API bool has_env_var(const std::string &key);
-} // namespace Config
-} // namespace Utils
+} // namespace Utils::Config

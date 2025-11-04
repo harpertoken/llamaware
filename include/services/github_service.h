@@ -8,23 +8,23 @@
 namespace Services {
 
 struct GitHubIssue {
-  int number;
-  std::string title;
-  std::string body;
-  std::string state;
-  std::vector<std::string> labels;
-  std::vector<std::string> assignees;
-  int milestone;
+  int number{0};
+  std::string title{};
+  std::string body{};
+  std::string state{};
+  std::vector<std::string> labels{};
+  std::vector<std::string> assignees{};
+  int milestone{0};
 };
 
 struct GitHubPR {
-  int number;
-  std::string title;
-  std::string body;
-  std::string state;
-  std::string head_branch;
-  std::string base_branch;
-  bool mergeable;
+  int number{0};
+  std::string title{};
+  std::string body{};
+  std::string state{};
+  std::string head_branch{};
+  std::string base_branch{};
+  bool mergeable{false};
 };
 
 class GitHubService {

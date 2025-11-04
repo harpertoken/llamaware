@@ -6,7 +6,7 @@
 namespace Services {
 class CommandService {
 private:
-  static const std::array<std::string, 9> dangerous_commands_;
+  static const std::array<std::string, 9> dangerous_commands;
 
   // Check if a command is considered dangerous
   static bool is_dangerous_command(const std::string &command);

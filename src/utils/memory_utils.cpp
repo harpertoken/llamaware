@@ -1,6 +1,9 @@
 #include "utils/memory_utils.h"
+#include <algorithm>
+#include <array>
 #include <iomanip>
 #include <sstream>
+#include <string>
 
 namespace Utils {
 namespace Memory {
@@ -10,9 +13,7 @@ size_t MemoryTracker::peak_usage_ = 0;
 
 void MemoryTracker::add_allocation(size_t size) {
   current_usage_ += size;
-  if (current_usage_ > peak_usage_) {
-    peak_usage_ = current_usage_;
-  }
+  peak_usage_ = std::max(peak_usage_, current_usage_);
 }
 
 void MemoryTracker::remove_allocation(size_t size) {
@@ -22,12 +23,13 @@ void MemoryTracker::remove_allocation(size_t size) {
 }
 
 std::string MemoryTracker::format_bytes(size_t bytes) {
-  const char *units[] = {"B", "KB", "MB", "GB"};
+  constexpr std::array<std::string_view, 4> units = {"B", "KB", "MB", "GB"};
+  constexpr double KB = 1024.0;
   double size = static_cast<double>(bytes);
-  int unit_index = 0;
+  size_t unit_index = 0;
 
-  while (size >= 1024.0 && unit_index < 3) {
-    size /= 1024.0;
+  while (size >= KB && unit_index < 3) {
+    size /= KB;
     unit_index++;
   }
 

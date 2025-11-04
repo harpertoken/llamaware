@@ -11,13 +11,13 @@
 #include <stdexcept>
 
 namespace Services {
-const std::array<std::string, 9> CommandService::dangerous_commands_ = {
+const std::array<std::string, 9> CommandService::dangerous_commands = {
     "rm",     "sudo rm", "format", "del /", "shutdown",
     "reboot", "mkfs",    "fdisk",  "dd"};
 
 bool CommandService::is_dangerous_command(const std::string &command) {
   // Token-based matching to avoid substring false positives
-  for (const auto &danger : dangerous_commands_) {
+  for (const auto &danger : dangerous_commands) {
     std::regex pattern(
         "\\b" + std::regex_replace(danger, std::regex(" "), "\\s+") + "\\b");
     if (std::regex_search(command, pattern)) {

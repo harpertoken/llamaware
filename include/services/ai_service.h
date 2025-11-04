@@ -9,7 +9,7 @@ private:
   Core::Agent::Mode mode_;
   std::string api_key_;
 
-  bool is_online_mode() const;
+  [[nodiscard]] bool is_online_mode() const;
   nlohmann::json create_standard_payload(const std::string &model,
                                          const std::string &user_input,
                                          const std::string &context);

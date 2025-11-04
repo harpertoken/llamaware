@@ -1,14 +1,11 @@
 #pragma once
 #include "utils/config.h" // For LLAMAWARE_API
+#include <cstdint>
 
 // Forward declarations for STL types
 #include <memory>
 #include <string>
 #include <vector>
-
-// Forward declarations for STL types
-#include <memory>
-#include <string>
 
 // Forward declarations for our own types
 
@@ -22,7 +19,7 @@ class AIService;
 namespace Core {
 class LLAMAWARE_API Agent {
 public:
-  enum Mode {
+  enum class Mode : std::uint8_t {
     MODE_UNSET = 0,
     MODE_TOGETHER = 1,
     MODE_LLAMA_3B = 2,
@@ -36,14 +33,19 @@ public:
   };
 
 private:
-  Mode mode_;
+  Mode mode_{Mode::MODE_UNSET};
   std::string api_key_;
-  bool shell_mode_;
+  bool shell_mode_{false};
   // Using raw pointers with PIMPL idiom would be better for ABI stability
   std::unique_ptr<Data::MemoryManager> memory_;
   std::unique_ptr<Services::AIService> ai_service_;
-  int command_count_;
-  long long token_usage_;
+  int command_count_{0};
+  long long token_usage_{0};
+
+public:
+  // Move operations
+  Agent(Agent &&) noexcept = default;
+  Agent &operator=(Agent &&) noexcept = default;
 
   // Disable copying
   Agent(const Agent &) = delete;
@@ -87,12 +89,10 @@ private:
   void handle_sandbox_command(const std::string &command);
   void handle_error_command(const std::string &command);
 
-private:
-  bool is_online_mode() const;
+  [[nodiscard]] bool is_online_mode() const;
 
-public:
   Agent();
-  ~Agent(); // Need explicit destructor for unique_ptr with forward declarations
+  ~Agent();
 
   void run();
 };

@@ -7,9 +7,9 @@
 
 namespace Services {
 
-enum class ErrorLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL };
+enum class ErrorLevel : std::uint8_t { DEBUG, INFO, WARNING, ERROR, CRITICAL };
 
-enum class ErrorCategory {
+enum class ErrorCategory : std::uint8_t {
   VALIDATION,
   NETWORK,
   FILE_SYSTEM,
@@ -21,28 +21,28 @@ enum class ErrorCategory {
 };
 
 struct ErrorInfo {
-  std::string id;
-  ErrorLevel level;
-  ErrorCategory category;
-  std::string message;
-  std::string details;
-  std::string context;
-  std::chrono::system_clock::time_point timestamp;
-  std::vector<std::string> suggestions;
-  std::map<std::string, std::string> metadata;
+  std::string id{};
+  ErrorLevel level{ErrorLevel::DEBUG};
+  ErrorCategory category{ErrorCategory::VALIDATION};
+  std::string message{};
+  std::string details{};
+  std::string context{};
+  std::chrono::system_clock::time_point timestamp{};
+  std::vector<std::string> suggestions{};
+  std::map<std::string, std::string> metadata{};
 };
 
 struct ValidationRule {
-  std::string name;
-  std::function<bool(const std::string &)> validator;
-  std::string error_message;
-  std::vector<std::string> suggestions;
+  std::string name{};
+  std::function<bool(const std::string &)> validator{};
+  std::string error_message{};
+  std::vector<std::string> suggestions{};
 };
 
 class ErrorService {
 private:
-  static std::vector<ErrorInfo> error_log_;
-  static std::map<std::string, ValidationRule> validation_rules_;
+  static std::vector<ErrorInfo> error_log;
+  static std::map<std::string, ValidationRule> validation_rules;
   static std::string get_error_log_path();
   static void ensure_error_directory();
   static std::string generate_error_id();

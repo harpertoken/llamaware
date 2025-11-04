@@ -8,28 +8,28 @@
 namespace Services {
 
 struct AuthProvider {
-  std::string name;
-  std::string display_name;
-  std::string api_key;
-  std::string base_url;
-  std::string model;
+  std::string name{};
+  std::string display_name{};
+  std::string api_key{};
+  std::string base_url{};
+  std::string model{};
   bool is_active = false;
   bool is_valid = false;
-  std::map<std::string, std::string> additional_config;
+  std::map<std::string, std::string> additional_config{};
 };
 
 class AuthService {
 private:
-  static constexpr size_t KEY_SIZE = 32;  // 256 bits for AES-256
-  static constexpr size_t IV_SIZE = 12;   // 96 bits for GCM
-  static constexpr size_t TAG_SIZE = 16;  // 128-bit authentication tag
+  static constexpr size_t key_size = 32;  // 256 bits for AES-256
+  static constexpr size_t iv_size = 12;   // 96 bits for GCM
+  static constexpr size_t tag_size = 16;  // 128-bit authentication tag
   static constexpr size_t SALT_SIZE = 32; // 256-bit salt for key derivation
   static constexpr size_t ITERATIONS = 100000; // Key derivation iterations
 
-  static std::map<std::string, AuthProvider> providers_;
-  static std::string active_provider_;
-  static std::vector<unsigned char> encryption_key_;
-  static std::string key_file_path_;
+  static std::map<std::string, AuthProvider> providers;
+  static std::string active_provider;
+  static std::vector<unsigned char> encryption_key;
+  static std::string key_file_path;
 
   static std::string get_auth_config_path();
   static void ensure_auth_directory();

@@ -1,24 +1,11 @@
 #!/bin/bash
+# Full check: clean → build → test → preflight-quick → preflight
 
-# Full check script: clean, build, test, preflight-quick, preflight
+set -e  # Exit on error
 
-set -e  # Exit on any error
-
-echo "Starting full check..."
-
-echo "Step 1: Cleaning..."
-make clean
-
-echo "Step 2: Building..."
-make build
-
-echo "Step 3: Testing..."
-make test
-
-echo "Step 4: Quick preflight..."
-make preflight-quick
-
-echo "Step 5: Full preflight..."
-make preflight
-
-echo "Full check completed successfully!"
+echo "==> Running full check sequence..."
+for step in clean build test preflight-quick preflight; do
+  echo "--> $step..."
+  make "$step"
+done
+echo "✅ Full check completed successfully."

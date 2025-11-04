@@ -6,10 +6,10 @@
 namespace Services {
 
 struct ContextFile {
-  std::string file_path;
-  std::string content;
-  int priority;       // Higher priority = loaded first
-  std::string source; // "global", "project", "local"
+  std::string file_path{};
+  std::string content{};
+  int priority{0};      // Higher priority = loaded first
+  std::string source{}; // "global", "project", "local"
 };
 
 class ContextService {
@@ -55,8 +55,8 @@ public:
 
 private:
   // Cache for loaded context
-  static std::map<std::string, std::string> context_cache_;
-  static std::string cached_working_directory_;
+  static std::map<std::string, std::string> context_cache;
+  static std::string cached_working_directory;
 
   // Get home directory
   static std::string get_home_directory();
