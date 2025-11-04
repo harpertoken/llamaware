@@ -76,6 +76,7 @@ jobs:
           cmake --build build --config ${{ matrix.build_type }}
 
       - name: Preflight
+        shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             cmake --build build --target preflight --config ${{ matrix.build_type }} || true
