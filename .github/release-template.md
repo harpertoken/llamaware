@@ -1,21 +1,21 @@
-## 🚀 What's New
+##  What's New
 
-### ✨ Features
+###  Features
 -
 
-### 🐛 Bug Fixes
+###  Bug Fixes
 -
 
-### 🔧 Improvements
+###  Improvements
 -
 
-### 📚 Documentation
+###  Documentation
 -
 
-### 🔒 Security
+###  Security
 -
 
-## 📦 Installation
+##  Installation
 
 ### Binary Downloads
 Download the appropriate binary for your platform from the assets below.
@@ -28,10 +28,10 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-## 🔄 Upgrade Notes
+##  Upgrade Notes
 -
 
-## 🙏 Contributors
+##  Contributors
 Thanks to all contributors who made this release possible!
 
 ---

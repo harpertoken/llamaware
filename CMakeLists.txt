@@ -437,6 +437,7 @@ set(SERVICE_SOURCES
 set(UTILS_SOURCES
     src/utils/ui.cpp
     src/utils/config.cpp
+    src/utils/memory_utils.cpp
     src/utils/version.cpp
     src/utils/validation.cpp
 )

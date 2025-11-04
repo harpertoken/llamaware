@@ -89,12 +89,6 @@ The agent supports GitHub-related commands:
 
 ## Local Development
 
-Run the local report script for consistent UX:
-
-```bash
-./scripts/report.sh
-```
-
 ## API Integration
 
 The bot integrates with GitHub API for:

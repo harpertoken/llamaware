@@ -15,6 +15,10 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
                             void *userp) {
   size_t real_size = size * nmemb;
   std::string *response = static_cast<std::string *>(userp);
+  // Reserve space to avoid frequent reallocations
+  if (response->capacity() < response->size() + real_size) {
+    response->reserve(response->size() + real_size + 4096);
+  }
   response->append(static_cast<char *>(contents), real_size);
   return real_size;
 }

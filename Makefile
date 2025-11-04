@@ -1,7 +1,7 @@
 # Llamaware Agent Makefile
 # Professional AI Agent with Command Execution
 
-.PHONY: all build clean test test-e2e test-e2e-docker package install docker-build preflight preflight-quick preflight-full preflight-ci setup install-deps-mac install-deps-ubuntu lint-yaml lint-all help
+.PHONY: all build clean test test-e2e test-e2e-docker package install docker-build preflight preflight-quick preflight-full preflight-ci full-check setup install-deps-mac install-deps-ubuntu lint-yaml lint-all help
 
 # Default target
 all: build
@@ -75,6 +75,11 @@ preflight-ci:
 	@echo "Running CI-style preflight checks..."
 	@CI=true ./package/scripts/preflight.sh
 
+# Run full check (clean, build, test, preflight-quick, preflight)
+full-check:
+	@echo "Running full check..."
+	@./scripts/full-check.sh
+
 # Run CI locally (simulate GitHub Actions)
 ci:
 	@echo "Running local CI simulation..."
@@ -139,6 +144,7 @@ help:
 	@echo "  preflight-quick    Run quick preflight checks"
 	@echo "  preflight-full     Run full preflight checks"
 	@echo "  preflight-ci       Run CI-style preflight checks"
+	@echo "  full-check         Run full check (clean, build, test, preflights)"
 	@echo ""
 	@echo "Docker:"
 	@echo "  docker-build       Build Docker image"

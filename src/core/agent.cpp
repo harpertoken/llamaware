@@ -972,7 +972,7 @@ void Agent::compress_context() {
     // Apply compression to memory
     memory_->compress_memory(summary);
 
-    std::cout << "✓ Context successfully compressed!" << std::endl;
+    std::cout << " Context successfully compressed!" << std::endl;
     std::cout << "Original interactions have been summarized and recent "
                  "context preserved."
               << std::endl;
@@ -1214,7 +1214,7 @@ void Agent::handle_checkpoint_command(const std::string &command) {
       std::cout << "Creating checkpoint '" << name << "'..." << std::endl;
       std::string checkpoint_id =
           Services::CheckpointService::create_checkpoint(name, description);
-      std::cout << "✓ Checkpoint created with ID: " << checkpoint_id
+      std::cout << " Checkpoint created with ID: " << checkpoint_id
                 << std::endl;
 
     } else if (action == "list") {
@@ -1270,8 +1270,7 @@ void Agent::handle_checkpoint_command(const std::string &command) {
       }
 
       if (Services::CheckpointService::delete_checkpoint(checkpoint_id)) {
-        std::cout << "✓ Checkpoint " << checkpoint_id << " deleted"
-                  << std::endl;
+        std::cout << " Checkpoint " << checkpoint_id << " deleted" << std::endl;
       } else {
         std::cout << "Error: Failed to delete checkpoint " << checkpoint_id
                   << std::endl;
@@ -1284,7 +1283,7 @@ void Agent::handle_checkpoint_command(const std::string &command) {
         keep_count = 10;
 
       Services::CheckpointService::cleanup_old_checkpoints(keep_count);
-      std::cout << "✓ Cleaned up old checkpoints, keeping " << keep_count
+      std::cout << " Cleaned up old checkpoints, keeping " << keep_count
                 << " most recent" << std::endl;
 
     } else if (action == "restore") {
@@ -1321,7 +1320,7 @@ void Agent::handle_checkpoint_command(const std::string &command) {
 
       if (Services::CheckpointService::restore_checkpoint(checkpoint_id,
                                                           options)) {
-        std::cout << "✓ Successfully restored from checkpoint " << checkpoint_id
+        std::cout << " Successfully restored from checkpoint " << checkpoint_id
                   << std::endl;
         std::cout << "Note: You may need to restart the application to see all "
                      "changes."
@@ -1433,7 +1432,7 @@ void Agent::handle_mcp_command(const std::string &command) {
         std::cout << "Server is already running." << std::endl;
       } else {
         // This would start the actual server in a full implementation
-        std::cout << "✓ MCP server '" << server_name << "' started (simulated)"
+        std::cout << " MCP server '" << server_name << "' started (simulated)"
                   << std::endl;
         std::cout << "Note: Full MCP server integration requires process "
                      "management implementation."
@@ -1450,7 +1449,7 @@ void Agent::handle_mcp_command(const std::string &command) {
 
       std::cout << "Stopping MCP server '" << server_name << "'..."
                 << std::endl;
-      std::cout << "✓ MCP server '" << server_name << "' stopped (simulated)"
+      std::cout << " MCP server '" << server_name << "' stopped (simulated)"
                 << std::endl;
 
     } else if (action == "resources") {
@@ -1666,7 +1665,7 @@ void Agent::handle_theme_command(const std::string &command) {
 
       if (Services::ThemeService::set_theme(theme_name)) {
         std::cout << Services::ThemeService::colorize_success(
-                         "✓ Theme set to: " + theme_name)
+                         " Theme set to: " + theme_name)
                   << std::endl;
       } else {
         std::cout << Services::ThemeService::colorize_error(
@@ -1755,7 +1754,7 @@ void Agent::handle_auth_command(const std::string &command) {
       }
 
       if (Services::AuthService::set_active_provider(provider_name)) {
-        std::cout << "✓ Active provider set to: " << provider_name << std::endl;
+        std::cout << " Active provider set to: " << provider_name << std::endl;
       } else {
         std::cout << "Error: Provider not found: " << provider_name
                   << std::endl;
@@ -1771,7 +1770,7 @@ void Agent::handle_auth_command(const std::string &command) {
       }
 
       if (Services::AuthService::set_api_key(provider_name, api_key)) {
-        std::cout << "✓ API key set for provider: " << provider_name
+        std::cout << " API key set for provider: " << provider_name
                   << std::endl;
       } else {
         std::cout << "Error: Failed to set API key for provider: "
@@ -1803,10 +1802,10 @@ void Agent::handle_auth_command(const std::string &command) {
       }
 
       if (Services::AuthService::test_provider_connection(provider_name)) {
-        std::cout << "✓ Connection test successful for: " << provider_name
+        std::cout << " Connection test successful for: " << provider_name
                   << std::endl;
       } else {
-        std::cout << "✗ Connection test failed for: " << provider_name
+        std::cout << " Connection test failed for: " << provider_name
                   << std::endl;
       }
 
@@ -1909,7 +1908,7 @@ void Agent::handle_sandbox_command(const std::string &command) {
 
     } else if (action == "cleanup") {
       Services::SandboxService::cleanup_old_containers();
-      std::cout << "✓ Cleaned up old sandbox containers" << std::endl;
+      std::cout << " Cleaned up old sandbox containers" << std::endl;
 
     } else {
       std::cout << "Unknown sandbox command: " << action << std::endl;
@@ -1968,7 +1967,7 @@ void Agent::handle_error_command(const std::string &command) {
 
     } else if (action == "clear") {
       Services::ErrorService::clear_error_log();
-      std::cout << "✓ Error log cleared" << std::endl;
+      std::cout << " Error log cleared" << std::endl;
 
     } else if (action == "export") {
       std::string export_path;
@@ -1978,7 +1977,7 @@ void Agent::handle_error_command(const std::string &command) {
       }
 
       if (Services::ErrorService::export_error_log(export_path)) {
-        std::cout << "✓ Error log exported to: " << export_path << std::endl;
+        std::cout << " Error log exported to: " << export_path << std::endl;
       } else {
         std::cout << "Error: Failed to export error log" << std::endl;
       }

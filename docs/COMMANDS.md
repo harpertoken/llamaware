@@ -135,7 +135,7 @@
 
 ## Documentation
 
-- [Setup](SETUP.md)
-- [Architecture](ARCHITECTURE.md)
-- [Development](DEVELOPMENT.md)
+- [Setup](setup.md)
+- [Architecture](architecture.md)
+- [Development](development.md)
 - [README](../README.md)

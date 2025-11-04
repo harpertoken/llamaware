@@ -8,12 +8,12 @@
 
 ### Quick Check
 ```bash
-make test-quick
+make test
 ```
 
 ### Full Validation
 ```bash
-make check
+make preflight-quick
 ```
 
 ### Production Check
@@ -42,15 +42,15 @@ grep -r "system(" src/ include/
 ## Validation Sequence
 
 ```bash
-make test-quick    # Development
-make check         # Major changes
-make preflight     # Production
+make test              # Development
+make preflight-quick   # Major changes
+make preflight         # Production
 ```
 
 ## Command Coverage
 
-**test-quick**: startup, shutdown, binary validation
-**check**: build process, functionality, help system
+**test**: startup, shutdown, binary validation
+**preflight-quick**: build process, functionality, help system
 **preflight**: environment, dependencies, structure, security
 
 ## Dependencies
@@ -122,6 +122,37 @@ ollama list
 - **Connection refused**: Check if port 11434 is available
 - **Model not found**: Run `ollama pull <model-name>` to download
 - **Permission issues**: May need to restart terminal after Ollama install
+
+## Development Workflow
+
+### Setup (One Time)
+```bash
+./scripts/setup-pre-commit.sh    # Git hooks setup
+./scripts/install-deps.sh        # Dependencies
+```
+
+### Daily Workflow
+```bash
+# While coding
+make test              # Quick validation
+
+# Before committing
+make preflight-quick   # Comprehensive check
+
+# Before pushing
+make preflight         # Full validation
+```
+
+### Git Hooks
+- **Pre-commit**: Automatic code quality checks
+- **Commit-msg**: Validates conventional commit format
+- **Pre-push**: Comprehensive validation
+
+### Best Practices
+- Run `make preflight` before major commits
+- Use conventional commit messages (feat:, fix:, docs:, etc.)
+- Keep commits small and focused
+- Test both online and offline modes
 
 ## Contributing
 Fork → branch → commit → push → pull request

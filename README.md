@@ -40,6 +40,10 @@
 * **scripts/** – build & report utilities
 * **docker/** – Docker and containerization files
 
+## Documentation
+
+See [docs/](docs/) for detailed documentation.
+
 ## Installation & Build
 
 ### Common Steps
@@ -54,6 +58,10 @@ cd llamaware
 **Ubuntu/Debian**
 
 ```bash
+# Use the automated script
+./scripts/install-deps.sh
+
+# Or install manually:
 sudo apt update
 sudo apt install -y build-essential cmake git libcurl4-openssl-dev
 # Optional: for PostgreSQL database support
@@ -64,9 +72,14 @@ make install-deps-ubuntu
 **macOS**
 
 ```bash
+# Use the automated script
+./scripts/install-deps.sh
+
+# Or install manually:
 brew install cmake
 # Optional: for PostgreSQL database support
 brew install libpqxx
+make install-deps-mac
 ```
 
 **Windows**
@@ -81,13 +94,7 @@ vcpkg install libpqxx
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release -- -j$(nproc)
-```
-
-### Optional: Generate Progress Report
-
-```bash
-./scripts/report.sh
+cmake --build build --config Release --parallel
 ```
 
 ## Running the Agent
@@ -262,6 +269,7 @@ This installs:
 **Workflow**
 
 * Use `help` inside the agent to explore commands
+* Run `make full-check` for comprehensive validation (clean, build, test, preflights)
 * Follow CI/CD guides for contributing
 * Run `pre-commit run --all-files` to check all files
 

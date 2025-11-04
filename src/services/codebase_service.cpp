@@ -43,7 +43,7 @@ std::string CodebaseService::analyze_structure(const std::string &path) {
 
   for (const auto &file : config_files) {
     if (std::filesystem::exists(std::filesystem::path(path) / file)) {
-      analysis << "  ✓ " << file << "\n";
+      analysis << "   " << file << "\n";
     }
   }
 
