@@ -14,7 +14,7 @@
 
 **Compiler**
 
-* C++17 compatible (GCC 9+, Clang 10+, MSVC 2019+)
+* C++20 compatible (GCC 10+, Clang 12+, MSVC 2019 16.11+)
 
 **Build System**
 
@@ -317,6 +317,21 @@ docker logs llamaware-agent
 # Restart agent
 docker-compose -f package/docker/docker-compose.yml restart llamaware-agent
 ```
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (SemVer):
+
+- **MAJOR**: Incompatible API changes
+- **MINOR**: Backward-compatible functionality additions
+- **PATCH**: Backward-compatible bug fixes
+
+**Version Sources (in priority order):**
+1. Git tags (e.g., `v0.0.8`)
+2. `VERSION` file in project root
+3. Default fallback version
+
+**Current Version:** Check with `./build/bin/llamaware-agent version`
 
 ## License
 

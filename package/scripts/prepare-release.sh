@@ -63,7 +63,7 @@ fi
 
 # Check version consistency
 print_step "Checking versions..."
-VERSION_HEADER=$(grep "LLAMAWARE_VERSION_STRING" include/version.h | cut -d'"' -f2)
+VERSION_HEADER=$(grep "LLAMAWARE_VERSION_STRING" build/include/version.h | cut -d'"' -f2)
 VERSION_RELEASE=$(grep "VERSION=" package/scripts/release.sh | cut -d'"' -f2)
 if [ "$VERSION_HEADER" != "$VERSION" ] || [ "$VERSION_RELEASE" != "$VERSION" ]; then
     print_error "Version mismatch: header=$VERSION_HEADER, release=$VERSION_RELEASE, expected=$VERSION"

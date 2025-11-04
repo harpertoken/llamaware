@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-# Get version from git tag if available
+# Get version from git tag if available, fallback to VERSION file
 find_package(Git)
 if(GIT_FOUND)
   execute_process(
@@ -13,22 +13,34 @@ if(GIT_FOUND)
   if(GIT_TAG)
     string(REGEX REPLACE "^v" "" PROJECT_VERSION ${GIT_TAG})
   else()
-    set(PROJECT_VERSION "0.1")
+    # Fallback to VERSION file
+    if(EXISTS "${CMAKE_SOURCE_DIR}/VERSION")
+      file(READ "${CMAKE_SOURCE_DIR}/VERSION" PROJECT_VERSION)
+      string(STRIP "${PROJECT_VERSION}" PROJECT_VERSION)
+    else()
+      set(PROJECT_VERSION "0.1.0")
+    endif()
   endif()
 else()
-  set(PROJECT_VERSION "0.1")
+  # Fallback to VERSION file
+  if(EXISTS "${CMAKE_SOURCE_DIR}/VERSION")
+    file(READ "${CMAKE_SOURCE_DIR}/VERSION" PROJECT_VERSION)
+    string(STRIP "${PROJECT_VERSION}" PROJECT_VERSION)
+  else()
+    set(PROJECT_VERSION "0.1.0")
+  endif()
 endif()
 
 project(LlamawareAgent VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 # Configure version header
-configure_file(include/version.h.in include/version.h @ONLY)
+configure_file(include/utils/version.h.in include/version.h @ONLY)
 
 # Include FetchContent for downloading dependencies
 include(FetchContent)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Generate compile_commands.json for clang-tidy

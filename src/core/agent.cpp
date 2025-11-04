@@ -354,9 +354,9 @@ void Agent::handle_direct_command(const std::string &input) {
     parts.push_back(params.substr(pos)); // Last part
 
     if (parts.size() >= 3) {
-      std::string filename = parts[0];
-      std::string old_text = parts[1];
-      std::string new_text = parts[2];
+      const std::string &filename = parts[0];
+      const std::string &old_text = parts[1];
+      const std::string &new_text = parts[2];
       int expected = (parts.size() > 3) ? std::stoi(parts[3]) : 1;
 
       auto edit_result = Services::FileService::replace_text_in_file(
