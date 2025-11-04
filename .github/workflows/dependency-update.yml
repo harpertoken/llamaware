@@ -44,7 +44,7 @@ jobs:
           fi
 
       - name: Update GitHub Actions
-        uses: renovatebot/github-action@v40.1.11
+        uses: renovatebot/github-action@v43.0.20
         with:
           configurationFile: .github/renovate.json
           token: ${{ secrets.GITHUB_TOKEN }}
