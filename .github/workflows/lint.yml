@@ -13,6 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            ~/.cache/apt
+          key: lint-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', '.github/workflows/lint.yml') }}
+          restore-keys: |
+            lint-${{ runner.os }}-
+
       - name: Install dependencies
         run: |
           sudo apt update

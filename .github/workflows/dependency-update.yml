@@ -1,0 +1,69 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Mondays at 6 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for CMake updates
+        run: |
+          echo "Checking for CMake dependency updates..."
+          # This is a placeholder - actual implementation would check for updates
+          # to dependencies like nlohmann-json, cpr, etc.
+
+      - name: Update vcpkg baseline (if exists)
+        run: |
+          if [ -f "vcpkg.json" ]; then
+            echo "Updating vcpkg baseline..."
+            # Update vcpkg baseline to latest
+            git clone https://github.com/Microsoft/vcpkg.git temp-vcpkg
+            LATEST_COMMIT=$(cd temp-vcpkg && git rev-parse HEAD)
+            if [ -f "vcpkg-configuration.json" ]; then
+              sed -i "s/\"baseline\": \".*\"/\"baseline\": \"$LATEST_COMMIT\"/" vcpkg-configuration.json
+            fi
+            rm -rf temp-vcpkg
+          fi
+
+      - name: Update GitHub Actions
+        uses: renovatebot/github-action@v40.1.11
+        with:
+          configurationFile: .github/renovate.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update dependencies'
+          title: 'chore(deps): automated dependency updates'
+          body: |
+            ## Automated Dependency Updates
+
+            This PR contains automated updates to project dependencies:
+
+            - Updated vcpkg baseline (if applicable)
+            - Updated GitHub Actions versions
+            - Security patches and bug fixes
+
+            Please review the changes before merging.
+          branch: chore/dependency-updates
+          delete-branch: true

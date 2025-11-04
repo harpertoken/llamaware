@@ -35,6 +35,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache CMake build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            ~/.cache/vcpkg
+            C:\vcpkg\installed
+          key: ${{ runner.os }}-${{ matrix.build_type }}-${{ hashFiles('CMakeLists.txt', 'vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.build_type }}-
+            ${{ runner.os }}-
+
+      - name: Cache dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
+      - name: Cache dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/var/homebrew/locks
+          key: ${{ runner.os }}-brew-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-brew-
+
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
