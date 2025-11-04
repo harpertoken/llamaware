@@ -142,11 +142,11 @@ nlohmann::json AIService::create_payload(const std::string &user_input,
       context;
 
   switch (mode_) {
-  case Core::Agent::Mode::MODE_TOGETHER: // Together AI
+  case Core::AgentMode::MODE_TOGETHER: // Together AI
     return create_standard_payload(
         "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free", user_input,
         system_prompt);
-  case Core::Agent::Mode::MODE_CEREBRAS: // Cerebras
+  case Core::AgentMode::MODE_CEREBRAS: // Cerebras
     return {{"model", "llama-4-maverick-17b-128e-instruct"},
             {"messages",
              {{{"role", "system"}, {"content", system_prompt}},
@@ -155,32 +155,32 @@ nlohmann::json AIService::create_payload(const std::string &user_input,
             {"max_completion_tokens", 4096},
             {"temperature", 0.7},
             {"top_p", 0.9}};
-  case Core::Agent::Mode::MODE_FIREWORKS: // Fireworks
+  case Core::AgentMode::MODE_FIREWORKS: // Fireworks
     return create_standard_payload(
         "accounts/fireworks/models/llama-v3-70b-instruct", user_input,
         system_prompt);
-  case Core::Agent::Mode::MODE_GROQ: // Groq
+  case Core::AgentMode::MODE_GROQ: // Groq
     return create_standard_payload("llama-3.1-70b-versatile", user_input,
                                    system_prompt);
-  case Core::Agent::Mode::MODE_DEEPSEEK: // DeepSeek
+  case Core::AgentMode::MODE_DEEPSEEK: // DeepSeek
     return create_standard_payload("deepseek-chat", user_input, system_prompt);
-  case Core::Agent::Mode::MODE_OPENAI: // OpenAI
+  case Core::AgentMode::MODE_OPENAI: // OpenAI
     return create_standard_payload("gpt-4", user_input, system_prompt);
-  case Core::Agent::Mode::MODE_LLAMA_3B: // Llama 3B (local)
+  case Core::AgentMode::MODE_LLAMA_3B: // Llama 3B (local)
     return {{"model", "llama3.2:3b"},
             {"stream", false},
             {"messages",
              {{{"role", "system"}, {"content", system_prompt}},
               {{"role", "user"}, {"content", user_input}}}}};
 
-  case Core::Agent::Mode::MODE_LLAMA_LATEST: // Llama latest (local)
+  case Core::AgentMode::MODE_LLAMA_LATEST: // Llama latest (local)
     return {{"model", "llama3.2:latest"},
             {"stream", false},
             {"messages",
              {{{"role", "system"}, {"content", system_prompt}},
               {{"role", "user"}, {"content", user_input}}}}};
 
-  case Core::Agent::Mode::MODE_LLAMA_31: // Llama 3.1 (local)
+  case Core::AgentMode::MODE_LLAMA_31: // Llama 3.1 (local)
     return {{"model", "llama3.1:latest"},
             {"stream", false},
             {"messages",
@@ -260,22 +260,22 @@ std::string AIService::chat(const std::string &user_input,
 
     // Set API key in appropriate header based on service
     switch (mode_) {
-    case Core::Agent::Mode::MODE_TOGETHER:  // Together AI
-    case Core::Agent::Mode::MODE_FIREWORKS: // Fireworks
-    case Core::Agent::Mode::MODE_GROQ:      // Groq
-    case Core::Agent::Mode::MODE_DEEPSEEK:  // DeepSeek
-    case Core::Agent::Mode::MODE_OPENAI:    // OpenAI
+    case Core::AgentMode::MODE_TOGETHER:  // Together AI
+    case Core::AgentMode::MODE_FIREWORKS: // Fireworks
+    case Core::AgentMode::MODE_GROQ:      // Groq
+    case Core::AgentMode::MODE_DEEPSEEK:  // DeepSeek
+    case Core::AgentMode::MODE_OPENAI:    // OpenAI
       headers["Authorization"] = "Bearer " + api_key_;
       break;
-    case Core::Agent::Mode::MODE_CEREBRAS: // Cerebras
+    case Core::AgentMode::MODE_CEREBRAS: // Cerebras
       headers["X-API-Key"] = api_key_;
       break;
-    case Core::Agent::Mode::MODE_LLAMA_3B: // Local Ollama
-    case Core::Agent::Mode::MODE_LLAMA_LATEST:
-    case Core::Agent::Mode::MODE_LLAMA_31:
+    case Core::AgentMode::MODE_LLAMA_3B: // Local Ollama
+    case Core::AgentMode::MODE_LLAMA_LATEST:
+    case Core::AgentMode::MODE_LLAMA_31:
       // No API key needed for local
       break;
-    case Core::Agent::Mode::MODE_UNSET:
+    case Core::AgentMode::MODE_UNSET:
       // No action
       break;
     }
@@ -285,15 +285,15 @@ std::string AIService::chat(const std::string &user_input,
     std::string json_body = payload.dump();
 
     WebResponse response;
-    if (mode_ == Core::Agent::Mode::MODE_TOGETHER ||
-        mode_ == Core::Agent::Mode::MODE_CEREBRAS ||
-        mode_ == Core::Agent::Mode::MODE_FIREWORKS ||
-        mode_ == Core::Agent::Mode::MODE_GROQ ||
-        mode_ == Core::Agent::Mode::MODE_DEEPSEEK ||
-        mode_ == Core::Agent::Mode::MODE_OPENAI ||
-        mode_ == Core::Agent::Mode::MODE_LLAMA_3B ||
-        mode_ == Core::Agent::Mode::MODE_LLAMA_LATEST ||
-        mode_ == Core::Agent::Mode::MODE_LLAMA_31) {
+    if (mode_ == Core::AgentMode::MODE_TOGETHER ||
+        mode_ == Core::AgentMode::MODE_CEREBRAS ||
+        mode_ == Core::AgentMode::MODE_FIREWORKS ||
+        mode_ == Core::AgentMode::MODE_GROQ ||
+        mode_ == Core::AgentMode::MODE_DEEPSEEK ||
+        mode_ == Core::AgentMode::MODE_OPENAI ||
+        mode_ == Core::AgentMode::MODE_LLAMA_3B ||
+        mode_ == Core::AgentMode::MODE_LLAMA_LATEST ||
+        mode_ == Core::AgentMode::MODE_LLAMA_31) {
       // All providers use POST
       response = web_service.post_json(url, json_body, headers);
     } else {
@@ -307,7 +307,7 @@ std::string AIService::chat(const std::string &user_input,
     }
 
     // Handle streaming response for Cerebras
-    if (mode_ == Core::Agent::Mode::MODE_CEREBRAS) {
+    if (mode_ == Core::AgentMode::MODE_CEREBRAS) {
       return parse_cerebras_stream(response.content);
     }
 
@@ -316,12 +316,12 @@ std::string AIService::chat(const std::string &user_input,
 
     // Handle different response formats
     switch (mode_) {
-    case Core::Agent::Mode::MODE_TOGETHER:  // Together AI
-    case Core::Agent::Mode::MODE_FIREWORKS: // Fireworks
-    case Core::Agent::Mode::MODE_GROQ:      // Groq
-    case Core::Agent::Mode::MODE_DEEPSEEK:  // DeepSeek
-    case Core::Agent::Mode::MODE_OPENAI:    // OpenAI
-    case Core::Agent::Mode::MODE_CEREBRAS:  // Cerebras
+    case Core::AgentMode::MODE_TOGETHER:  // Together AI
+    case Core::AgentMode::MODE_FIREWORKS: // Fireworks
+    case Core::AgentMode::MODE_GROQ:      // Groq
+    case Core::AgentMode::MODE_DEEPSEEK:  // DeepSeek
+    case Core::AgentMode::MODE_OPENAI:    // OpenAI
+    case Core::AgentMode::MODE_CEREBRAS:  // Cerebras
       if (json_response.contains("choices") &&
           !json_response["choices"].empty()) {
         auto &choice = json_response["choices"][0];
@@ -333,9 +333,9 @@ std::string AIService::chat(const std::string &user_input,
         }
       }
       break;
-    case Core::Agent::Mode::MODE_LLAMA_3B: // Local Ollama
-    case Core::Agent::Mode::MODE_LLAMA_LATEST:
-    case Core::Agent::Mode::MODE_LLAMA_31:
+    case Core::AgentMode::MODE_LLAMA_3B: // Local Ollama
+    case Core::AgentMode::MODE_LLAMA_LATEST:
+    case Core::AgentMode::MODE_LLAMA_31:
       if (json_response.contains("message") &&
           json_response["message"].contains("content")) {
         return json_response["message"]["content"].get<std::string>();
@@ -343,7 +343,7 @@ std::string AIService::chat(const std::string &user_input,
         return json_response["response"].get<std::string>();
       }
       break;
-    case Core::Agent::Mode::MODE_UNSET:
+    case Core::AgentMode::MODE_UNSET:
       // No action
       break;
     }
