@@ -1,12 +1,16 @@
 #pragma once
-#include "core/agent.h"
 #include <nlohmann/json.hpp>
 #include <string>
+
+// Forward declarations
+namespace Core {
+enum class AgentMode : std::uint8_t;
+}
 
 namespace Services {
 class AIService {
 private:
-  Core::Agent::Mode mode_;
+  Core::AgentMode mode_;
   std::string api_key_;
 
   [[nodiscard]] bool is_online_mode() const;
@@ -19,7 +23,7 @@ private:
   std::string parse_cerebras_stream(const std::string &response);
 
 public:
-  AIService(Core::Agent::Mode mode, const std::string &api_key = "");
+  AIService(Core::AgentMode mode, const std::string &api_key = "");
 
   std::string chat(const std::string &user_input, const std::string &context);
   bool is_available();

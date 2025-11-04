@@ -1,5 +1,5 @@
 #include "services/ai_service.h"
-#include "core/agent.h"
+#include "core/agent_mode.h"
 #include "services/web_service.h"
 #include "utils/config.h"
 #include <curl/curl.h>
@@ -12,16 +12,16 @@
 
 namespace Services {
 
-AIService::AIService(Core::Agent::Mode mode, const std::string &api_key)
+AIService::AIService(Core::AgentMode mode, const std::string &api_key)
     : mode_(mode), api_key_(api_key) {}
 
 bool AIService::is_online_mode() const {
-  return mode_ == Core::Agent::Mode::MODE_TOGETHER ||
-         mode_ == Core::Agent::Mode::MODE_CEREBRAS ||
-         mode_ == Core::Agent::Mode::MODE_FIREWORKS ||
-         mode_ == Core::Agent::Mode::MODE_GROQ ||
-         mode_ == Core::Agent::Mode::MODE_DEEPSEEK ||
-         mode_ == Core::Agent::Mode::MODE_OPENAI;
+  return mode_ == Core::AgentMode::MODE_TOGETHER ||
+         mode_ == Core::AgentMode::MODE_CEREBRAS ||
+         mode_ == Core::AgentMode::MODE_FIREWORKS ||
+         mode_ == Core::AgentMode::MODE_GROQ ||
+         mode_ == Core::AgentMode::MODE_DEEPSEEK ||
+         mode_ == Core::AgentMode::MODE_OPENAI;
 }
 
 bool AIService::is_available() {
@@ -37,41 +37,41 @@ std::string AIService::get_api_url() {
   if (std::getenv("TEST_MODE")) {
     // Use mock URLs for testing
     switch (mode_) {
-    case Core::Agent::Mode::MODE_TOGETHER:
+    case Core::AgentMode::MODE_TOGETHER:
       return "http://mock-together/v1/chat/completions";
-    case Core::Agent::Mode::MODE_CEREBRAS:
+    case Core::AgentMode::MODE_CEREBRAS:
       return "http://mock-cerebras/v1/chat/completions";
-    case Core::Agent::Mode::MODE_FIREWORKS:
+    case Core::AgentMode::MODE_FIREWORKS:
       return "http://mock-fireworks/inference/v1/chat/completions";
-    case Core::Agent::Mode::MODE_GROQ:
+    case Core::AgentMode::MODE_GROQ:
       return "http://mock-groq/openai/v1/chat/completions";
-    case Core::Agent::Mode::MODE_DEEPSEEK:
+    case Core::AgentMode::MODE_DEEPSEEK:
       return "http://mock-deepseek/v1/chat/completions";
-    case Core::Agent::Mode::MODE_OPENAI:
+    case Core::AgentMode::MODE_OPENAI:
       return "http://mock-openai/v1/chat/completions";
-    case Core::Agent::Mode::MODE_LLAMA_3B:
-    case Core::Agent::Mode::MODE_LLAMA_LATEST:
-    case Core::Agent::Mode::MODE_LLAMA_31:
+    case Core::AgentMode::MODE_LLAMA_3B:
+    case Core::AgentMode::MODE_LLAMA_LATEST:
+    case Core::AgentMode::MODE_LLAMA_31:
     default:
       return "http://mock-ollama:11434/api/chat";
     }
   } else {
     switch (mode_) {
-    case Core::Agent::Mode::MODE_TOGETHER:
+    case Core::AgentMode::MODE_TOGETHER:
       return "https://api.together.xyz/v1/chat/completions";
-    case Core::Agent::Mode::MODE_CEREBRAS:
+    case Core::AgentMode::MODE_CEREBRAS:
       return "https://api.cerebras.ai/v1/chat/completions";
-    case Core::Agent::Mode::MODE_FIREWORKS:
+    case Core::AgentMode::MODE_FIREWORKS:
       return "https://api.fireworks.ai/inference/v1/chat/completions";
-    case Core::Agent::Mode::MODE_GROQ:
+    case Core::AgentMode::MODE_GROQ:
       return "https://api.groq.com/openai/v1/chat/completions";
-    case Core::Agent::Mode::MODE_DEEPSEEK:
+    case Core::AgentMode::MODE_DEEPSEEK:
       return "https://api.deepseek.com/v1/chat/completions";
-    case Core::Agent::Mode::MODE_OPENAI:
+    case Core::AgentMode::MODE_OPENAI:
       return "https://api.openai.com/v1/chat/completions";
-    case Core::Agent::Mode::MODE_LLAMA_3B:
-    case Core::Agent::Mode::MODE_LLAMA_LATEST:
-    case Core::Agent::Mode::MODE_LLAMA_31:
+    case Core::AgentMode::MODE_LLAMA_3B:
+    case Core::AgentMode::MODE_LLAMA_LATEST:
+    case Core::AgentMode::MODE_LLAMA_31:
     default:
       return "http://localhost:11434/api/chat";
     }

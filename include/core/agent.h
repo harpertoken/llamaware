@@ -1,8 +1,6 @@
 #pragma once
+#include "core/agent_mode.h"
 #include "utils/config.h" // For LLAMAWARE_API
-#include <cstdint>
-
-// Forward declarations for STL types
 #include <memory>
 #include <string>
 #include <vector>
@@ -19,18 +17,7 @@ class AIService;
 namespace Core {
 class LLAMAWARE_API Agent {
 public:
-  enum class Mode : std::uint8_t {
-    MODE_UNSET = 0,
-    MODE_TOGETHER = 1,
-    MODE_LLAMA_3B = 2,
-    MODE_CEREBRAS = 3,
-    MODE_LLAMA_LATEST = 4,
-    MODE_LLAMA_31 = 5,
-    MODE_FIREWORKS = 6,
-    MODE_GROQ = 7,
-    MODE_DEEPSEEK = 8,
-    MODE_OPENAI = 9
-  };
+  using Mode = AgentMode; // Type alias for backward compatibility
 
 private:
   Mode mode_{Mode::MODE_UNSET};
