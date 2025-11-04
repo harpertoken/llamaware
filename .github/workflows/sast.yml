@@ -18,7 +18,7 @@ jobs:
     name: Semgrep SAST
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Run Semgrep
@@ -34,14 +34,14 @@ jobs:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
   bandit:
-    name: Bandit Python Security
+    name: Bandit
     runs-on: ubuntu-latest
     if: contains(github.event.head_commit.message, 'python') || contains(github.event.head_commit.message, '.py')
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -59,13 +59,13 @@ jobs:
           path: bandit-report.json
 
   trivy:
-    name: Trivy Security Scan
+    name: Trivy
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
