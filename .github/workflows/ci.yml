@@ -40,6 +40,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.build_type }}-
 
       - name: Setup
+        shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Linux" ]]; then
             sudo apt update
