@@ -333,6 +333,20 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer):
 
 **Current Version:** Check with `./build/bin/llamaware-agent version`
 
+**Release Process:**
+```bash
+# Bump version (patch/minor/major)
+./scripts/bump-version.sh patch
+
+# Commit and trigger release
+git add . && git commit -m "feat: release v0.0.9 [release]"
+git push origin main
+```
+
+**Auto-Release Triggers:**
+- Commit message contains `[release]` - triggers auto-tagging
+- Add `[major]` or `[minor]` for version bump type (default: patch)
+
 ## License
 
 MIT License
