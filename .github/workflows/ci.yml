@@ -106,7 +106,7 @@ jobs:
           files: build/coverage/coverage.info
           flags: unittests
           name: codecov
-        fail_ci_if_error: false
+          fail_ci_if_error: false
 
   lint:
     name: Lint
