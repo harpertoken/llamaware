@@ -58,8 +58,9 @@ std::vector<unsigned char>
 Services::AuthService::hex_to_bytes(const std::string &hex) {
   std::vector<unsigned char> bytes;
   for (size_t i = 0; i < hex.length(); i += 2) {
-    std::string byteString = hex.substr(i, 2);
-    unsigned char byte = (unsigned char)strtol(byteString.c_str(), nullptr, 16);
+    std::string byte_string = hex.substr(i, 2);
+    auto byte =
+        static_cast<unsigned char>(strtol(byte_string.c_str(), nullptr, 16));
     bytes.push_back(byte);
   }
   return bytes;
@@ -116,12 +117,13 @@ bool Services::AuthService::save_encryption_key() {
   std::vector<unsigned char> ciphertext(encryption_key.size() +
                                         EVP_MAX_BLOCK_LENGTH);
 
-  int len;
-  int ciphertext_len;
+  int len = 0;
+  int ciphertext_len = 0;
 
   EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-  if (!ctx)
+  if (!ctx) {
     return false;
+  }
 
   if (EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, derived_key.data(),
                          iv.data()) != 1) {

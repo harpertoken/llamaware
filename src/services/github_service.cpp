@@ -12,7 +12,7 @@ namespace Services {
 
 std::string GitHubService::get_github_token() {
   const char *token = std::getenv("GITHUB_TOKEN");
-  if (token) {
+  if (token != nullptr) {
     return std::string(token);
   }
   return "";
@@ -42,9 +42,8 @@ WebResponse GitHubService::make_github_request(const std::string &endpoint,
 
   if (method == "POST") {
     return WebService::post_json(url, body, headers);
-  } else {
-    return WebService::fetch_with_headers(url, headers);
   }
+  return WebService::fetch_with_headers(url, headers);
 }
 
 std::string GitHubService::get_repo_info(const std::string &owner,

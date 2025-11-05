@@ -466,9 +466,8 @@ std::string MCPService::get_server_status(const std::string &server_name) {
 
   if (ping_server(server_name)) {
     return "Running";
-  } else {
-    return "Unresponsive";
   }
+  return "Unresponsive";
 }
 
 void MCPService::cleanup_dead_servers() {

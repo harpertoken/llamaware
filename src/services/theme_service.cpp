@@ -90,14 +90,18 @@ void ThemeService::initialize_default_themes() {
 
 std::string ThemeService::get_ansi_color_code(const std::string &color) {
   // Convert hex colors to ANSI escape codes
-  if (color == "#00FFFF")
+  if (color == "#00FFFF") {
     return "\033[96m"; // Bright cyan
-  if (color == "#FF00FF")
+  }
+  if (color == "#FF00FF") {
     return "\033[95m"; // Bright magenta
-  if (color == "#00FF00")
+  }
+  if (color == "#00FF00") {
     return "\033[92m"; // Bright green
-  if (color == "#FFFF00")
+  }
+  if (color == "#FFFF00") {
     return "\033[93m"; // Bright yellow
+  }
   if (color == "#FF0080")
     return "\033[91m"; // Bright red
   if (color == "#4A9EFF")
@@ -412,8 +416,9 @@ void ThemeService::reset_colors() { std::cout << "\033[0m" << std::flush; }
 bool ThemeService::is_color_supported() {
   // Check if terminal supports colors
   const char *term = std::getenv("TERM");
-  if (!term)
+  if (term == nullptr) {
     return false;
+  }
 
   std::string term_str(term);
   return term_str.find("color") != std::string::npos ||
