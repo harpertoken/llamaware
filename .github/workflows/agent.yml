@@ -16,94 +16,87 @@ permissions:
   repository-projects: write
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      manifest_name: ${{ steps.read.outputs.name }}
+      manifest_description: ${{ steps.read.outputs.description }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: read
+        name: read manifest
+        run: |
+          NAME=$(grep '^name:' agent | awk '{print $2}')
+          DESC=$(grep '^description:' agent | cut -d':' -f2- | xargs)
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "description=$DESC" >> $GITHUB_OUTPUT
+
   health-check:
+    needs: setup
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup Environment
+      - name: setup environment
         run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
 
-      - name: Configure Build
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: configure build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
-      - name: Run Diagnostics and Generate Report
+      - name: run diagnostics and generate report
         id: report
         run: |
-          echo "Running Llamaware Agent Health Diagnostics..."
+          echo "Running ${{ needs.setup.outputs.manifest_name }} diagnostics..."
+          echo "${{ needs.setup.outputs.manifest_description }}"
           echo "---------------------------------------------"
 
-          # --- Build phase ---
           BUILD_LOG=$(cmake --build build --config Release 2>&1 || true)
           if echo "$BUILD_LOG" | grep -q "error:"; then
-            BUILD_STATUS="Failed"
-            BUILD_PERCENT=40
+            BUILD_STATUS="Failed"; BUILD_PERCENT=40
           else
-            BUILD_STATUS="Passed"
-            BUILD_PERCENT=100
+            BUILD_STATUS="Passed"; BUILD_PERCENT=100
           fi
 
-          # --- Test phase ---
           TEST_LOG=$(ctest --test-dir build --output-on-failure 2>&1 || true)
           if echo "$TEST_LOG" | grep -q "100% tests passed"; then
-            TEST_STATUS="Passed"
-            TEST_PERCENT=100
+            TEST_STATUS="Passed"; TEST_PERCENT=100
           elif echo "$TEST_LOG" | grep -q "tests failed"; then
-            TEST_STATUS="Partial"
-            TEST_PERCENT=60
+            TEST_STATUS="Partial"; TEST_PERCENT=60
           else
-            TEST_STATUS="Unknown"
-            TEST_PERCENT=70
+            TEST_STATUS="Unknown"; TEST_PERCENT=70
           fi
 
-          # --- Quality phase ---
           TODO_COUNT=$(grep -r "TODO\\|FIXME\\|HACK" src/ include/ 2>/dev/null | wc -l || echo "0")
           if [ "$TODO_COUNT" -gt 0 ]; then
-            QUALITY_STATUS="$TODO_COUNT issue(s)"
-            QUALITY_PERCENT=70
+            QUALITY_STATUS="$TODO_COUNT issue(s)"; QUALITY_PERCENT=70
           else
-            QUALITY_STATUS="Clean"
-            QUALITY_PERCENT=100
+            QUALITY_STATUS="Clean"; QUALITY_PERCENT=100
           fi
 
-          # --- Preflight phase ---
           if cmake --build build --target preflight > /dev/null 2>&1; then
-            PREFLIGHT_STATUS="Passed"
-            PREFLIGHT_PERCENT=100
+            PREFLIGHT_STATUS="Passed"; PREFLIGHT_PERCENT=100
           else
-            PREFLIGHT_STATUS="Review"
-            PREFLIGHT_PERCENT=60
+            PREFLIGHT_STATUS="Review"; PREFLIGHT_PERCENT=60
           fi
 
-          # --- Overall score ---
           TOTAL=$((BUILD_PERCENT + TEST_PERCENT + QUALITY_PERCENT + PREFLIGHT_PERCENT))
           AVG=$((TOTAL / 4))
-          if [ "$AVG" -ge 90 ]; then
-            OVERALL="Operational"
-          elif [ "$AVG" -ge 70 ]; then
-            OVERALL="Degraded"
-          else
-            OVERALL="Unstable"
-          fi
+          if [ "$AVG" -ge 90 ]; then OVERALL="Operational"
+          elif [ "$AVG" -ge 70 ]; then OVERALL="Degraded"
+          else OVERALL="Unstable"; fi
 
-          # --- Progress bar helper ---
           progress_bar() {
-            local percent=$1
-            local done=$((percent/10))
-            local remain=$((10-done))
-            printf "["
-            printf "%0.s#" $(seq 1 $done)
-            printf "%0.s." $(seq 1 $remain)
+            local percent=$1; local done=$((percent/10)); local remain=$((10-done))
+            printf "["; printf "%0.s#" $(seq 1 $done); printf "%0.s." $(seq 1 $remain)
             printf "] %s%%" "$percent"
           }
 
-          # --- Markdown summary ---
           {
-            echo "## Llamaware Agent"
+            echo "## ${{ needs.setup.outputs.manifest_name }}"
             echo ""
             echo "**Build:** $(progress_bar $BUILD_PERCENT) ($BUILD_STATUS)"
             echo "**Tests:** $(progress_bar $TEST_PERCENT) ($TEST_STATUS)"
@@ -117,7 +110,7 @@ jobs:
           cat report.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Post Health Report
+      - name: post health report
         uses: actions/github-script@v8
         with:
           script: |
@@ -134,7 +127,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Process TODOs
+      - name: process todos
         uses: actions/github-script@v8
         with:
           script: |
@@ -161,7 +154,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: Assign Milestone
+      - name: assign milestone
         uses: actions/github-script@v8
         with:
           script: |
