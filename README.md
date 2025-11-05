@@ -1,6 +1,7 @@
 # Llamaware
 
 [![CI/CD](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml)
+[![agent](https://github.com/harpertoken/llamaware/actions/workflows/agent.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/agent.yml)
 
 **Llamaware** is a modular AI agent for development — designed for **stability**, **extensibility**, and **security**.
 It provides core systems for file management, sessions, extensions, AI providers, and GitHub automation.
