@@ -146,11 +146,13 @@ Enabled automatically when `libpqxx` is detected at build time.
 
 ## GitHub Bot
 
+The agent includes automated GitHub integration for enhanced project management.
+
 **Features**
 
-* Health checks (build/tests/quality)
-* TODO tracking and sub-issue creation
-* Automatic milestone tagging
+* **Health Checks**: Runs on pull requests to verify builds, tests, code quality (TODOs/FIXMEs), and preflight checks, posting detailed reports with progress bars and overall status (Operational/Degraded/Unstable).
+* **TODO Management**: Automatically creates sub-issues for TODO items found in issue descriptions, with proper labeling and linking.
+* **Milestone Assignment**: Assigns appropriate milestones to pull requests based on keywords (e.g., 'feature' → Next Release, 'bug'/'fix' → Bug Fixes, 'refactor' → Technical Debt).
 ```
 
 ---
