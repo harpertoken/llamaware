@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="0.1"
+VERSION=$(cat ../../VERSION | tr -d '\n')
 RELEASE_DIR="release/v${VERSION}"
 
 echo "Building release v${VERSION}..."

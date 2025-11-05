@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="0.1"
+VERSION=$(cat ../../VERSION | tr -d '\n')
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -64,7 +64,7 @@ fi
 # Check version consistency
 print_step "Checking versions..."
 VERSION_HEADER=$(grep "LLAMAWARE_VERSION_STRING" build/include/version.h | cut -d'"' -f2)
-VERSION_RELEASE=$(grep "VERSION=" package/scripts/release.sh | cut -d'"' -f2)
+VERSION_RELEASE=$(cat ../../VERSION | tr -d '\n')
 if [ "$VERSION_HEADER" != "$VERSION" ] || [ "$VERSION_RELEASE" != "$VERSION" ]; then
     print_error "Version mismatch: header=$VERSION_HEADER, release=$VERSION_RELEASE, expected=$VERSION"
     exit 1
