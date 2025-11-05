@@ -22,57 +22,106 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: setup
+      - name: Setup Environment
         run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
 
-      - name: build
+      - name: Configure Build
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --config Release
 
-      - name: check
+      - name: Run Diagnostics and Generate Report
+        id: report
         run: |
-          cat > report.md << 'EOF'
-          ## Llamaware Agent
+          echo "Running Llamaware Agent Health Diagnostics..."
+          echo "---------------------------------------------"
 
-          **Status**
-          ██████████ 100% (Operational)
+          # --- Build phase ---
+          BUILD_LOG=$(cmake --build build --config Release 2>&1 || true)
+          if echo "$BUILD_LOG" | grep -q "error:"; then
+            BUILD_STATUS="Failed"
+            BUILD_PERCENT=40
+          else
+            BUILD_STATUS="Passed"
+            BUILD_PERCENT=100
+          fi
 
-          **Build**
-          ██████████ 100% (Clean)
+          # --- Test phase ---
+          TEST_LOG=$(ctest --test-dir build --output-on-failure 2>&1 || true)
+          if echo "$TEST_LOG" | grep -q "100% tests passed"; then
+            TEST_STATUS="Passed"
+            TEST_PERCENT=100
+          elif echo "$TEST_LOG" | grep -q "tests failed"; then
+            TEST_STATUS="Partial"
+            TEST_PERCENT=60
+          else
+            TEST_STATUS="Unknown"
+            TEST_PERCENT=70
+          fi
 
-          **Tests**
-          ██████████ 100% (Passing)
-          EOF
-
-          TODO_COUNT=$(grep -r "TODO\|FIXME\|HACK" src/ include/ \
-            2>/dev/null | grep -v "Find TODO\|TODO comments\|codebase\|FIXME\|HACK" \
-            | wc -l || echo "0")
-
+          # --- Quality phase ---
+          TODO_COUNT=$(grep -r "TODO\\|FIXME\\|HACK" src/ include/ 2>/dev/null | wc -l || echo "0")
           if [ "$TODO_COUNT" -gt 0 ]; then
-            echo "**Quality**" >> report.md
-            echo "███████░░░ 70% ($TODO_COUNT items)" >> report.md
+            QUALITY_STATUS="$TODO_COUNT issue(s)"
+            QUALITY_PERCENT=70
           else
-            echo "**Quality**" >> report.md
-            echo "██████████ 100% (Clean)" >> report.md
+            QUALITY_STATUS="Clean"
+            QUALITY_PERCENT=100
           fi
 
+          # --- Preflight phase ---
           if cmake --build build --target preflight > /dev/null 2>&1; then
-            echo "**Checks**" >> report.md
-            echo "██████████ 100% (Passed)" >> report.md
+            PREFLIGHT_STATUS="Passed"
+            PREFLIGHT_PERCENT=100
           else
-            echo "**Checks**" >> report.md
-            echo "██████░░░░ 60% (Review)" >> report.md
+            PREFLIGHT_STATUS="Review"
+            PREFLIGHT_PERCENT=60
           fi
 
-      - name: post
+          # --- Overall score ---
+          TOTAL=$((BUILD_PERCENT + TEST_PERCENT + QUALITY_PERCENT + PREFLIGHT_PERCENT))
+          AVG=$((TOTAL / 4))
+          if [ "$AVG" -ge 90 ]; then
+            OVERALL="Operational"
+          elif [ "$AVG" -ge 70 ]; then
+            OVERALL="Degraded"
+          else
+            OVERALL="Unstable"
+          fi
+
+          # --- Progress bar helper ---
+          progress_bar() {
+            local percent=$1
+            local done=$((percent/10))
+            local remain=$((10-done))
+            printf "["
+            printf "%0.s#" $(seq 1 $done)
+            printf "%0.s." $(seq 1 $remain)
+            printf "] %s%%" "$percent"
+          }
+
+          # --- Markdown summary ---
+          {
+            echo "## Llamaware Agent"
+            echo ""
+            echo "**Build:** $(progress_bar $BUILD_PERCENT) ($BUILD_STATUS)"
+            echo "**Tests:** $(progress_bar $TEST_PERCENT) ($TEST_STATUS)"
+            echo "**Quality:** $(progress_bar $QUALITY_PERCENT) ($QUALITY_STATUS)"
+            echo "**Checks:** $(progress_bar $PREFLIGHT_PERCENT) ($PREFLIGHT_STATUS)"
+            echo ""
+            echo "**Overall:** $OVERALL (${AVG}%)"
+          } | tee report.md
+
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          cat report.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post Health Report
         uses: actions/github-script@v8
         with:
           script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('report.md', 'utf8');
+            const report = `${{ steps.report.outputs.report }}`;
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -85,13 +134,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
-      - name: process
+      - name: Process TODOs
         uses: actions/github-script@v8
         with:
           script: |
             const todos = [...context.payload.issue.body.matchAll(/TODO:\s*(.+)/gi)];
-
             for (const [, title] of todos) {
               await github.rest.issues.create({
                 owner: context.repo.owner,
@@ -101,14 +148,12 @@ jobs:
                 labels: ['todo']
               });
             }
-
             if (todos.length) {
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `Created ${todos.length} sub-issue${
-                  todos.length > 1 ? 's' : ''}`
+                body: `Created ${todos.length} sub-issue${todos.length > 1 ? 's' : ''}.`
               });
             }
 
@@ -116,26 +161,23 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: assign
+      - name: Assign Milestone
         uses: actions/github-script@v8
         with:
           script: |
             const content = `${context.payload.pull_request.title} ${
               context.payload.pull_request.body || ''}`.toLowerCase();
-
             const map = {
               'Next Release': ['feature'],
               'Bug Fixes': ['bug', 'fix'],
               'Technical Debt': ['refactor']
             };
-
             for (const [name, keywords] of Object.entries(map)) {
               if (keywords.some(k => content.includes(k))) {
                 const { data } = await github.rest.issues.listMilestones({
                   owner: context.repo.owner,
                   repo: context.repo.repo
                 });
-
                 const milestone = data.find(m => m.title === name);
                 if (milestone) {
                   await github.rest.issues.update({
@@ -144,7 +186,6 @@ jobs:
                     repo: context.repo.repo,
                     milestone: milestone.number
                   });
-
                   await github.rest.issues.createComment({
                     issue_number: context.issue.number,
                     owner: context.repo.owner,
