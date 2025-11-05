@@ -15,26 +15,26 @@ permissions:
 
 jobs:
   build:
-    name: build (${{ matrix.os_short }}, ${{ toLower(matrix.build_type) }})
+    name: build (${{ matrix.os_short }}, ${{ matrix.build_type == 'Release' && 'release' || 'debug' }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             os_short: ubuntu
-            build_type: Release
+            build_type: release
           - os: ubuntu-latest
             os_short: ubuntu
-            build_type: Debug
+            build_type: debug
           - os: macos-latest
             os_short: macos
-            build_type: Release
+            build_type: release
           - os: macos-latest
             os_short: macos
-            build_type: Debug
+            build_type: debug
           - os: windows-latest
             os_short: windows
-            build_type: Release
+            build_type: release
 
     steps:
       - uses: actions/checkout@v5
