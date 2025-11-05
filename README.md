@@ -150,20 +150,6 @@ Enabled automatically when `libpqxx` is detected at build time.
 * Health checks (build/tests/quality)
 * TODO tracking and sub-issue creation
 * Automatic milestone tagging
-
-**Config (`.llamaware-agent.yml`)**
-
-```yaml
-name: llamaware-agent
-version: 1.0.0
-features:
-  - health_checks
-  - todo_management
-  - milestone_assignment
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
 ```
 
 ---
