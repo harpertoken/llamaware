@@ -27,8 +27,8 @@ jobs:
       - id: read
         name: read manifest
         run: |
-          NAME=$(grep '^name:' agent | awk '{print $2}')
-          DESC=$(grep '^description:' agent | cut -d':' -f2- | xargs)
+          NAME=$(grep '^name:' .agent | awk '{print $2}')
+          DESC=$(grep '^description:' .agent | cut -d':' -f2- | xargs)
           echo "name=$NAME" >> $GITHUB_OUTPUT
           echo "description=$DESC" >> $GITHUB_OUTPUT
 
