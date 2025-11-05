@@ -1,4 +1,4 @@
-name: llamaware-agent
+name: agent
 
 on:
   pull_request:
@@ -22,17 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup
+      - name: setup
         run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
 
-      - name: Build
+      - name: build
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
 
-      - name: Diagnostics
+      - name: check
         run: |
           cat > report.md << 'EOF'
           ## Llamaware Agent
@@ -67,7 +67,7 @@ jobs:
             echo "██████░░░░ 60% (Review)" >> report.md
           fi
 
-      - name: Post
+      - name: post
         uses: actions/github-script@v8
         with:
           script: |
@@ -86,7 +86,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Process
+      - name: process
         uses: actions/github-script@v8
         with:
           script: |
@@ -116,7 +116,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: Assign
+      - name: assign
         uses: actions/github-script@v8
         with:
           script: |

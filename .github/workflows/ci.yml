@@ -1,4 +1,4 @@
-name: CI/CD
+name: ci
 
 on:
   push:
@@ -15,7 +15,6 @@ permissions:
 
 jobs:
   build:
-    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Cache
+      - name: cache
         uses: actions/cache@v4
         with:
           path: |
@@ -39,7 +38,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.build_type }}-
 
-      - name: Setup
+      - name: setup
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Linux" ]]; then
@@ -61,7 +60,7 @@ jobs:
             "
           fi
 
-      - name: Build
+      - name: build
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -75,7 +74,7 @@ jobs:
           fi
           cmake --build build --config ${{ matrix.build_type }}
 
-      - name: Preflight
+      - name: test
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -92,7 +91,6 @@ jobs:
             build/bin/Release/llamaware-agent.exe
 
   coverage:
-    name: Coverage
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name != 'release'
@@ -111,7 +109,6 @@ jobs:
           fail_ci_if_error: false
 
   lint:
-    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -125,7 +122,6 @@ jobs:
           echo "✅ Lint check completed (detailed linting handled by pre-commit hooks)"
 
   e2e:
-    name: E2E
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     steps:
@@ -139,7 +135,6 @@ jobs:
           path: tests/e2e/e2e_test.log
 
   docker:
-    name: Docker
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'release'
     continue-on-error: true
