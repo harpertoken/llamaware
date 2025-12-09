@@ -21,7 +21,7 @@ jobs:
   codeql:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: github/codeql-action/init@v4
         with:
           languages: cpp
@@ -37,7 +37,7 @@ jobs:
     name: sast
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: fs
@@ -53,7 +53,7 @@ jobs:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential \
@@ -73,7 +73,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential \
