@@ -22,7 +22,7 @@ jobs:
       manifest_name: ${{ steps.read.outputs.name }}
       manifest_description: ${{ steps.read.outputs.description }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - id: read
         name: read manifest
@@ -37,7 +37,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: setup environment
         run: |
@@ -126,7 +126,7 @@ jobs:
     if: github.event_name == 'issues' && contains(github.event.issue.body, 'TODO')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: process todos
         uses: actions/github-script@v8
         with:
