@@ -149,7 +149,7 @@ if(APPLE)
         set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
     else()
         # Use current system version to avoid linker warnings with Homebrew libraries
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "26.0" CACHE STRING "Minimum macOS version" FORCE)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
     endif()
 
     # Use Homebrew's OpenSSL on macOS/arm64
