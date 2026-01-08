@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -21,7 +21,7 @@ repos:
     hooks:
       - id: clang-format
         name: clang-format
-        entry: clang-format
+        entry: /opt/homebrew/bin/clang-format
         language: system
         files: \.(cpp|hpp|c|h|cc|cxx)$
         args: [-i]
