@@ -18,7 +18,10 @@ permissions:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'harpertoken'
+    if: >
+      github.repository_owner == 'harpertoken'
+      && github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true
     outputs:
       manifest_name: ${{ steps.read.outputs.name }}
       manifest_description: ${{ steps.read.outputs.description }}
@@ -35,7 +38,10 @@ jobs:
 
   health-check:
     needs: setup
-    if: github.repository_owner == 'harpertoken'
+    if: >
+      github.repository_owner == 'harpertoken'
+      && github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
