@@ -19,8 +19,15 @@ docs:
 
 ci:
   - changed-files:
-      - any-glob-to-any-file: ['.github/**', '**/Dockerfile*', 'docker-compose*', '*.yml', '*.yaml']
-      - any-glob-to-any-file: ['.gitlab-ci*', '.travis*', 'Jenkinsfile*', 'Makefile']
+      - any-glob-to-any-file:
+          - '.github/**'
+          - '**/Dockerfile*'
+          - 'docker-compose*'
+      - any-glob-to-any-file:
+          - '.gitlab-ci*'
+          - '.travis*'
+          - 'Jenkinsfile*'
+          - 'Makefile'
 
 config:
   - changed-files:
