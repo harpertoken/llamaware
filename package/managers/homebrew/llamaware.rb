@@ -3,7 +3,7 @@ class Llamaware < Formula
   homepage "https://github.com/harpertoken/llamaware"
   url "https://github.com/harpertoken/llamaware/archive/v0.1.tar.gz"
   sha256 "d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed"
-  license "MIT"
+  license "Apache-2.0"
 
   depends_on "cmake" => :build
   depends_on "cpr"

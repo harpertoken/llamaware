@@ -1,16 +1,16 @@
 # Contributing to Llamaware
 
-Thank you for your interest in contributing to **Llamaware**! This guide outlines how to set up your environment, follow coding standards, and submit high-quality contributions.
+Thank you for your interest in contributing to Llamaware. This guide outlines how to set up your environment, follow coding standards, and submit contributions.
 
----
+## Getting started
 
-## Development Setup
+The project uses C++20, CMake, and various libraries. It may be challenging to set up initially. We are working on improving the build process.
 
 ### Prerequisites
 
-* **C++20** compiler (GCC 10+, Clang 12+, MSVC 2019 16.11+)
-* **CMake** 3.20+
-* **Git** with pre-commit hook support
+- C++20 compiler (GCC 10+, Clang 12+, MSVC 2019 16.11+)
+- CMake 3.20+
+- Git with pre-commit hook support
 
 ### Platform Dependencies
 
@@ -49,29 +49,32 @@ cmake --build build --config Release
 cmake --build build --target test
 
 # Run preflight
-make preflight  # Linux/macOS
-cmake --build build --target preflight --config Release  # Windows
+make preflight
 ```
-
----
 
 ## Development Guidelines
 
+We are less concerned with low-level issues, such as naming conventions and indentation style. However, no topic that can help produce better code is out of bounds.
+
 ### Code Standards
 
-* Use **C++20** features appropriately
-* Follow **Conventional Commits** (`feat:`, `fix:`, `docs:`, etc.)
-* Apply **RAII** and modern C++ idioms
-* Use **forward declarations** to reduce dependencies
-* Prefer **meaningful identifiers** and clear comments
-* Maintain **exception safety** and robust error handling
+- Use C++20 features appropriately
+- Follow Conventional Commits (feat:, fix:, docs:, etc.)
+- Apply RAII and modern C++ idioms
+- Use forward declarations to reduce dependencies
+- Prefer meaningful identifiers and clear comments
+- Maintain exception safety and robust error handling
+
+Our initial set of standards may be too strict. We expect to have to introduce more flexibility to better accommodate real-world needs. We also need more guidelines.
 
 ### Architecture
 
-* Modular design with clear separation of concerns
-* **Service-oriented** structure (`Services` namespace)
-* Use **PIMPL** for ABI stability when needed
-* Apply **dependency injection** for testability
+- Modular design with clear separation of concerns
+- Service-oriented structure (Services namespace)
+- Use PIMPL for ABI stability when needed
+- Apply dependency injection for testability
+
+You will find some of the architecture decisions contrary to your expectations or even contrary to your experience. If we have not suggested that you change your approach in any way, we have failed.
 
 ### Commit Format
 
@@ -83,11 +86,11 @@ fix(ci): resolve windows build issue
 docs(readme): update installation guide
 ```
 
-Keep subject lines under **60 characters**.
-
----
+Keep subject lines under 60 characters.
 
 ## Pull Request Process
+
+We do not expect you to understand all the guidelines before trying to contribute. The rules are meant for gradual introduction into your workflow.
 
 ### Before Submitting
 
@@ -99,21 +102,19 @@ Keep subject lines under **60 characters**.
 
 ### PR Checklist
 
-* [ ] Code follows project style guidelines
-* [ ] All tests pass locally
-* [ ] Pre-commit hooks pass
-* [ ] CI/CD pipeline passes (Linux/macOS/Windows)
-* [ ] Documentation updated
-* [ ] Security considerations reviewed
+- Code follows project style guidelines
+- All tests pass locally
+- Pre-commit hooks pass
+- CI/CD pipeline passes (Linux/macOS/Windows)
+- Documentation updated
+- Security considerations reviewed
 
 ### Review Process
 
-* PRs require maintainer review
-* Address feedback promptly
-* Keep PRs focused and scoped
-* Rebase on `main` before merging
-
----
+- PRs require maintainer review
+- Address feedback promptly
+- Keep PRs focused and scoped
+- Rebase on main before merging
 
 ## Testing
 
@@ -136,41 +137,35 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --target coverage
 ```
 
----
-
 ## Issue Reporting
 
 ### Bug Reports
 
-* Use the bug report template
-* Include OS and compiler details
-* Provide minimal reproduction steps
-* Attach logs or error outputs
+- Use the bug report template
+- Include OS and compiler details
+- Provide minimal reproduction steps
+- Attach logs or error outputs
 
 ### Feature Requests
 
-* Use the feature request template
-* Explain motivation and use case
-* Consider complexity and alternatives
+- Use the feature request template
+- Explain motivation and use case
+- Consider complexity and alternatives
 
----
+You will find some of our processes obvious or even trivial. Please remember that one purpose of a guideline is to help someone who is less experienced or coming from a different background or language to get up to speed.
 
 ## Security
 
-* Report vulnerabilities via **GitHub Security Advisories**
-* Follow secure coding best practices
-* Validate all inputs and handle errors gracefully
-* Use static analysis tools (`clang-tidy` configured)
-
----
+- Report vulnerabilities via GitHub Security Advisories
+- Follow secure coding best practices
+- Validate all inputs and handle errors gracefully
+- Use static analysis tools (clang-tidy configured)
 
 ## Getting Help
 
-* Check existing issues and discussions
-* Review documentation and examples
-* Ask focused, well-researched questions
-
----
+- Check existing issues and discussions
+- Review documentation and examples
+- Ask focused, well-researched questions
 
 ## License
 
