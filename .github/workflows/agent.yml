@@ -50,7 +50,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential \
-            libcurl4-openssl-dev libxattr-dev libssl-dev linux-libc-dev
+            libcurl4-openssl-dev libattr1-dev libssl-dev linux-libc-dev
 
       - name: configure build
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
