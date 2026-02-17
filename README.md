@@ -1,186 +1,99 @@
-# Llamaware
-
 [![CI/CD](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/ci.yml)
 [![agent](https://github.com/harpertoken/llamaware/actions/workflows/agent.yml/badge.svg)](https://github.com/harpertoken/llamaware/actions/workflows/agent.yml)
 
-**Llamaware** is a modular AI agent for development — designed for **stability**, **extensibility**, and **security**.
-It provides core systems for file management, sessions, extensions, AI providers, and GitHub automation.
+<img width="648" height="698" alt="Screenshot 2026-02-17 at 7 29 53 PM" src="https://github.com/user-attachments/assets/b3f9b585-3f8d-4ae0-900d-220a993cb2e1" />
 
----
+The [Llamaware](README.md) is a C++20-based AI development agent. It provides core systems for file management, sessions, extensions, AI providers, and GitHub automation. It is the result of many person-years of discussion and design. Its design encourages general applicability and broad adoption but can be freely copied and modified to meet your organization's needs.
 
-## System Requirements
+## Getting started
 
-**Supported Platforms**
+The fastest way to get started:
 
-* Linux (Ubuntu 20.04+)
-* macOS (15.0+)
-* Windows (MSVC 2019+)
+```bash
+git clone https://github.com/harpertoken/llamaware.git
+cd llamaware
+brew install cmake libpqxx
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
+./build/bin/llamaware-agent
+```
 
-**Compiler**
+The agent supports both offline (local Ollama) and online (cloud LLM providers) modes. Select your preferred mode and model when starting the agent.
 
-* C++20 (GCC 10+, Clang 12+, MSVC 2019 16.11+)
+## Background and scope
 
-**Build System**
+The aim of Llamaware is to help developers use AI effectively for coding tasks. By "effectively" we mean fast responses, offline capability, and secure operation. In other words: what would you like your AI agent to do in your development workflow?
 
-* CMake 3.14+
+The project is focused on relatively higher-level issues, such as agent architecture, service modularity, and provider integration. Such design affects application architecture and library development. Following the architecture may lead to extensible and maintainable code. And it may run fast - but only if you build things right.
 
-**Version Control**
+We are less concerned with low-level implementation details, such as naming conventions and indentation style. However, no topic that can help build a better AI agent is out of bounds.
 
-* Git
+Our initial set of features emphasizes stability, extensibility, and security. They may very well be too strict. We expect to have to introduce more options to better accommodate real-world needs. We also need more features.
 
-**Dependencies**
+You will find some of the design decisions contrary to your expectations or even contrary to your experience. If we have not suggested that you change your workflow in any way, we have failed. Please try to verify or disprove our design choices. In particular, we would really like to have some of our decisions backed up with measurements or better examples.
 
-* cpr ≥ 1.10.0
-* nlohmann-json ≥ 3.10.0
-* OpenSSL ≥ 1.1.1
-* libpqxx ≥ 7.0 (optional, for PostgreSQL)
+You will find some of the features obvious or even trivial. Please remember that one purpose of a tool is to help someone who is less experienced or coming from a different background or language to get up to speed.
 
----
+The agent is designed to be extended easily. New services can be added by implementing the service interface. We do not expect you to understand all the internals before trying to use the agent.
+
+Llamaware is meant for gradual introduction into your development workflow. We plan to build tools for that and hope others will too.
 
 ## Project Structure
 
 ```
 src/core/         → agent logic, command routing
 src/services/     → AI, file, web, git, MCP, etc.
-src/utils/        → config, UI, validation helpers
-tests/            → unit & E2E tests
-scripts/          → build & reporting tools
-package/docker/   → containerization setup
+src/utils/       → config, UI, validation helpers
+src/data/        → memory management
+tests/           → unit & E2E tests
+scripts/         → build & reporting tools
+package/docker/  → containerization setup
 ```
 
----
+## System Requirements
 
-## Installation
+**Supported Platforms**
 
-```bash
-git clone https://github.com/harpertoken/llamaware.git
-cd llamaware
-```
+- Linux (Ubuntu 20.04+)
+- macOS (15.0+)
+- Windows (MSVC 2019+)
 
-### Ubuntu/Debian
+**Compiler**
 
-```bash
-./scripts/install-deps.sh  # or run manually:
-sudo apt update
-sudo apt install -y build-essential cmake git libcurl4-openssl-dev libpqxx-dev
-```
+- C++20 (GCC 10+, Clang 12+, MSVC 2019 16.11+)
 
-### macOS
+**Dependencies**
 
-```bash
-./scripts/install-deps.sh  # or run manually:
-brew install cmake libpqxx
-```
-
-### Windows
-
-```powershell
-# Install Chocolatey, CMake, and vcpkg (see CI workflow)
-vcpkg install libpqxx
-```
-
----
-
-## Build
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release --parallel
-```
-
----
-
-## Run
-
-```bash
-./build/bin/llamaware-agent
-```
-
-**Basic Commands**
-
-```
-version
-search:query
-cmd:command
-read:/path/to/file
-write:/path/to/file content
-help
-exit
-```
-
----
+- cpr ≥ 1.10.0
+- nlohmann-json ≥ 3.10.0
+- OpenSSL ≥ 1.1.1
+- libpqxx ≥ 7.0 (optional, for PostgreSQL)
 
 ## AI Providers
 
-* Together AI (Llama models)
-* Cerebras (Llama inference)
-* Fireworks (performance-optimized)
-* Groq (speed-focused)
-* DeepSeek (reasoning models)
-* OpenAI (GPT models)
-* Ollama (offline support)
+Llamaware supports multiple AI providers:
 
----
+| Provider    | Description             |
+|-------------|------------------------|
+| Ollama      | Local offline inference |
+| OpenAI      | GPT models             |
+| Together AI | Llama models           |
+| Cerebras    | Fast inference         |
+| Fireworks   | Performance-optimized  |
+| Groq        | Speed-focused          |
+| DeepSeek    | Reasoning models       |
 
-## Database Integration (Optional)
-
-**Features**
-
-* Persistent memory and session state
-* Conversation history
-* Automatic schema initialization
-
-**Config**
-
-```bash
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=llamaware
-DB_USER=llamaware
-DB_PASSWORD=your_password
-```
-
-Enabled automatically when `libpqxx` is detected at build time.
-
----
-
-## GitHub Bot
-
-The agent includes automated GitHub integration for enhanced project management.
-
-**Features**
-
-* **Health Checks**: Runs on pull requests to verify builds, tests, code quality (TODOs/FIXMEs), and preflight checks, posting detailed reports with progress bars and overall status (Operational/Degraded/Unstable).
-* **TODO Management**: Automatically creates sub-issues for TODO items found in issue descriptions, with proper labeling and linking.
-* **Milestone Assignment**: Assigns appropriate milestones to pull requests based on keywords (e.g., 'feature' → Next Release, 'bug'/'fix' → Bug Fixes, 'refactor' → Technical Debt).
-```
-
----
-
-## CI/CD
-
-**Workflows**
-
-* Build and test (Linux, macOS, Windows)
-* Preflight checks
-* Artifact uploads
-* Code coverage
-
-**Triggers**
-
-* Push to `main` or `develop`
-* Pull requests
-* Release publication
-
-**Repository Variables**
+## Basic Commands
 
 ```
-PUSH_BRANCHES   = ["main","develop"]
-PR_BRANCHES     = ["*"]
-RELEASE_TYPES   = ["published"]
+version           → show version
+search:query      → search the web
+cmd:command       → execute shell commands
+read:filename     → read file contents
+write:filename   → write content to file
+help              → show help
+exit              → quit
 ```
-
----
 
 ## Testing
 
@@ -200,107 +113,6 @@ docker compose -f docker-compose.e2e.yml logs -f e2e-tests
 docker compose -f docker-compose.e2e.yml down
 ```
 
----
+## Contributions and LICENSE
 
-## Development
-
-**Debug Build**
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --config Debug
-```
-
-**Code Quality**
-
-```bash
-./scripts/setup-pre-commit.sh
-make clang-tidy
-make lint-all
-```
-
-Run full checks:
-
-```bash
-make full-check
-pre-commit run --all-files
-```
-
----
-
-## Conventional Commits
-
-**Commit Format**
-
-```
-<type>: <description>
-```
-
-**Allowed Types**
-`feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
-
-**Examples**
-
-```
-feat: add user authentication
-fix: resolve memory leak
-docs: update installation guide
-```
-
-**Setup Hook**
-
-```bash
-cp scripts/commit-msg .git/hooks/
-chmod +x .git/hooks/commit-msg
-```
-
-**Rewriting History**
-
-```bash
-git filter-branch --msg-filter 'bash scripts/rewrite_msg.sh' -- --all
-git push --force-with-lease origin main
-```
-
----
-
-## Troubleshooting
-
-```bash
-docker ps                # check containers
-docker logs llamaware-agent
-docker-compose -f package/docker/docker-compose.yml restart llamaware-agent
-```
-
----
-
-## Versioning
-
-Follows [Semantic Versioning](https://semver.org/):
-
-| Type  | Description      |
-| ----- | ---------------- |
-| MAJOR | Breaking changes |
-| MINOR | New features     |
-| PATCH | Bug fixes        |
-
-**Version Detection Order**
-
-1. Git tag (e.g., `v0.0.8`)
-2. `VERSION` file
-3. Default fallback
-
-**Release Process**
-
-```bash
-./scripts/bump-version.sh patch
-git add . && git commit -m "feat: release v0.0.9 [release]"
-git push origin main
-```
-
-Auto-releases trigger on `[release]`, with `[major]` or `[minor]` for version bump type.
-
----
-
-## License
-
-MIT License
+Comments and suggestions for improvements are most welcome. We plan to modify and extend this project as our understanding improves and the available libraries improve. More details are found at [CONTRIBUTING](./CONTRIBUTING.md) and [LICENSE](./LICENSE).
