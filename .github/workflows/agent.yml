@@ -122,6 +122,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: post health report
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
