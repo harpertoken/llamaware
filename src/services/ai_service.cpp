@@ -302,8 +302,13 @@ std::string AIService::chat(const std::string &user_input,
     }
 
     if (response.status_code != 200) {
+      std::string error_content = response.content;
+      if (error_content.length() > 500) {
+        error_content = error_content.substr(0, 500) + "...[truncated]";
+      }
       return "Error: AI service returned status code " +
-             std::to_string(response.status_code) + " - " + response.content;
+             std::to_string(response.status_code) + " - " + error_content +
+             " | Error: " + response.error_message;
     }
 
     // Handle streaming response for Cerebras
