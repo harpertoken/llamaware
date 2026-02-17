@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    types: [closed]
+    types: [opened, closed]
   issues:
     types: [opened, edited]
   issue_comment:
