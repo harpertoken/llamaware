@@ -1,14 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.1] - 2026-02-18
 
-* **Codebase Modernization** – Upgraded to C++20 with scoped enums, default member initializers, and improved string handling
-* **CI/CD Simplification** – Consolidated 7 workflows into 2 unified pipelines
-* **Code Quality** – Fixed clang-tidy warnings, removed magic numbers, and refined naming conventions
-* **GitHub Bot Automation** – Added health checks, TODO management, and milestone assignment
-* **Progress Reports** – Introduced ASCII-based summaries for consistent UX
-* **API Integration** – Improved GitHub API interactions and error handling
-* **Documentation** – Expanded and updated project guides and structure
+* **Security** – Excluded third-party deps from CodeQL to eliminate false positive DES alerts
+* **CI/CD** – Added build dependencies (libxattr-dev, libssl-dev, linux-libc-dev) for feature detection
+* **Workflows** – Added health checks, TODO management, and milestone assignment for PRs
+* **Workflow Fix** – Added locked issue check before commenting to prevent failures
+* **Build** – Fixed invalid macOS deployment target in CMake
+* **AI** – Resolved Ollama API timeout using std::chrono::seconds
+* **Code Quality** – C++20 modernization, clang-tidy fixes, naming conventions
+* **Dependencies** – Updated actions/checkout, codeql-action, trivy-action to latest versions
+* **Maintenance** – License year update, various dependency bumps
 
 ## [0.1] – 2025-09-21
 
