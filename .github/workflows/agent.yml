@@ -49,7 +49,8 @@ jobs:
       - name: setup environment
         run: |
           sudo apt update
-          sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
+          sudo apt install -y nlohmann-json3-dev cmake build-essential \
+            libcurl4-openssl-dev libxattr-dev libssl-dev linux-libc-dev
 
       - name: configure build
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -122,12 +123,14 @@ jobs:
         with:
           script: |
             const report = `${{ steps.report.outputs.report }}`;
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
+            if (!context.payload.issue.locked) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            }
 
   todo-management:
     if: >
@@ -151,12 +154,14 @@ jobs:
               });
             }
             if (todos.length) {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `Created ${todos.length} sub-issue${todos.length > 1 ? 's' : ''}.`
-              });
+              if (!context.payload.issue.locked) {
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `Created ${todos.length} sub-issue${todos.length > 1 ? 's' : ''}.`
+                });
+              }
             }
 
   milestone-assignment:
@@ -190,12 +195,14 @@ jobs:
                     repo: context.repo.repo,
                     milestone: milestone.number
                   });
-                  await github.rest.issues.createComment({
-                    issue_number: context.issue.number,
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    body: `Milestone: **${name}**`
-                  });
+                  if (!context.payload.issue.locked) {
+                    await github.rest.issues.createComment({
+                      issue_number: context.issue.number,
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      body: `Milestone: **${name}**`
+                    });
+                  }
                 }
                 break;
               }
