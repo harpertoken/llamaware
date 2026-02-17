@@ -1,8 +1,10 @@
 name: agent
 
 on:
+  push:
+    branches: [main, develop]
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [closed]
   issues:
     types: [opened, edited]
   issue_comment:
@@ -18,6 +20,11 @@ permissions:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    if: >
+      github.repository_owner == 'harpertoken'
+      && (github.event_name == 'push'
+      || (github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true))
     outputs:
       manifest_name: ${{ steps.read.outputs.name }}
       manifest_description: ${{ steps.read.outputs.description }}
@@ -34,7 +41,11 @@ jobs:
 
   health-check:
     needs: setup
-    if: github.event_name == 'pull_request'
+    if: >
+      (github.event_name == 'push'
+      || (github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true))
+      && github.repository_owner == 'harpertoken'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -123,7 +134,9 @@ jobs:
             });
 
   todo-management:
-    if: github.event_name == 'issues' && contains(github.event.issue.body, 'TODO')
+    if: >
+      github.event_name == 'issues' && contains(github.event.issue.body, 'TODO')
+      && github.repository_owner == 'harpertoken'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -151,7 +164,9 @@ jobs:
             }
 
   milestone-assignment:
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: >
+      github.event_name == 'pull_request' && github.event.action == 'opened'
+      && github.repository_owner == 'harpertoken'
     runs-on: ubuntu-latest
     steps:
       - name: assign milestone
