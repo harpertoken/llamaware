@@ -60,3 +60,15 @@ tests:
           - '*.spec.*'
           - 'test_*.py'
           - '*_test.go'
+
+refactor:
+  - changed-files:
+      - any-glob-to-any-file: ['**/refactor/**']
+
+feature:
+  - changed-files:
+      - any-glob-to-any-file: ['**/feature/**', '**/features/**']
+
+bug:
+  - changed-files:
+      - any-glob-to-any-file: ['**/bug/**', '**/fix/**', '**/hotfix/**']
