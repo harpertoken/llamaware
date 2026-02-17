@@ -1,0 +1,10 @@
+name: "CodeQL Configuration"
+paths-ignore:
+  - build/**
+  - CMakeLists.txt
+  - openssl-3.2.1
+  - '**/openssl/**'
+  - '**/zlib/**'
+  - '**/nlohmann_json/**'
+  - '**/cpr/**'
+  - '**/googletest/**'

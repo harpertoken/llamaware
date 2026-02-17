@@ -26,6 +26,7 @@ jobs:
       - uses: github/codeql-action/init@v4
         with:
           languages: cpp
+          config-file: ./.github/codeql/codeql-config.yml
       - run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential \
