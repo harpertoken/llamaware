@@ -18,6 +18,7 @@ jobs:
   build:
     name: build (${{ matrix.os_short }}, ${{ matrix.build_type == 'Release' && 'release' || 'debug' }})
     runs-on: ${{ matrix.os }}
+    if: github.repository_owner == 'harpertoken'
     strategy:
       matrix:
         include:
