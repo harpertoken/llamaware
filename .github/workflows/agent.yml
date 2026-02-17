@@ -1,10 +1,8 @@
 name: agent
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
-    types: [closed]
+    types: [opened, closed]
   issues:
     types: [opened, edited]
   issue_comment:
@@ -20,11 +18,7 @@ permissions:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    if: >
-      github.repository_owner == 'harpertoken'
-      && (github.event_name == 'push'
-      || (github.event_name == 'pull_request'
-      && github.event.pull_request.merged == true))
+    if: github.repository_owner == 'harpertoken'
     outputs:
       manifest_name: ${{ steps.read.outputs.name }}
       manifest_description: ${{ steps.read.outputs.description }}
@@ -41,11 +35,7 @@ jobs:
 
   health-check:
     needs: setup
-    if: >
-      (github.event_name == 'push'
-      || (github.event_name == 'pull_request'
-      && github.event.pull_request.merged == true))
-      && github.repository_owner == 'harpertoken'
+    if: github.repository_owner == 'harpertoken'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -122,7 +112,6 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: post health report
-        if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
