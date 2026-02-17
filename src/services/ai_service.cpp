@@ -303,7 +303,8 @@ std::string AIService::chat(const std::string &user_input,
 
     if (response.status_code != 200) {
       return "Error: AI service returned status code " +
-             std::to_string(response.status_code) + " - " + response.content;
+             std::to_string(response.status_code) + " - " + response.content +
+             " | Error: " + response.error_message;
     }
 
     // Handle streaming response for Cerebras

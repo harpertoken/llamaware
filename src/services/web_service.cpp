@@ -487,7 +487,7 @@ WebResponse WebService::post_json(const std::string &url,
     // Make POST request
     cpr::Response cpr_response =
         cpr::Post(cpr::Url{url}, cpr_headers, cpr::Body{json_body},
-                  cpr::Timeout{kDefaultTimeoutSeconds});
+                  cpr::Timeout{std::chrono::seconds{kDefaultTimeoutSeconds}});
 
     // Fill response
     response.status_code = static_cast<int>(cpr_response.status_code);
@@ -496,8 +496,9 @@ WebResponse WebService::post_json(const std::string &url,
         (cpr_response.status_code >= 200 && cpr_response.status_code < 300);
 
     if (!response.success) {
-      response.error_message =
-          "HTTP " + std::to_string(cpr_response.status_code);
+      response.error_message = "HTTP " +
+                               std::to_string(cpr_response.status_code) +
+                               " | Error: " + cpr_response.error.message;
     }
 
     // Parse headers
