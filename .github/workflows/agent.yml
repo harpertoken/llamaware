@@ -144,14 +144,16 @@ jobs:
           script: |
             const report = `${{ steps.report.outputs.report }}`;
             const item = context.payload.issue || context.payload.pull_request;
-            if (!item?.locked) {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: report
-              });
+            if (!item || item.locked) {
+              console.log('Skipping comment: item not found or locked');
+              return;
             }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
 
   todo-management:
     if: >
@@ -217,7 +219,7 @@ jobs:
                     milestone: milestone.number
                   });
                   const item = context.payload.issue || context.payload.pull_request;
-                  if (!item?.locked) {
+                  if (item && !item.locked) {
                     await github.rest.issues.createComment({
                       issue_number: context.issue.number,
                       owner: context.repo.owner,
