@@ -152,7 +152,7 @@ jobs:
               });
             } catch (e) {
               if (e.message && e.message.includes('locked')) {
-                console.log('Skipping comment: item is locked');
+                console.log('Skipping comment: issue/PR is locked');
               } else {
                 throw e;
               }
