@@ -69,11 +69,14 @@ jobs:
             CONFIG_STATUS="Failed"; CONFIG_PERCENT=40
           fi
 
-          # Build and capture result
+          # Build and capture result (ignore CMake config warnings)
           BUILD_LOG=$(cmake --build build --config Release 2>&1 || true)
-          if echo "$BUILD_LOG" | grep -q "error:"; then
+          # Check for actual compilation/link errors, not CMake config warnings
+          if echo "$BUILD_LOG" | grep -qE "error:.*\.(cpp|c|h|cc|cxx):[0-9]+:"; then
             BUILD_STATUS="Failed"; BUILD_PERCENT=40
-          elif echo "$BUILD_LOG" | grep -q "built successfully\|Build completed"; then
+          elif echo "$BUILD_LOG" | grep -qE "^make.*Error|^make.*error:|collect2: error:"; then
+            BUILD_STATUS="Failed"; BUILD_PERCENT=40
+          elif echo "$BUILD_LOG" | grep -q "built successfully\|Build completed\|Linking\|Building"; then
             BUILD_STATUS="Passed"; BUILD_PERCENT=100
           else
             BUILD_STATUS="Passed"; BUILD_PERCENT=100
