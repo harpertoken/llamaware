@@ -53,7 +53,7 @@ jobs:
             libcurl4-openssl-dev libattr1-dev libssl-dev linux-libc-dev
 
       - name: configure build
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release 2>&1 | tee cmake_config.log
 
       - name: run diagnostics and generate report
         id: report
@@ -62,20 +62,37 @@ jobs:
           echo "${{ needs.setup.outputs.manifest_description }}"
           echo "---------------------------------------------"
 
+          # Check if cmake configuration succeeded
+          if [ -f "build/CMakeCache.txt" ]; then
+            CONFIG_STATUS="Passed"; CONFIG_PERCENT=100
+          else
+            CONFIG_STATUS="Failed"; CONFIG_PERCENT=40
+          fi
+
+          # Build and capture result
           BUILD_LOG=$(cmake --build build --config Release 2>&1 || true)
           if echo "$BUILD_LOG" | grep -q "error:"; then
             BUILD_STATUS="Failed"; BUILD_PERCENT=40
+          elif echo "$BUILD_LOG" | grep -q "built successfully\|Build completed"; then
+            BUILD_STATUS="Passed"; BUILD_PERCENT=100
           else
             BUILD_STATUS="Passed"; BUILD_PERCENT=100
           fi
 
+          # Run tests with better detection
           TEST_LOG=$(ctest --test-dir build --output-on-failure 2>&1 || true)
-          if echo "$TEST_LOG" | grep -q "100% tests passed"; then
+          FAILED_TESTS=$(echo "$TEST_LOG" | grep -c "  FAILED" || echo "0")
+          PASSED_TESTS=$(echo "$TEST_LOG" | grep -c "  Passed" || echo "0")
+          if [ "$FAILED_TESTS" -gt 0 ]; then
+            TEST_STATUS="Partial"; TEST_PERCENT=60
+          elif [ "$PASSED_TESTS" -gt 0 ]; then
+            TEST_STATUS="Passed"; TEST_PERCENT=100
+          elif echo "$TEST_LOG" | grep -q "100% tests passed"; then
             TEST_STATUS="Passed"; TEST_PERCENT=100
           elif echo "$TEST_LOG" | grep -q "tests failed"; then
             TEST_STATUS="Partial"; TEST_PERCENT=60
           else
-            TEST_STATUS="Unknown"; TEST_PERCENT=70
+            TEST_STATUS="No tests"; TEST_PERCENT=0
           fi
 
           TODO_COUNT=$(grep -r "TODO\\|FIXME\\|HACK" src/ include/ 2>/dev/null | wc -l || echo "0")
