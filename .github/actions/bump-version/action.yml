@@ -35,7 +35,8 @@ runs:
         LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name')
         printf "Labels: %s\n" "${LABELS}"
 
-        BUMP_COUNT=$(printf "%s" "${LABELS}" | grep -c -E "^(major|minor|patch)$" || echo "0")
+        BUMP_COUNT=$(printf "%s" "${LABELS}" | grep -c -E "^(major|minor|patch)$" || true)
+        BUMP_COUNT=${BUMP_COUNT:-0}
         if [ "$BUMP_COUNT" -gt 1 ]; then
           printf "Warning: Multiple bump labels found.\n"
         fi
@@ -55,6 +56,7 @@ runs:
       if: steps.bump-type.outputs.bump-type != 'skip'
       shell: bash
       run: |
+        chmod +x ./scripts/version.sh
         ./scripts/version.sh ${{ steps.bump-type.outputs.bump-type }}
 
     - name: Get version
