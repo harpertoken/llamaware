@@ -53,7 +53,7 @@ jobs:
             libcurl4-openssl-dev libattr1-dev libssl-dev linux-libc-dev
 
       - name: configure build
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release 2>&1 | tee cmake_config.log
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release 2>&1 | tee cmake_config.log || true
 
       - name: run diagnostics and generate report
         id: report
