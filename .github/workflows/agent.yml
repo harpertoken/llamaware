@@ -143,17 +143,20 @@ jobs:
         with:
           script: |
             const report = `${{ steps.report.outputs.report }}`;
-            const item = context.payload.issue || context.payload.pull_request;
-            if (!item || item.locked) {
-              console.log('Skipping comment: item not found or locked');
-              return;
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            } catch (e) {
+              if (e.message && e.message.includes('locked')) {
+                console.log('Skipping comment: item is locked');
+              } else {
+                throw e;
+              }
             }
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
 
   todo-management:
     if: >
@@ -177,13 +180,19 @@ jobs:
               });
             }
             if (todos.length) {
-              if (!context.payload.issue?.locked) {
+              try {
                 await github.rest.issues.createComment({
                   issue_number: context.issue.number,
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   body: `Created ${todos.length} sub-issue${todos.length > 1 ? 's' : ''}.`
                 });
+              } catch (e) {
+                if (e.message && e.message.includes('locked')) {
+                  console.log('Skipping comment: item is locked');
+                } else {
+                  throw e;
+                }
               }
             }
 
@@ -218,14 +227,19 @@ jobs:
                     repo: context.repo.repo,
                     milestone: milestone.number
                   });
-                  const item = context.payload.issue || context.payload.pull_request;
-                  if (item && !item.locked) {
+                  try {
                     await github.rest.issues.createComment({
                       issue_number: context.issue.number,
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       body: `Milestone: **${name}**`
                     });
+                  } catch (e) {
+                    if (e.message && e.message.includes('locked')) {
+                      console.log('Skipping comment: item is locked');
+                    } else {
+                      throw e;
+                    }
                   }
                 }
                 break;
