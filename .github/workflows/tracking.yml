@@ -9,7 +9,6 @@ on:
 jobs:
   update-tracking:
     runs-on: ubuntu-latest
-    if: vars.TRACKING_ISSUE_NUMBER != ''
     permissions:
       issues: write
       pull-requests: read
@@ -20,6 +19,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const trackingIssueNumber = '${{ vars.TRACKING_ISSUE_NUMBER }}';
+            if (!trackingIssueNumber || trackingIssueNumber === '') {
+              console.log('No tracking issue configured');
+              return;
+            }
             const { action, number } = context.payload;
             const isIssue = context.eventName === 'issues';
             const item = context.payload[isIssue ? 'issue' : 'pull_request'];
