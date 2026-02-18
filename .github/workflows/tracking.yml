@@ -26,6 +26,10 @@ jobs:
             const { action, number } = context.payload;
             const isIssue = context.eventName === 'issues';
             const item = context.payload[isIssue ? 'issue' : 'pull_request'];
+            if (!item || item.locked) {
+              console.log('Skipping: item not found or locked');
+              return;
+            }
             const type = isIssue ? 'Issue' : 'PR';
             const state = item.state;
             const title = item.title;
