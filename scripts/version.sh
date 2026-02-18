@@ -45,4 +45,22 @@ esac
 NEW_VERSION="$MAJOR.$MINOR.$PATCH"
 echo "$NEW_VERSION" > VERSION
 
+TODAY=$(date +%Y-%m-%d)
+CHANGELOG_TEMP=$(mktemp)
+
+cat > "$CHANGELOG_TEMP" << EOF
+# Changelog
+
+## [$NEW_VERSION] - $TODAY
+
+*
+
+EOF
+
+if [ -f CHANGELOG.md ]; then
+  tail -n +3 CHANGELOG.md >> "$CHANGELOG_TEMP"
+fi
+
+mv "$CHANGELOG_TEMP" CHANGELOG.md
+
 echo "Bumped version to $NEW_VERSION"
