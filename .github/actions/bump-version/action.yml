@@ -103,11 +103,11 @@ runs:
         VERSION=${{ steps.version.outputs.version }}
         TAG_PREFIX=${{ inputs.tag-prefix }}
 
-        if git ls-remote --tags --exit-code origin "${TAG_PREFIX}-${VERSION}"; then
-          echo "Tag ${TAG_PREFIX}-${VERSION} already exists."
+        if git ls-remote --tags --exit-code origin "${TAG_PREFIX}${VERSION}"; then
+          echo "Tag ${TAG_PREFIX}${VERSION} already exists."
         else
-          git tag "${TAG_PREFIX}-${VERSION}"
-          git push origin "${TAG_PREFIX}-${VERSION}"
+          git tag "${TAG_PREFIX}${VERSION}"
+          git push origin "${TAG_PREFIX}${VERSION}"
         fi
 
     - name: Create release
@@ -120,11 +120,11 @@ runs:
         VERSION=${{ steps.version.outputs.version }}
         TAG_PREFIX=${{ inputs.tag-prefix }}
 
-        if gh release view "${TAG_PREFIX}-${VERSION}" &>/dev/null; then
-          echo "Release ${TAG_PREFIX}-${VERSION} already exists."
+        if gh release view "${TAG_PREFIX}${VERSION}" &>/dev/null; then
+          echo "Release ${TAG_PREFIX}${VERSION} already exists."
           exit 0
         fi
 
-        gh release create "${TAG_PREFIX}-${VERSION}" \
+        gh release create "${TAG_PREFIX}${VERSION}" \
           --title "Release ${VERSION}" \
           --notes "Automated release for version ${VERSION}."
