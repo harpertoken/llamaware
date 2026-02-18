@@ -1,0 +1,75 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: llamaware-linux
+            ext: ''
+          - os: macos-latest
+            artifact_name: llamaware-macos
+            ext: ''
+          - os: windows-latest
+            artifact_name: llamaware-windows
+            ext: .exe
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev
+
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install cmake nlohmann-json curl
+
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install cmake --yes
+          choco install nlohmann-json --yes
+          choco install curl --yes
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p release
+          cp build/bin/llamaware-agent${{ matrix.ext }} release/${{ matrix.artifact_name }}${{ matrix.ext }}
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            7z a -tzip release-${{ matrix.artifact_name }}.zip release/*
+          else
+            tar -czvf release-${{ matrix.artifact_name }}.tar.gz release/*
+          fi
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          file: release-${{ matrix.artifact_name }}*
+          draft: false
+          prerelease: false
