@@ -143,7 +143,8 @@ jobs:
         with:
           script: |
             const report = `${{ steps.report.outputs.report }}`;
-            if (!context.payload.issue?.locked) {
+            const item = context.payload.issue || context.payload.pull_request;
+            if (!item?.locked) {
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
@@ -215,7 +216,8 @@ jobs:
                     repo: context.repo.repo,
                     milestone: milestone.number
                   });
-                  if (!context.payload.issue?.locked) {
+                  const item = context.payload.issue || context.payload.pull_request;
+                  if (!item?.locked) {
                     await github.rest.issues.createComment({
                       issue_number: context.issue.number,
                       owner: context.repo.owner,
