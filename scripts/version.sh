@@ -21,17 +21,6 @@ if [ -z "$CURRENT_VERSION" ]; then
   CURRENT_VERSION="1.0.0"
 fi
 
-if git describe --tags --exact-match HEAD >/dev/null 2>&1; then
-  BUILD=1
-else
-  BUILD=$(git rev-list --count HEAD ^"$LATEST_TAG" 2>/dev/null || echo "1")
-  BUILD=$((BUILD + 1))
-fi
-
-if [ "$BUILD" = "1" ] && [ -f VERSION ]; then
-  BUILD=$(grep '+' VERSION | sed 's|.*+||' || echo "1")
-fi
-
 IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 
 case $BUMP_TYPE in
@@ -53,7 +42,7 @@ case $BUMP_TYPE in
     ;;
 esac
 
-NEW_VERSION="$MAJOR.$MINOR.$PATCH+$BUILD"
+NEW_VERSION="$MAJOR.$MINOR.$PATCH"
 echo "$NEW_VERSION" > VERSION
 
 echo "Bumped version to $NEW_VERSION"
