@@ -35,18 +35,17 @@ runs:
         LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name')
         printf "Labels: %s\n" "${LABELS}"
 
-        BUMP_COUNT=$(printf "%s" "${LABELS}" | grep -c -E "^(major|minor|patch)$")
+        BUMP_COUNT=$(printf "%s" "${LABELS}" | grep -c -E "^(major|minor|patch)$" || echo "0")
         if [ "$BUMP_COUNT" -gt 1 ]; then
           printf "Warning: Multiple bump labels found.\n"
         fi
 
-        if printf "%s" "${LABELS}" | grep -q -x "major"; then
+        BUMP_TYPE="patch"
+        if printf "%s" "${LABELS}" | grep -qx "major"; then
           BUMP_TYPE="major"
-        elif printf "%s" "${LABELS}" | grep -q -x "minor"; then
+        elif printf "%s" "${LABELS}" | grep -qx "minor"; then
           BUMP_TYPE="minor"
-        elif printf "%s" "${LABELS}" | grep -q -x "patch"; then
-          BUMP_TYPE="patch"
-        else
+        elif printf "%s" "${LABELS}" | grep -qx "patch"; then
           BUMP_TYPE="patch"
         fi
 
