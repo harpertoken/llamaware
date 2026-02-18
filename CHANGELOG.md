@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.5] - 2026-02-18
+
+*
+
 ## [0.1.1] - 2026-02-18
 
 * **Security** – Excluded third-party deps from CodeQL to eliminate false positive DES alerts
