@@ -39,7 +39,7 @@ jobs:
             build_type: release
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: cache
         uses: actions/cache@v5
@@ -109,7 +109,7 @@ jobs:
     needs: build
     if: github.event_name != 'release'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: |
           sudo apt update
           sudo apt install -y nlohmann-json3-dev cmake build-essential libcurl4-openssl-dev libpqxx-dev lcov
@@ -125,7 +125,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: |
           sudo apt update
           sudo apt install -y clang-tidy cmake build-essential \
@@ -139,7 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - run: docker compose -f docker-compose.e2e.yml up --abort-on-container-exit --exit-code-from e2e-tests
       - if: failure()
@@ -153,7 +153,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.event_name == 'release'
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -191,7 +191,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # fetch all history for tag comparison
       - name: check version change
