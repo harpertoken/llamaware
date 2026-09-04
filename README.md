@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/harpertoken/llamaware/main/.github/assets/thumbnail.png" alt="llamaware" width="100%">
+</p>
+
 # llamaware
 
 Code with AI help in C++. Small dev tools.
