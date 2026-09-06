@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="https://raw.githubusercontent.com/Coccinella-Labs/agentware/main/.github/assets/thumbnail.png" alt="agentware" width="100%">
+</p>
+
+<p align="center">
   <img src="https://raw.githubusercontent.com/coccinella-labs/agentware/main/.github/assets/thumbnail.png" alt="agentware" width="100%">
 </p>
 
