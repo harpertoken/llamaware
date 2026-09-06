@@ -22,8 +22,8 @@ Download the appropriate binary for your platform from the assets below.
 
 ### Build from Source
 ```bash
-git clone https://github.com/harpertoken/llamaware.git
-cd llamaware
+git clone https://github.com/coccinella-labs/agentware.git
+cd agentware
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
@@ -35,4 +35,4 @@ cmake --build build --config Release
 Thanks to all contributors who made this release possible!
 
 ---
-**Full Changelog**: https://github.com/harpertoken/llamaware/compare/v{previous_tag}...v{current_tag}
+**Full Changelog**: https://github.com/coccinella-labs/agentware/compare/v{previous_tag}...v{current_tag}

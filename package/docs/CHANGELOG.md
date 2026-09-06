@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-09-25
 
 ### Added
-- Initial release of llamaware-agent
+- Initial release of agentware-agent
 - Command execution and file operations
 - AI integration with various providers
 - Package structure with Homebrew formula

@@ -809,7 +809,7 @@ void Agent::show_meta_help() {
   std::cout << "  /context show         - Show hierarchical context"
             << std::endl;
   std::cout << "  /context refresh      - Refresh context cache" << std::endl;
-  std::cout << "  /context create       - Create LLAMAWARE.md file"
+  std::cout << "  /context create       - Create AGENTWARE.md file"
             << std::endl;
   std::cout << "  /files <patterns>     - Read multiple files with patterns"
             << std::endl;
@@ -1014,7 +1014,7 @@ void Agent::handle_context_management(const std::string &command) {
         Services::ContextService::load_hierarchical_context(".");
     if (context.empty()) {
       std::cout << "No hierarchical context found." << std::endl;
-      std::cout << "Create a LLAMAWARE.md file with /context create"
+      std::cout << "Create a AGENTWARE.md file with /context create"
                 << std::endl;
     } else {
       std::cout << "Hierarchical Context:" << std::endl;
@@ -1025,10 +1025,10 @@ void Agent::handle_context_management(const std::string &command) {
     std::cout << "Context cache refreshed." << std::endl;
   } else if (command == "create") {
     if (Services::ContextService::create_context_file(".")) {
-      std::cout << "Created LLAMAWARE.md in current directory." << std::endl;
+      std::cout << "Created AGENTWARE.md in current directory." << std::endl;
       std::cout << "Edit it to provide context for this project." << std::endl;
     } else {
-      std::cout << "Could not create LLAMAWARE.md (file may already exist)."
+      std::cout << "Could not create AGENTWARE.md (file may already exist)."
                 << std::endl;
     }
   } else {

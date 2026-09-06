@@ -1,8 +1,8 @@
 #include "utils/config.h"
 
-// Define the LLAMAWARE_LIBRARY macro to ensure proper symbol export
-#ifndef LLAMAWARE_LIBRARY
-#define LLAMAWARE_LIBRARY
+// Define the AGENTWARE_LIBRARY macro to ensure proper symbol export
+#ifndef AGENTWARE_LIBRARY
+#define AGENTWARE_LIBRARY
 #endif
 #include <cstdlib>
 #include <fstream>

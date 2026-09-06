@@ -1,6 +1,6 @@
 #pragma once
 #include "core/agent_mode.h"
-#include "utils/config.h" // For LLAMAWARE_API
+#include "utils/config.h" // For AGENTWARE_API
 #include <memory>
 #include <string>
 #include <vector>
@@ -15,7 +15,7 @@ class AIService;
 }
 
 namespace Core {
-class LLAMAWARE_API Agent {
+class AGENTWARE_API Agent {
 public:
   using Mode = AgentMode; // Type alias for backward compatibility
 

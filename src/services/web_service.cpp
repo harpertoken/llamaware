@@ -77,7 +77,7 @@ std::string WebService::search(const std::string &query) {
       curl_easy_setopt(search_curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
       curl_easy_setopt(search_curl, CURLOPT_HEADERDATA, &response_headers);
       curl_easy_setopt(search_curl, CURLOPT_TIMEOUT, 5L); // 5s timeout
-      curl_easy_setopt(search_curl, CURLOPT_USERAGENT, "Llamaware-Agent/1.0");
+      curl_easy_setopt(search_curl, CURLOPT_USERAGENT, "Agentware-Agent/1.0");
 
       CURLcode res = curl_easy_perform(search_curl);
       if (res != CURLE_OK) {
@@ -250,7 +250,7 @@ WebResponse WebService::fetch_url(const std::string &url) {
 
     // Set up curl options
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Llamaware-Agent/1.0");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Agentware-Agent/1.0");
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L); // 10s timeout
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);

@@ -18,7 +18,7 @@ jobs:
   build:
     name: build (${{ matrix.os_short }}, ${{ matrix.build_type == 'Release' && 'release' || 'debug' }})
     runs-on: ${{ matrix.os }}
-    if: github.repository_owner == 'harpertoken'
+    if: github.repository_owner == 'coccinella-labs'
     strategy:
       matrix:
         include:
@@ -99,10 +99,10 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         with:
-          name: llamaware-${{ matrix.os }}-${{ matrix.build_type }}
+          name: agentware-${{ matrix.os }}-${{ matrix.build_type }}
           path: |
-            build/bin/llamaware-agent*
-            build/bin/Release/llamaware-agent.exe
+            build/bin/agentware-agent*
+            build/bin/Release/agentware-agent.exe
 
   coverage:
     runs-on: ubuntu-latest
@@ -168,8 +168,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            harpertoken/llamaware
-            ghcr.io/${{ github.repository }}/llamaware
+            coccinella-labs/agentware
+            ghcr.io/${{ github.repository }}/agentware
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

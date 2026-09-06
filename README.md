@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/harpertoken/llamaware/main/.github/assets/thumbnail.png" alt="llamaware" width="100%">
+  <img src="https://raw.githubusercontent.com/coccinella-labs/agentware/main/.github/assets/thumbnail.png" alt="agentware" width="100%">
 </p>
 
-# llamaware
+# agentware
 
 Code with AI help in C++. Small dev tools.
 

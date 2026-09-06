@@ -1,10 +1,10 @@
--- Llamaware Database Schema
+-- Agentware Database Schema
 
 -- Create database (run manually if needed)
--- CREATE DATABASE llamaware;
+-- CREATE DATABASE agentware;
 
--- Connect to llamaware database
--- \c llamaware;
+-- Connect to agentware database
+-- \c agentware;
 
 -- Example table for storing agent data
 CREATE TABLE IF NOT EXISTS agent_data (

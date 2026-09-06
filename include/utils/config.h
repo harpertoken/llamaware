@@ -2,11 +2,11 @@
 
 // Define DLL export/import macros for Windows
 #if defined(_WIN32) || defined(_WIN64)
-#ifndef LLAMAWARE_API
-#ifdef LLAMAWARE_LIBRARY
-#define LLAMAWARE_API __declspec(dllexport)
+#ifndef AGENTWARE_API
+#ifdef AGENTWARE_LIBRARY
+#define AGENTWARE_API __declspec(dllexport)
 #else
-#define LLAMAWARE_API __declspec(dllimport)
+#define AGENTWARE_API __declspec(dllimport)
 #endif
 #endif
 
@@ -35,34 +35,34 @@
 #define NOMINMAX
 #endif
 #else
-#ifndef LLAMAWARE_API
-#define LLAMAWARE_API __attribute__((visibility("default")))
+#ifndef AGENTWARE_API
+#define AGENTWARE_API __attribute__((visibility("default")))
 #endif
 
 // On non-Windows, we can use visibility attributes for better control
 #ifdef __GNUC__
-#ifndef LLAMAWARE_LOCAL
-#define LLAMAWARE_LOCAL __attribute__((visibility("hidden")))
+#ifndef AGENTWARE_LOCAL
+#define AGENTWARE_LOCAL __attribute__((visibility("hidden")))
 #endif
 #else
-#ifndef LLAMAWARE_LOCAL
-#define LLAMAWARE_LOCAL
+#ifndef AGENTWARE_LOCAL
+#define AGENTWARE_LOCAL
 #endif
 #endif
 #endif
 
 // Disable exporting of STL templates
 #ifdef _MSC_VER
-#define LLAMAWARE_NO_EXPORT_TEMPLATE template class LLAMAWARE_API
+#define AGENTWARE_NO_EXPORT_TEMPLATE template class AGENTWARE_API
 #else
-#define LLAMAWARE_NO_EXPORT_TEMPLATE extern template class LLAMAWARE_API
+#define AGENTWARE_NO_EXPORT_TEMPLATE extern template class AGENTWARE_API
 #endif
 
 #include <string>
 
 namespace Utils::Config {
-LLAMAWARE_API void load_environment(const std::string &filename = ".env");
-LLAMAWARE_API std::string get_env_var(const std::string &key,
+AGENTWARE_API void load_environment(const std::string &filename = ".env");
+AGENTWARE_API std::string get_env_var(const std::string &key,
                                       const std::string &default_value = "");
-LLAMAWARE_API bool has_env_var(const std::string &key);
+AGENTWARE_API bool has_env_var(const std::string &key);
 } // namespace Utils::Config

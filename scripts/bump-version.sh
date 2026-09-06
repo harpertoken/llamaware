@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bump version for Llamaware
+# Bump version for Agentware
 # Usage: ./scripts/bump-version.sh [major|minor|patch]
 
 set -e

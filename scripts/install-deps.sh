@@ -1,9 +1,9 @@
 #!/bin/bash
-# Llamaware Agent - Dependency Installer
+# Agentware Agent - Dependency Installer
 
 set -e
 
-echo "==> Installing Llamaware Agent dependencies..."
+echo "==> Installing Agentware Agent dependencies..."
 
 detect_os() {
   case "$OSTYPE" in
@@ -66,5 +66,5 @@ Next steps:
   1. Configure your API keys in .env
   2. Run: cmake -S . -B build
   3. Run: cmake --build build
-  4. Run: ./build/bin/llamaware-agent
+  4. Run: ./build/bin/agentware-agent
 EOF
