@@ -26,7 +26,7 @@ jobs:
       manifest_name: ${{ steps.read.outputs.name }}
       manifest_description: ${{ steps.read.outputs.description }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - id: read
         name: read manifest
@@ -44,7 +44,7 @@ jobs:
       && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: setup environment
         run: |
@@ -164,7 +164,7 @@ jobs:
       && github.repository_owner == 'coccinella-labs'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: process todos
         uses: actions/github-script@v8
         with:
